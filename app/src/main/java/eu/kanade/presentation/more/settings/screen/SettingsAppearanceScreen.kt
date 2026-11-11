@@ -166,6 +166,10 @@ object SettingsAppearanceScreen : SearchableSettings {
                     preference = uiPreferences.imagesInDescription,
                     title = stringResource(MR.strings.pref_display_images_description),
                 ),
+                Preference.PreferenceItem.SwitchPreference(
+                    preference = uiPreferences.showNavBarLabels,
+                    title = stringResource(MR.strings.pref_show_navbar_labels),
+                ),
             ),
         )
     }

@@ -73,6 +73,15 @@ color, drop shadow) that floats above the content, centered, with a
   black. The old `ic_mihon` drawable is still used by the More-page
   logo and notification icons, untouched.
 
+### Navigation bar labels setting (2026-11-11)
+
+- New preference `UiPreferences.showNavBarLabels`
+  (`pref_show_navbar_labels`, default **on**): Settings → Appearance
+  → "显示导航栏文字" / "Show navigation bar labels".
+- When on, the floating bar shows icon + label (11.sp); when off,
+  icon only. The bottom content clearance follows (96.dp with
+  labels, 84.dp without).
+
 ### KernelSU consistency
 
 The bar follows KernelSU's manager app (also built on Miuix 0.9.4).

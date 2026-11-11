@@ -44,7 +44,9 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
+import tachiyomi.presentation.core.util.collectAsState
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.util.fastForEach
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
@@ -87,9 +89,11 @@ object HomeScreen : Screen() {
     private const val TabNavigatorKey = "HomeTabs"
 
     // Bottom padding for tab content so nothing hides behind the floating bar:
-    // 52.dp bar height + 26.dp bottom offset (+ shadow). The navigation-bar
-    // inset is already in the Scaffold's PaddingValues.
+    // bar height (52.dp without labels, ~60.dp with labels) + 26.dp bottom
+    // offset (+ shadow). The navigation-bar inset is already in the
+    // Scaffold's PaddingValues.
     private val FloatingNavBarClearance = 84.dp
+    private val FloatingNavBarClearanceWithLabels = 96.dp
 
     private val TABS = listOf(
         LibraryTab,
@@ -101,7 +105,16 @@ object HomeScreen : Screen() {
 
     @Composable
     override fun Content() {
+        val context = LocalContext.current
         val navigator = LocalNavigator.currentOrThrow
+        val showNavBarLabels by remember {
+            context.appGraph.uiPreferences.showNavBarLabels
+        }.collectAsState()
+        val navBarClearance = if (showNavBarLabels) {
+            FloatingNavBarClearanceWithLabels
+        } else {
+            FloatingNavBarClearance
+        }
         TabNavigator(
             tab = LibraryTab,
             key = TabNavigatorKey,
@@ -152,7 +165,7 @@ object HomeScreen : Screen() {
                                     color = MiuixTheme.colorScheme.surfaceContainer
                                         .copy(alpha = 0.75f),
                                 ) {
-                                    TABS.fastForEach { FloatingNavItem(it) }
+                                    TABS.fastForEach { FloatingNavItem(it, showNavBarLabels) }
                                 }
                             }
                         },
@@ -160,7 +173,7 @@ object HomeScreen : Screen() {
                         Box(
                             modifier = Modifier
                                 .padding(paddingValues)
-                                .padding(bottom = FloatingNavBarClearance),
+                                .padding(bottom = navBarClearance),
                         ) {
                             TabContent(tabNavigator)
                         }
@@ -262,10 +275,11 @@ object HomeScreen : Screen() {
     }
 
     @Composable
-    private fun FloatingNavItem(tab: eu.kanade.presentation.util.Tab) {
+    private fun FloatingNavItem(tab: eu.kanade.presentation.util.Tab, showLabels: Boolean) {
         // Mirrors Miuix's FloatingNavigationBarItem, but takes a Painter so the
         // tabs keep their existing icons (including the animated library icon).
-        // Miuix's own item only accepts an ImageVector.
+        // Miuix's own item only accepts an ImageVector. The label is shown
+        // only when the "show navigation bar labels" appearance setting is on.
         val tabNavigator = LocalTabNavigator.current
         val navigator = LocalNavigator.currentOrThrow
         val scope = rememberCoroutineScope()
@@ -290,12 +304,19 @@ object HomeScreen : Screen() {
                     indication = null,
                 ),
             horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(2.dp),
         ) {
             BadgedBox(
                 badge = { badge?.invoke() },
                 modifier = Modifier.padding(
-                    vertical = FloatingNavigationBarDefaults.IconPadding,
-                    horizontal = FloatingNavigationBarDefaults.IconPadding,
+                    top = FloatingNavigationBarDefaults.IconPadding,
+                    bottom = if (showLabels) {
+                        2.dp
+                    } else {
+                        FloatingNavigationBarDefaults.IconPadding
+                    },
+                    start = FloatingNavigationBarDefaults.IconPadding,
+                    end = FloatingNavigationBarDefaults.IconPadding,
                 ),
             ) {
                 Icon(
@@ -303,6 +324,15 @@ object HomeScreen : Screen() {
                     contentDescription = tab.options.title,
                     modifier = Modifier.size(FloatingNavigationBarDefaults.IconSize),
                     tint = tint,
+                )
+            }
+            if (showLabels) {
+                Text(
+                    text = tab.options.title,
+                    fontSize = 11.sp,
+                    lineHeight = 14.sp,
+                    color = tint,
+                    maxLines = 1,
                 )
             }
         }
