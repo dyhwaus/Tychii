@@ -3,13 +3,11 @@ package eu.kanade.tachiyomi.ui.home
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.animation.togetherWith
-import androidx.compose.foundation.background
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
@@ -18,7 +16,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.selection.selectable
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.Badge
 import androidx.compose.material3.Icon
@@ -48,7 +45,6 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.compose.ui.util.fastForEach
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
@@ -91,9 +87,9 @@ object HomeScreen : Screen() {
     private const val TabNavigatorKey = "HomeTabs"
 
     // Bottom padding for tab content so nothing hides behind the floating bar:
-    // ~60.dp bar height (icon + label) + 26.dp bottom offset (+ shadow).
-    // The navigation-bar inset is already in the Scaffold's PaddingValues.
-    private val FloatingNavBarClearance = 96.dp
+    // 52.dp bar height + 26.dp bottom offset (+ shadow). The navigation-bar
+    // inset is already in the Scaffold's PaddingValues.
+    private val FloatingNavBarClearance = 84.dp
 
     private val TABS = listOf(
         LibraryTab,
@@ -269,9 +265,7 @@ object HomeScreen : Screen() {
     private fun FloatingNavItem(tab: eu.kanade.presentation.util.Tab) {
         // Mirrors Miuix's FloatingNavigationBarItem, but takes a Painter so the
         // tabs keep their existing icons (including the animated library icon).
-        // Miuix's own item only accepts an ImageVector. Like KernelSU's bar,
-        // this item shows an icon plus a label, with a pill behind the
-        // selected tab (KernelSU's non-blur fallback indicator).
+        // Miuix's own item only accepts an ImageVector.
         val tabNavigator = LocalTabNavigator.current
         val navigator = LocalNavigator.currentOrThrow
         val scope = rememberCoroutineScope()
@@ -280,14 +274,6 @@ object HomeScreen : Screen() {
         val isPressed by interactionSource.collectIsPressedAsState()
         val tint = floatingNavItemTint(selected, isPressed)
         val badge = tabBadge(tab)
-        val pillColor by animateColorAsState(
-            targetValue = if (selected) {
-                MiuixTheme.colorScheme.primary.copy(alpha = 0.15f)
-            } else {
-                Color.Transparent
-            },
-            label = "selectedPill",
-        )
         Column(
             modifier = Modifier
                 .selectable(
@@ -302,14 +288,15 @@ object HomeScreen : Screen() {
                     role = Role.Tab,
                     interactionSource = interactionSource,
                     indication = null,
-                )
-                .background(color = pillColor, shape = RoundedCornerShape(18.dp))
-                .padding(horizontal = 12.dp, vertical = 8.dp),
+                ),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(2.dp),
         ) {
             BadgedBox(
                 badge = { badge?.invoke() },
+                modifier = Modifier.padding(
+                    vertical = FloatingNavigationBarDefaults.IconPadding,
+                    horizontal = FloatingNavigationBarDefaults.IconPadding,
+                ),
             ) {
                 Icon(
                     painter = tab.options.icon!!,
@@ -318,13 +305,6 @@ object HomeScreen : Screen() {
                     tint = tint,
                 )
             }
-            Text(
-                text = tab.options.title,
-                fontSize = 11.sp,
-                lineHeight = 14.sp,
-                color = tint,
-                maxLines = 1,
-            )
         }
     }
 
