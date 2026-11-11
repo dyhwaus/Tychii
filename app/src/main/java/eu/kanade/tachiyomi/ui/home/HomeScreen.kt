@@ -147,7 +147,11 @@ object HomeScreen : Screen() {
                                 enter = slideInVertically(initialOffsetY = { it }) + fadeIn(),
                                 exit = slideOutVertically(targetOffsetY = { it }) + fadeOut(),
                             ) {
-                                FloatingNavigationBar {
+                                FloatingNavigationBar(
+                                    // Translucent so the content shows through the bar.
+                                    color = MiuixTheme.colorScheme.surfaceContainer
+                                        .copy(alpha = 0.75f),
+                                ) {
                                     TABS.fastForEach { FloatingNavItem(it) }
                                 }
                             }

@@ -62,6 +62,13 @@ color, drop shadow) that floats above the content, centered, with a
   (52.dp bar height + 26.dp offset + shadow) so nothing hides behind it.
 - Tablets keep the Material3 navigation rail, unchanged.
 
+### Floating bar transparency
+
+The floating bar's background is `surfaceContainer` at 0.75 alpha, so
+content shows through it. A real frosted-glass blur would need
+`miuix-blur`, which requires minSdk 33; the translucent color is the
+effect without a minSdk bump.
+
 ### Rename: Mihon → Tychii
 
 - `i18n/src/commonMain/moko-resources/base/strings.xml` — `app_name`
@@ -82,6 +89,11 @@ no color.
 - `app/src/main/res/drawable/ic_launcher_background.xml` — black + glow.
 - `app/src/main/res/drawable/ic_launcher_monochrome.xml` — the T mark
   in white, for themed icons.
+- The same T mark and black background are also in
+  `app/src/debug/res/drawable/` (`ic_launcher_foreground.xml`,
+  `ic_launcher_background.xml`). The debug source set overrides `main`,
+  so a debug build (what Android Studio runs by default) was still
+  showing Mihon's original icon until these were replaced too.
 
 A rendered preview is in `~/workspace/imagine_media/` as
 `media-generation-tychii-icon-bw-preview-0-*.webp`.
