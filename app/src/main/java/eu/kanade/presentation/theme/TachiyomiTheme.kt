@@ -25,6 +25,9 @@ import eu.kanade.presentation.theme.colorscheme.TokyoNightColorScheme
 import eu.kanade.presentation.theme.colorscheme.YinYangColorScheme
 import eu.kanade.presentation.theme.colorscheme.YotsubaColorScheme
 import mihon.app.di.appGraph
+import top.yukonga.miuix.kmp.theme.ColorSchemeMode
+import top.yukonga.miuix.kmp.theme.MiuixTheme
+import top.yukonga.miuix.kmp.theme.ThemeController
 
 @Composable
 fun TachiyomiTheme(
@@ -65,8 +68,19 @@ private fun BaseTachiyomiTheme(
                 isAmoled = isAmoled,
             )
         },
-        content = content,
-    )
+    ) {
+        // Miuix needs its own theme wrapper; it follows the same dark/light mode.
+        // Its colors stay on the library defaults (its surfaceContainer backs the
+        // floating navigation bar) rather than the app's custom palettes.
+        val miuixController = remember(isDark) {
+            ThemeController(
+                colorSchemeMode = if (isDark) ColorSchemeMode.Dark else ColorSchemeMode.Light,
+            )
+        }
+        MiuixTheme(controller = miuixController) {
+            content()
+        }
+    }
 }
 
 private fun getThemeColorScheme(

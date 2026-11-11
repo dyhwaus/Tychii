@@ -2,8 +2,21 @@ package eu.kanade.tachiyomi.ui.home
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.animation.togetherWith
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.selection.selectable
+import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.Badge
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -18,10 +31,16 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.produceState
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
@@ -50,6 +69,10 @@ import soup.compose.material.motion.animation.materialFadeThroughIn
 import soup.compose.material.motion.animation.materialFadeThroughOut
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.i18n.pluralStringResource
+import top.yukonga.miuix.kmp.basic.FloatingNavigationBar
+import top.yukonga.miuix.kmp.basic.FloatingNavigationBarDefaults
+import top.yukonga.miuix.kmp.basic.Scaffold as MiuixScaffold
+import top.yukonga.miuix.kmp.theme.MiuixTheme
 
 object HomeScreen : Screen() {
 
@@ -62,6 +85,11 @@ object HomeScreen : Screen() {
 
     @Suppress("ConstPropertyName")
     private const val TabNavigatorKey = "HomeTabs"
+
+    // Bottom padding for tab content so nothing hides behind the floating bar:
+    // 52.dp bar height + 26.dp bottom offset (+ shadow). The navigation-bar
+    // inset is already in the Scaffold's PaddingValues.
+    private val FloatingNavBarClearance = 84.dp
 
     private val TABS = listOf(
         LibraryTab,
@@ -81,47 +109,56 @@ object HomeScreen : Screen() {
             // Provide usable navigator to content screen
             CompositionLocalProvider(LocalNavigator provides navigator) {
                 val tabletUi = isTabletUi()
-                val navigationSuiteType = if (tabletUi) {
-                    NavigationSuiteType.NavigationRail
-                } else {
-                    NavigationSuiteType.NavigationBar
-                }
-                val navigationSuiteState = rememberNavigationSuiteScaffoldState()
-                LaunchedEffect(navigationSuiteState, tabletUi) {
-                    if (tabletUi) navigationSuiteState.show()
-                    showBottomNavEvent.receiveAsFlow().collectLatest { show ->
-                        if (tabletUi || show) {
-                            navigationSuiteState.show()
-                        } else {
-                            navigationSuiteState.hide()
-                        }
-                    }
+                var showNavBar by remember { mutableStateOf(true) }
+                LaunchedEffect(Unit) {
+                    showBottomNavEvent.receiveAsFlow().collectLatest { showNavBar = it }
                 }
 
-                NavigationSuiteScaffold(
-                    navigationSuiteType = navigationSuiteType,
-                    state = navigationSuiteState,
-                    navigationSuiteColors = NavigationSuiteDefaults.colors(
-                        navigationRailContainerColor = MaterialTheme.colorScheme
-                            .surfaceColorAtElevation(3.dp),
-                    ),
-                    navigationItemVerticalArrangement = Arrangement.Center,
-                    navigationItems = {
-                        TABS.fastForEach { NavigationSuiteItem(it, navigationSuiteType) }
-                    },
-                ) {
-                    AnimatedContent(
-                        targetState = tabNavigator.current,
-                        transitionSpec = {
-                            materialFadeThroughIn(
-                                initialScale = 1f,
-                                durationMillis = TabFadeDuration,
-                            ) togetherWith materialFadeThroughOut(durationMillis = TabFadeDuration)
+                if (tabletUi) {
+                    // Tablets keep the Material3 navigation rail; the floating
+                    // bar is a phone layout.
+                    val navigationSuiteState = rememberNavigationSuiteScaffoldState()
+                    LaunchedEffect(navigationSuiteState) {
+                        navigationSuiteState.show()
+                    }
+                    NavigationSuiteScaffold(
+                        navigationSuiteType = NavigationSuiteType.NavigationRail,
+                        state = navigationSuiteState,
+                        navigationSuiteColors = NavigationSuiteDefaults.colors(
+                            navigationRailContainerColor = MaterialTheme.colorScheme
+                                .surfaceColorAtElevation(3.dp),
+                        ),
+                        navigationItemVerticalArrangement = Arrangement.Center,
+                        navigationItems = {
+                            TABS.fastForEach {
+                                NavigationSuiteItem(it, NavigationSuiteType.NavigationRail)
+                            }
                         },
-                        label = "tabContent",
                     ) {
-                        tabNavigator.saveableState(key = "currentTab", it) {
-                            it.Content()
+                        TabContent(tabNavigator)
+                    }
+                } else {
+                    // Phones use a Miuix floating navigation bar: a detached
+                    // pill that floats above the content.
+                    MiuixScaffold(
+                        floatingToolbar = {
+                            AnimatedVisibility(
+                                visible = showNavBar,
+                                enter = slideInVertically(initialOffsetY = { it }) + fadeIn(),
+                                exit = slideOutVertically(targetOffsetY = { it }) + fadeOut(),
+                            ) {
+                                FloatingNavigationBar {
+                                    TABS.fastForEach { FloatingNavItem(it) }
+                                }
+                            }
+                        },
+                    ) { paddingValues ->
+                        Box(
+                            modifier = Modifier
+                                .padding(paddingValues)
+                                .padding(bottom = FloatingNavBarClearance),
+                        ) {
+                            TabContent(tabNavigator)
                         }
                     }
                 }
@@ -166,6 +203,24 @@ object HomeScreen : Screen() {
     }
 
     @Composable
+    private fun TabContent(tabNavigator: TabNavigator) {
+        AnimatedContent(
+            targetState = tabNavigator.current,
+            transitionSpec = {
+                materialFadeThroughIn(
+                    initialScale = 1f,
+                    durationMillis = TabFadeDuration,
+                ) togetherWith materialFadeThroughOut(durationMillis = TabFadeDuration)
+            },
+            label = "tabContent",
+        ) {
+            tabNavigator.saveableState(key = "currentTab", it) {
+                it.Content()
+            }
+        }
+    }
+
+    @Composable
     private fun NavigationSuiteItem(
         tab: eu.kanade.presentation.util.Tab,
         navigationSuiteType: NavigationSuiteType,
@@ -200,6 +255,72 @@ object HomeScreen : Screen() {
             },
             badge = tabBadge(tab),
         )
+    }
+
+    @Composable
+    private fun FloatingNavItem(tab: eu.kanade.presentation.util.Tab) {
+        // Mirrors Miuix's FloatingNavigationBarItem, but takes a Painter so the
+        // tabs keep their existing icons (including the animated library icon).
+        // Miuix's own item only accepts an ImageVector.
+        val tabNavigator = LocalTabNavigator.current
+        val navigator = LocalNavigator.currentOrThrow
+        val scope = rememberCoroutineScope()
+        val selected = tabNavigator.current::class == tab::class
+        val interactionSource = remember { MutableInteractionSource() }
+        val isPressed by interactionSource.collectIsPressedAsState()
+        val tint = floatingNavItemTint(selected, isPressed)
+        val badge = tabBadge(tab)
+        Column(
+            modifier = Modifier
+                .selectable(
+                    selected = selected,
+                    onClick = {
+                        if (!selected) {
+                            tabNavigator.current = tab
+                        } else {
+                            scope.launch { tab.onReselect(navigator) }
+                        }
+                    },
+                    role = Role.Tab,
+                    interactionSource = interactionSource,
+                    indication = null,
+                ),
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
+            BadgedBox(
+                badge = { badge?.invoke() },
+                modifier = Modifier.padding(
+                    vertical = FloatingNavigationBarDefaults.IconPadding,
+                    horizontal = FloatingNavigationBarDefaults.IconPadding,
+                ),
+            ) {
+                Icon(
+                    painter = tab.options.icon!!,
+                    contentDescription = tab.options.title,
+                    modifier = Modifier.size(FloatingNavigationBarDefaults.IconSize),
+                    tint = tint,
+                )
+            }
+        }
+    }
+
+    @Composable
+    private fun floatingNavItemTint(selected: Boolean, isPressed: Boolean): Color {
+        // Same state opacity as Miuix's NavigationBarItemColors: the selected
+        // icon is full opacity, unselected is 40%, pressed dims further.
+        val base = MiuixTheme.colorScheme.onSurfaceContainer
+        return when {
+            isPressed && selected -> base.copy(
+                alpha = base.alpha * FloatingNavigationBarDefaults.SelectedPressedAlpha,
+            )
+            isPressed -> base.copy(
+                alpha = base.alpha * FloatingNavigationBarDefaults.UnselectedPressedAlpha,
+            )
+            selected -> base
+            else -> base.copy(
+                alpha = base.alpha * FloatingNavigationBarDefaults.UnselectedAlpha,
+            )
+        }
     }
 
     @Composable

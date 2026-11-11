@@ -52,7 +52,7 @@ class ComickApi(
                 .header(
                     "User-Agent",
                     buildString {
-                        append("Mihon/v${BuildConfig.VERSION_NAME} ")
+                        append("Tychii/v${BuildConfig.VERSION_NAME} ")
                         append("(${BuildConfig.APPLICATION_ID}) ${BuildConfig.COMMIT_SHA}) ")
                         append("(Android) (https://github.com/mihonapp/mihon)")
                     },

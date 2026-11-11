@@ -33,6 +33,10 @@ dependencies {
     implementation(libs.androidx.compose.foundation)
     implementation(libs.androidx.compose.material3)
     api(libs.androidx.compose.material3NavSuite)
+
+    // Miuix (HyperOS-style UI): the floating navigation bar + theme live here
+    api("top.yukonga.miuix.kmp:miuix-ui-android:0.9.4")
+    api("top.yukonga.miuix.kmp:miuix-preference-android:0.9.4")
     implementation(libs.androidx.compose.animation)
     implementation(libs.androidx.compose.animationGraphics)
     debugImplementation(libs.androidx.compose.uiTooling)
