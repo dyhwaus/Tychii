@@ -92,7 +92,39 @@ translucent `surfaceContainer` (0.75 alpha), which is KernelSU's own
 non-blur fallback. (An icon-plus-label variant with a selected-tab
 indicator pill was tried and reverted; the bar is icon-only.)
 
-## Settings + More pages (not restyled)
+## Neko style (2026-11-12)
+
+Tychii's UI now follows Neko (nekomangaorg/Neko), keeping the Miuix
+floating navigation bar. Neko is Material3 Expressive; Tychii already
+uses MaterialExpressiveTheme.
+
+- **Color scheme:** Neko's palette is now the default theme
+  (`NekoColorScheme`, `AppTheme.DEFAULT` → Neko, plus an explicit
+  `AppTheme.NEKO` entry). Primary `#FF124A` light / `#FCFC98` dark,
+  background `#FBFBFF` / `#1A1C1E`. The old default blue is still
+  available by picking another theme.
+- **Font (pending):** M PLUS Rounded 1c (OFL) is Neko's signature
+  rounded font, but the `.ttf` files are binary and cannot be pushed
+  with the text-only push tool. The font files are staged locally in
+  `res/font/mplus_rounded1c_*`; they still need to be uploaded to
+  GitHub (web upload) and `Typefaces.appTypography` wired into
+  `TachiyomiTheme.kt` before the rounded font takes effect. Until
+  then the app uses the default font.
+- **Library grid:** cover radius 12.dp with a 0.75.dp `#9D9D9D`
+  outline (`MangaCover`), grid gaps 16.dp horizontal / 4.dp vertical,
+  comfortable title below the cover in bodyMedium Medium (max 3
+  lines), compact title on a black gradient scrim.
+- **Floating bar:** selected tab now uses the app primary color
+  (Neko pink/yellow) instead of onSurfaceContainer; unselected uses
+  onSurfaceVariant. The bar itself is unchanged (Miuix pill, labels
+  toggle kept).
+- **Ripple:** primary color at 0.6 alpha for all states.
+- **Not done (and why):** Neko's Feed merge (Updates+History into
+  one tab) and its edge-attached NavigationBar are not copied —
+  Tychii keeps its 5 tabs and floating bar. The per-manga palette
+  detail screen, the search top bar, and the settings restyle are
+  also not done (settings stay original Mihon per the user's
+  "不变动其他页面"). The reader is untouched.
 
 The settings and More pages were restyled to Miuix on 2026-11-11 and
 reverted the same day at the user's request ("不变动其他页面"):

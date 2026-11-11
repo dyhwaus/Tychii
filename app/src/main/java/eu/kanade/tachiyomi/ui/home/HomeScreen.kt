@@ -340,19 +340,21 @@ object HomeScreen : Screen() {
 
     @Composable
     private fun floatingNavItemTint(selected: Boolean, isPressed: Boolean): Color {
-        // Same state opacity as Miuix's NavigationBarItemColors: the selected
-        // icon is full opacity, unselected is 40%, pressed dims further.
-        val base = MiuixTheme.colorScheme.onSurfaceContainer
+        // Neko-style: the selected tab uses the app primary color
+        // (#FF124A light / #FCFC98 dark), unselected uses onSurfaceVariant.
+        // Opacity follows Miuix's NavigationBarItemColors.
+        val selectedColor = MaterialTheme.colorScheme.primary
+        val unselectedColor = MaterialTheme.colorScheme.onSurfaceVariant
         return when {
-            isPressed && selected -> base.copy(
-                alpha = base.alpha * FloatingNavigationBarDefaults.SelectedPressedAlpha,
+            isPressed && selected -> selectedColor.copy(
+                alpha = selectedColor.alpha * FloatingNavigationBarDefaults.SelectedPressedAlpha,
             )
-            isPressed -> base.copy(
-                alpha = base.alpha * FloatingNavigationBarDefaults.UnselectedPressedAlpha,
+            isPressed -> unselectedColor.copy(
+                alpha = unselectedColor.alpha * FloatingNavigationBarDefaults.UnselectedPressedAlpha,
             )
-            selected -> base
-            else -> base.copy(
-                alpha = base.alpha * FloatingNavigationBarDefaults.UnselectedAlpha,
+            selected -> selectedColor
+            else -> unselectedColor.copy(
+                alpha = unselectedColor.alpha * FloatingNavigationBarDefaults.UnselectedAlpha,
             )
         }
     }

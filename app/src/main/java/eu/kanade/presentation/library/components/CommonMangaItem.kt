@@ -32,10 +32,10 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shadow
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import eu.kanade.presentation.manga.components.MangaCover
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.roundedfilled.PlayArrow
@@ -46,7 +46,8 @@ import tachiyomi.presentation.core.util.selectedBackground
 import tachiyomi.domain.manga.model.MangaCover as MangaCoverModel
 
 object CommonMangaItemDefaults {
-    val GridHorizontalSpacer = 4.dp
+    // Neko's grid gaps: 16.dp horizontal, 4.dp vertical.
+    val GridHorizontalSpacer = 16.dp
     val GridVerticalSpacer = 4.dp
 
     @Suppress("ConstPropertyName")
@@ -118,7 +119,8 @@ fun MangaCompactGridItem(
 }
 
 /**
- * Title overlay for [MangaCompactGridItem]
+ * Title overlay for [MangaCompactGridItem]: a black gradient scrim with
+ * white text, like Neko's compact grid.
  */
 @Composable
 private fun BoxScope.CoverTextOverlay(
@@ -127,14 +129,15 @@ private fun BoxScope.CoverTextOverlay(
 ) {
     Box(
         modifier = Modifier
-            .clip(RoundedCornerShape(bottomStart = 4.dp, bottomEnd = 4.dp))
+            .clip(RoundedCornerShape(bottomStart = 12.dp, bottomEnd = 12.dp))
             .background(
                 Brush.verticalGradient(
                     0f to Color.Transparent,
-                    1f to Color(0xAA000000),
+                    0.5f to Color(0x1A000000),
+                    1f to Color(0xDE000000),
                 ),
             )
-            .fillMaxHeight(0.33f)
+            .fillMaxHeight(0.5f)
             .fillMaxWidth()
             .align(Alignment.BottomCenter),
     )
@@ -180,7 +183,7 @@ fun MangaComfortableGridItem(
     onClick: () -> Unit,
     onLongClick: () -> Unit,
     isSelected: Boolean = false,
-    titleMaxLines: Int = 2,
+    titleMaxLines: Int = 3,
     coverAlpha: Float = 1f,
     coverBadgeStart: (@Composable RowScope.() -> Unit)? = null,
     coverBadgeEnd: (@Composable RowScope.() -> Unit)? = null,
@@ -219,7 +222,9 @@ fun MangaComfortableGridItem(
             GridItemTitle(
                 modifier = Modifier.padding(4.dp),
                 title = title,
-                style = MaterialTheme.typography.titleSmall,
+                style = MaterialTheme.typography.bodyMedium.copy(
+                    fontWeight = FontWeight.Medium,
+                ),
                 minLines = 2,
                 maxLines = titleMaxLines,
             )
@@ -276,8 +281,6 @@ private fun GridItemTitle(
     Text(
         modifier = modifier,
         text = title,
-        fontSize = 12.sp,
-        lineHeight = 18.sp,
         minLines = minLines,
         maxLines = maxLines,
         overflow = TextOverflow.Ellipsis,

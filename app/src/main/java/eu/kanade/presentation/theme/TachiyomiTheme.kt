@@ -2,9 +2,14 @@ package eu.kanade.presentation.theme
 
 import android.content.Context
 import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.material.ripple.RippleAlpha
 import androidx.compose.material3.ColorScheme
+import androidx.compose.material3.LocalRippleConfiguration
 import androidx.compose.material3.MaterialExpressiveTheme
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.RippleConfiguration
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
 import eu.kanade.domain.ui.model.AppTheme
@@ -15,6 +20,7 @@ import eu.kanade.presentation.theme.colorscheme.LavenderColorScheme
 import eu.kanade.presentation.theme.colorscheme.MidnightDuskColorScheme
 import eu.kanade.presentation.theme.colorscheme.MonetColorScheme
 import eu.kanade.presentation.theme.colorscheme.MonochromeColorScheme
+import eu.kanade.presentation.theme.colorscheme.NekoColorScheme
 import eu.kanade.presentation.theme.colorscheme.NordColorScheme
 import eu.kanade.presentation.theme.colorscheme.StrawberryColorScheme
 import eu.kanade.presentation.theme.colorscheme.TachiyomiColorScheme
@@ -68,17 +74,33 @@ private fun BaseTachiyomiTheme(
                 isAmoled = isAmoled,
             )
         },
+        // Neko's typography (M PLUS Rounded 1c) is applied once the font
+        // files are added to res/font; see TYCHII-MIUIX.md.
     ) {
-        // Miuix needs its own theme wrapper; it follows the same dark/light mode.
-        // Its colors stay on the library defaults (its surfaceContainer backs the
-        // floating navigation bar) rather than the app's custom palettes.
-        val miuixController = remember(isDark) {
-            ThemeController(
-                colorSchemeMode = if (isDark) ColorSchemeMode.Dark else ColorSchemeMode.Light,
-            )
-        }
-        MiuixTheme(controller = miuixController) {
-            content()
+        // Neko's ripple: primary color at 0.6 alpha for all states.
+        val rippleConfiguration = RippleConfiguration(
+            color = MaterialTheme.colorScheme.primary,
+            rippleAlpha = RippleAlpha(
+                draggedAlpha = 0.6f,
+                focusedAlpha = 0.6f,
+                hoveredAlpha = 0.6f,
+                pressedAlpha = 0.6f,
+            ),
+        )
+        CompositionLocalProvider(
+            LocalRippleConfiguration provides rippleConfiguration,
+        ) {
+            // Miuix needs its own theme wrapper; it follows the same dark/light mode.
+            // Its colors stay on the library defaults (its surfaceContainer backs the
+            // floating navigation bar) rather than the app's custom palettes.
+            val miuixController = remember(isDark) {
+                ThemeController(
+                    colorSchemeMode = if (isDark) ColorSchemeMode.Dark else ColorSchemeMode.Light,
+                )
+            }
+            MiuixTheme(controller = miuixController) {
+                content()
+            }
         }
     }
 }
@@ -102,7 +124,10 @@ private fun getThemeColorScheme(
 }
 
 private val colorSchemes: Map<AppTheme, BaseColorScheme> = mapOf(
-    AppTheme.DEFAULT to TachiyomiColorScheme,
+    // Neko is the default theme: its pink-red / pale-yellow palette is
+    // Tychii's look, matching Neko (nekomangaorg/Neko).
+    AppTheme.DEFAULT to NekoColorScheme,
+    AppTheme.NEKO to NekoColorScheme,
     AppTheme.CATPPUCCIN to CatppuccinColorScheme,
     AppTheme.TOKYONIGHT to TokyoNightColorScheme,
     AppTheme.GREEN_APPLE to GreenAppleColorScheme,
