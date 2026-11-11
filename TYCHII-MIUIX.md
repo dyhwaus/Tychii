@@ -49,18 +49,30 @@ It uses Miuix `Scaffold` with a `FloatingNavigationBar` in the
 color, drop shadow) that floats above the content, centered, with a
 26.dp bottom offset plus the navigation-bar inset.
 
-- The five tabs (Library, Updates, History, Browse, More) are icon-only,
-  matching Miuix's floating-bar design; the label is kept as the content
-  description. Selection is shown by icon opacity (full for selected,
-  40% for unselected), the same as Miuix's own item.
+- The five tabs (Library, Updates, History, Browse, More) show an icon
+  plus a label (11.sp), like KernelSU's bar, with a pill behind the
+  selected tab (`primary` at 0.15 alpha, animated) — KernelSU's
+  non-blur fallback indicator. Selection is also shown by icon opacity
+  (full for selected, 40% for unselected), the same as Miuix's own item.
 - The tab icons stay as `Painter`s, so the animated library icon is kept.
   Miuix's own `FloatingNavigationBarItem` only accepts an `ImageVector`,
   so `FloatingNavItem` mirrors it with a `Painter` instead.
 - The Updates / Browse count badges are kept (M3 `BadgedBox` + `Badge`).
 - The bar hides and shows with the existing `showBottomNav` events
-  (slide + fade). Tab content gets an extra 84.dp bottom padding
-  (52.dp bar height + 26.dp offset + shadow) so nothing hides behind it.
+  (slide + fade). Tab content gets an extra 96.dp bottom padding
+  (~60.dp bar height with labels + 26.dp offset + shadow) so nothing
+  hides behind it.
 - Tablets keep the Material3 navigation rail, unchanged.
+
+### KernelSU consistency
+
+The bar follows KernelSU's manager app (also built on Miuix 0.9.4):
+icon + label tabs and a selected-tab indicator pill. KernelSU's own
+bar is a custom liquid-glass implementation (backdrop blur + lens
+refraction + vibrancy, via `miuix-blur`, minSdk 33) — that effect is
+not available at Tychii's minSdk 26, so Tychii uses the translucent
+`surfaceContainer` (0.75 alpha) plus the pill indicator, which is
+KernelSU's own non-blur fallback.
 
 ### Floating bar transparency
 
