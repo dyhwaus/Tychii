@@ -1,11 +1,11 @@
 package eu.kanade.presentation.more.settings
 
 import androidx.compose.foundation.layout.RowScope
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
 import dev.icerock.moko.resources.StringResource
+import mihon.icons.materialsymbols.MaterialSymbols
+import mihon.icons.materialsymbols.automirroredrounded.ArrowBack
 import tachiyomi.presentation.core.i18n.stringResource
 import top.yukonga.miuix.kmp.basic.IconButton
 import top.yukonga.miuix.kmp.basic.Scaffold as MiuixScaffold
@@ -26,7 +26,7 @@ fun PreferenceScaffold(
                     if (onBackPressed != null) {
                         IconButton(onClick = onBackPressed) {
                             Icon(
-                                imageVector = Icons.AutoMirrored.Rounded.ArrowBack,
+                                imageVector = MaterialSymbols.AutoMirroredRounded.ArrowBack,
                                 contentDescription = null,
                             )
                         }
