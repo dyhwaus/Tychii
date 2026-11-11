@@ -1,10 +1,14 @@
 package eu.kanade.presentation.more.settings.widget
 
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Checkbox
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.unit.dp
+import top.yukonga.miuix.kmp.preference.CheckboxLocation
+import top.yukonga.miuix.kmp.preference.CheckboxPreference
 
 @Composable
 fun CheckboxPreferenceWidget(
@@ -16,20 +20,23 @@ fun CheckboxPreferenceWidget(
     enabled: Boolean = true,
     onCheckedChanged: (Boolean) -> Unit,
 ) {
-    TextPreferenceWidget(
-        modifier = modifier,
+    CheckboxPreference(
         title = title,
-        subtitle = subtitle,
-        icon = icon,
-        widget = {
-            Checkbox(
-                checked = checked,
-                onCheckedChange = null,
-                enabled = enabled,
-                modifier = Modifier.padding(start = TrailingWidgetBuffer),
-            )
+        checked = checked,
+        onCheckedChange = onCheckedChanged,
+        modifier = modifier,
+        summary = subtitle,
+        startAction = icon?.let {
+            {
+                Icon(
+                    imageVector = it,
+                    tint = MaterialTheme.colorScheme.primary,
+                    contentDescription = null,
+                    modifier = Modifier.padding(end = 6.dp),
+                )
+            }
         },
+        checkboxLocation = CheckboxLocation.End,
         enabled = enabled,
-        onPreferenceClick = { onCheckedChanged(!checked) },
     )
 }

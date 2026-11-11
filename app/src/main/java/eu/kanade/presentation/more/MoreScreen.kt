@@ -1,8 +1,12 @@
 package eu.kanade.presentation.more
 
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.material3.HorizontalDivider
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.unit.dp
 import eu.kanade.presentation.more.settings.widget.SwitchPreferenceWidget
@@ -25,6 +29,7 @@ import tachiyomi.presentation.core.components.ScrollbarLazyColumn
 import tachiyomi.presentation.core.components.material.Scaffold
 import tachiyomi.presentation.core.i18n.pluralStringResource
 import tachiyomi.presentation.core.i18n.stringResource
+import top.yukonga.miuix.kmp.basic.Card
 
 @Composable
 fun MoreScreen(
@@ -51,106 +56,110 @@ fun MoreScreen(
                 )
             }
             item {
-                SwitchPreferenceWidget(
-                    title = stringResource(MR.strings.label_downloaded_only),
-                    subtitle = stringResource(MR.strings.downloaded_only_summary),
-                    icon = MaterialSymbols.Rounded.CloudOff,
-                    checked = downloadedOnly,
-                    onCheckedChanged = onDownloadedOnlyChange,
-                )
-            }
-            item {
-                SwitchPreferenceWidget(
-                    title = stringResource(MR.strings.pref_incognito_mode),
-                    subtitle = stringResource(MR.strings.pref_incognito_mode_summary),
-                    icon = MaterialSymbols.Rounded.Eyeglasses2,
-                    checked = incognitoMode,
-                    onCheckedChanged = onIncognitoModeChange,
-                )
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 12.dp),
+                ) {
+                    SwitchPreferenceWidget(
+                        title = stringResource(MR.strings.label_downloaded_only),
+                        subtitle = stringResource(MR.strings.downloaded_only_summary),
+                        icon = MaterialSymbols.Rounded.CloudOff,
+                        checked = downloadedOnly,
+                        onCheckedChanged = onDownloadedOnlyChange,
+                    )
+                    SwitchPreferenceWidget(
+                        title = stringResource(MR.strings.pref_incognito_mode),
+                        subtitle = stringResource(MR.strings.pref_incognito_mode_summary),
+                        icon = MaterialSymbols.Rounded.Eyeglasses2,
+                        checked = incognitoMode,
+                        onCheckedChanged = onIncognitoModeChange,
+                    )
+                }
             }
 
-            item { HorizontalDivider() }
+            item { Spacer(modifier = Modifier.height(12.dp)) }
 
             item {
-                val downloadQueueState = downloadQueueStateProvider()
-                TextPreferenceWidget(
-                    title = stringResource(MR.strings.label_download_queue),
-                    subtitle = when (downloadQueueState) {
-                        DownloadQueueState.Stopped -> null
-                        is DownloadQueueState.Paused -> {
-                            val pending = downloadQueueState.pending
-                            if (pending == 0) {
-                                stringResource(MR.strings.paused)
-                            } else {
-                                "${stringResource(MR.strings.paused)} • ${
-                                    pluralStringResource(
-                                        MR.plurals.download_queue_summary,
-                                        count = pending,
-                                        pending,
-                                    )
-                                }"
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 12.dp),
+                ) {
+                    val downloadQueueState = downloadQueueStateProvider()
+                    TextPreferenceWidget(
+                        title = stringResource(MR.strings.label_download_queue),
+                        subtitle = when (downloadQueueState) {
+                            DownloadQueueState.Stopped -> null
+                            is DownloadQueueState.Paused -> {
+                                val pending = downloadQueueState.pending
+                                if (pending == 0) {
+                                    stringResource(MR.strings.paused)
+                                } else {
+                                    "${stringResource(MR.strings.paused)} • ${
+                                        pluralStringResource(
+                                            MR.plurals.download_queue_summary,
+                                            count = pending,
+                                            pending,
+                                        )
+                                    }"
+                                }
                             }
-                        }
-                        is DownloadQueueState.Downloading -> {
-                            val pending = downloadQueueState.pending
-                            pluralStringResource(MR.plurals.download_queue_summary, count = pending, pending)
-                        }
-                    },
-                    icon = MaterialSymbols.Rounded.Download,
-                    onPreferenceClick = onClickDownloadQueue,
-                )
-            }
-            item {
-                TextPreferenceWidget(
-                    title = stringResource(MR.strings.categories),
-                    icon = MaterialSymbols.AutoMirroredRounded.Label,
-                    onPreferenceClick = onClickCategories,
-                )
-            }
-            item {
-                TextPreferenceWidget(
-                    title = stringResource(MR.strings.label_stats),
-                    icon = MaterialSymbols.Rounded.QueryStats,
-                    onPreferenceClick = onClickStats,
-                )
-            }
-            item {
-                TextPreferenceWidget(
-                    title = stringResource(MR.strings.label_data_storage),
-                    icon = MaterialSymbols.Rounded.Storage,
-                    onPreferenceClick = onClickDataAndStorage,
-                )
+                            is DownloadQueueState.Downloading -> {
+                                val pending = downloadQueueState.pending
+                                pluralStringResource(MR.plurals.download_queue_summary, count = pending, pending)
+                            }
+                        },
+                        icon = MaterialSymbols.Rounded.Download,
+                        onPreferenceClick = onClickDownloadQueue,
+                    )
+                    TextPreferenceWidget(
+                        title = stringResource(MR.strings.categories),
+                        icon = MaterialSymbols.AutoMirroredRounded.Label,
+                        onPreferenceClick = onClickCategories,
+                    )
+                    TextPreferenceWidget(
+                        title = stringResource(MR.strings.label_stats),
+                        icon = MaterialSymbols.Rounded.QueryStats,
+                        onPreferenceClick = onClickStats,
+                    )
+                    TextPreferenceWidget(
+                        title = stringResource(MR.strings.label_data_storage),
+                        icon = MaterialSymbols.Rounded.Storage,
+                        onPreferenceClick = onClickDataAndStorage,
+                    )
+                }
             }
 
-            item { HorizontalDivider() }
+            item { Spacer(modifier = Modifier.height(12.dp)) }
 
             item {
-                TextPreferenceWidget(
-                    title = stringResource(MR.strings.label_settings),
-                    icon = MaterialSymbols.Rounded.Settings,
-                    onPreferenceClick = onClickSettings,
-                )
-            }
-            item {
-                TextPreferenceWidget(
-                    title = stringResource(MR.strings.label_support_us),
-                    icon = MaterialSymbols.RoundedFilled.VolunteerActivism,
-                    onPreferenceClick = onClickSupport,
-                )
-            }
-            item {
-                TextPreferenceWidget(
-                    title = stringResource(MR.strings.pref_category_about),
-                    icon = MaterialSymbols.Rounded.Info,
-                    onPreferenceClick = onClickAbout,
-                )
-            }
-            item {
-                TextPreferenceWidget(
-                    title = stringResource(MR.strings.label_help),
-                    icon = MaterialSymbols.AutoMirroredRounded.Help,
-                    onPreferenceClick = { uriHandler.openUri(Constants.URL_HELP) },
-                )
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 12.dp),
+                ) {
+                    TextPreferenceWidget(
+                        title = stringResource(MR.strings.label_settings),
+                        icon = MaterialSymbols.Rounded.Settings,
+                        onPreferenceClick = onClickSettings,
+                    )
+                    TextPreferenceWidget(
+                        title = stringResource(MR.strings.label_support_us),
+                        icon = MaterialSymbols.RoundedFilled.VolunteerActivism,
+                        onPreferenceClick = onClickSupport,
+                    )
+                    TextPreferenceWidget(
+                        title = stringResource(MR.strings.pref_category_about),
+                        icon = MaterialSymbols.Rounded.Info,
+                        onPreferenceClick = onClickAbout,
+                    )
+                    TextPreferenceWidget(
+                        title = stringResource(MR.strings.label_help),
+                        icon = MaterialSymbols.AutoMirroredRounded.Help,
+                        onPreferenceClick = { uriHandler.openUri(Constants.URL_HELP) },
+                    )
+                }
             }
         }
     }

@@ -74,6 +74,31 @@ not available at Tychii's minSdk 26, so Tychii uses the translucent
 `surfaceContainer` (0.75 alpha) plus the pill indicator, which is
 KernelSU's own non-blur fallback.
 
+## Settings + More pages (Miuix preference rows, 2026-11-11)
+
+All settings pages go through one central renderer, so the whole
+settings area was restyled in one place:
+
+- `SwitchPreferenceWidget` → Miuix `SwitchPreference`;
+  `TextPreferenceWidget` → Miuix `ArrowPreference`;
+  `CheckboxPreferenceWidget` → Miuix `CheckboxPreference`
+  (checkbox at the end). List/MultiSelect/EditText rows keep their
+  M3 dialogs for now; the row itself is now an ArrowPreference.
+- `PreferenceScreen.kt`: each settings group is now a Miuix `Card`
+  (16.dp corners, 12.dp side padding, 12.dp between groups) under its
+  group header, like KernelSU's settings. The search highlight scroll
+  index was updated for the new lazy structure (a highlighted row
+  scrolls to its group's Card).
+- `PreferenceScaffold.kt`: Miuix `Scaffold` + `SmallTopAppBar`
+  (back button + actions), covering all settings sub-pages.
+- `MoreScreen.kt`: the three sections (toggles, download/categories/
+  stats/storage, settings/support/about/help) are Miuix Cards;
+  dividers removed. The rows were already Miuix via the widgets above.
+- Not yet converted: the settings main list (`SettingsMainScreen`,
+  its own M3 Scaffold/AppBar + two-pane layout), the shared `AppBar`
+  (main tabs, manga detail), and the reader (explicitly excluded —
+  gesture-driven, high risk). No new dependencies; minSdk stays 26.
+
 ### Floating bar transparency
 
 The floating bar's background is `surfaceContainer` at 0.75 alpha, so

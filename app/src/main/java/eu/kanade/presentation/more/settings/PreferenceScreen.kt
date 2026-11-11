@@ -3,8 +3,9 @@ package eu.kanade.presentation.more.settings
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -15,6 +16,7 @@ import eu.kanade.presentation.more.settings.screen.SearchableSettings
 import eu.kanade.presentation.more.settings.widget.PreferenceGroupHeader
 import kotlinx.coroutines.delay
 import tachiyomi.presentation.core.components.ScrollbarLazyColumn
+import top.yukonga.miuix.kmp.basic.Card
 import kotlin.time.Duration.Companion.seconds
 
 /**
@@ -48,7 +50,8 @@ fun PreferenceScreen(
     ) {
         items.fastForEachIndexed { i, preference ->
             when (preference) {
-                // Create Preference Group
+                // Create Preference Group: a header above a Miuix Card
+                // holding the group's rows, like KernelSU's settings.
                 is Preference.PreferenceGroup -> {
                     if (!preference.visible) return@fastForEachIndexed
 
@@ -60,11 +63,19 @@ fun PreferenceScreen(
                             )
                         }
                     }
-                    items(preference.preferenceItems) { item ->
-                        PreferenceItem(
-                            item = item,
-                            highlightKey = highlightKey,
-                        )
+                    item {
+                        Card(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 12.dp),
+                        ) {
+                            preference.preferenceItems.forEach { item ->
+                                PreferenceItem(
+                                    item = item,
+                                    highlightKey = highlightKey,
+                                )
+                            }
+                        }
                     }
                     item {
                         if (i < items.lastIndex) {
@@ -85,16 +96,29 @@ fun PreferenceScreen(
     }
 }
 
+// The lazy list now has, per visible group, a header item, a single Card
+// item holding all of the group's rows, and a spacer item (except after
+// the last group). A highlighted row scrolls to its group's Card.
 private fun List<Preference>.findHighlightedIndex(highlightKey: String): Int {
-    return flatMap {
-        if (it is Preference.PreferenceGroup) {
-            buildList<String?> {
-                add(it.title) // Header
-                addAll(it.preferenceItems.map { groupItem -> groupItem.title })
-                add(null) // Spacer
+    var lazyIndex = 0
+    forEachIndexed { i, preference ->
+        when (preference) {
+            is Preference.PreferenceGroup -> {
+                if (!preference.visible) return@forEachIndexed
+                if (preference.title == highlightKey) return lazyIndex
+                lazyIndex++
+                val cardIndex = lazyIndex
+                if (preference.preferenceItems.any { it.title == highlightKey }) {
+                    return cardIndex
+                }
+                lazyIndex++
+                if (i < lastIndex) lazyIndex++
             }
-        } else {
-            listOf(it.title)
+            is Preference.PreferenceItem<*, *> -> {
+                if (preference.title == highlightKey) return lazyIndex
+                lazyIndex++
+            }
         }
-    }.indexOfFirst { it == highlightKey }
+    }
+    return -1
 }
