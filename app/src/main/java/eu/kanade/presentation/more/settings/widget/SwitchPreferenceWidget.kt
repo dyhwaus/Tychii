@@ -1,13 +1,16 @@
 package eu.kanade.presentation.more.settings.widget
 
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Switch
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.unit.dp
-import top.yukonga.miuix.kmp.preference.SwitchPreference
+import androidx.compose.ui.tooling.preview.PreviewLightDark
+import eu.kanade.presentation.theme.TachiyomiPreviewTheme
+import mihon.icons.materialsymbols.MaterialSymbols
+import mihon.icons.materialsymbols.rounded.Preview
 
 @Composable
 fun SwitchPreferenceWidget(
@@ -19,22 +22,54 @@ fun SwitchPreferenceWidget(
     enabled: Boolean = true,
     onCheckedChanged: (Boolean) -> Unit,
 ) {
-    SwitchPreference(
-        checked = checked,
-        onCheckedChange = onCheckedChanged,
-        title = title,
+    TextPreferenceWidget(
         modifier = modifier,
-        summary = subtitle,
-        startAction = icon?.let {
-            {
-                Icon(
-                    imageVector = it,
-                    tint = MaterialTheme.colorScheme.primary,
-                    contentDescription = null,
-                    modifier = Modifier.padding(end = 6.dp),
-                )
-            }
+        title = title,
+        subtitle = subtitle,
+        icon = icon,
+        widget = {
+            Switch(
+                checked = checked,
+                onCheckedChange = null,
+                enabled = enabled,
+                modifier = Modifier.padding(start = TrailingWidgetBuffer),
+            )
         },
         enabled = enabled,
+        onPreferenceClick = { onCheckedChanged(!checked) },
     )
+}
+
+@PreviewLightDark
+@Composable
+private fun SwitchPreferenceWidgetPreview() {
+    TachiyomiPreviewTheme {
+        Surface {
+            Column {
+                SwitchPreferenceWidget(
+                    title = "Text preference with icon",
+                    subtitle = "Text preference summary",
+                    icon = MaterialSymbols.Rounded.Preview,
+                    checked = true,
+                    onCheckedChanged = {},
+                )
+                SwitchPreferenceWidget(
+                    title = "Text preference",
+                    subtitle = "Text preference summary",
+                    checked = false,
+                    onCheckedChanged = {},
+                )
+                SwitchPreferenceWidget(
+                    title = "Text preference no summary",
+                    checked = false,
+                    onCheckedChanged = {},
+                )
+                SwitchPreferenceWidget(
+                    title = "Another text preference no summary",
+                    checked = false,
+                    onCheckedChanged = {},
+                )
+            }
+        }
+    }
 }

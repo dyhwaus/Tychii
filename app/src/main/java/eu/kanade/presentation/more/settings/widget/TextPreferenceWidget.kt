@@ -1,14 +1,20 @@
 package eu.kanade.presentation.more.settings.widget
 
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.unit.dp
-import top.yukonga.miuix.kmp.preference.ArrowPreference
+import androidx.compose.ui.tooling.preview.PreviewLightDark
+import eu.kanade.presentation.theme.TachiyomiPreviewTheme
+import mihon.icons.materialsymbols.MaterialSymbols
+import mihon.icons.materialsymbols.rounded.Preview
+import tachiyomi.presentation.core.util.secondaryItemAlpha
 
 @Composable
 fun TextPreferenceWidget(
@@ -21,24 +27,58 @@ fun TextPreferenceWidget(
     enabled: Boolean = true,
     onPreferenceClick: (() -> Unit)? = null,
 ) {
-    ArrowPreference(
-        title = title ?: "",
+    BasePreferenceWidget(
         modifier = modifier,
-        summary = subtitle,
-        startAction = icon?.let {
+        title = title,
+        subcomponent = if (!subtitle.isNullOrBlank()) {
             {
-                Icon(
-                    imageVector = it,
-                    tint = iconTint,
-                    contentDescription = null,
-                    modifier = Modifier.padding(end = 6.dp),
+                Text(
+                    text = subtitle,
+                    modifier = Modifier
+                        .padding(horizontal = PrefsHorizontalPadding)
+                        .secondaryItemAlpha(),
+                    style = MaterialTheme.typography.bodySmall,
+                    maxLines = 10,
                 )
             }
+        } else {
+            null
         },
-        endActions = {
-            widget?.invoke()
+        icon = if (icon != null) {
+            {
+                Icon(
+                    imageVector = icon,
+                    tint = iconTint,
+                    contentDescription = null,
+                )
+            }
+        } else {
+            null
         },
         onClick = onPreferenceClick,
+        widget = widget,
         enabled = enabled,
     )
+}
+
+@PreviewLightDark
+@Composable
+private fun TextPreferenceWidgetPreview() {
+    TachiyomiPreviewTheme {
+        Surface {
+            Column {
+                TextPreferenceWidget(
+                    title = "Text preference with icon",
+                    subtitle = "Text preference summary",
+                    icon = MaterialSymbols.Rounded.Preview,
+                    onPreferenceClick = {},
+                )
+                TextPreferenceWidget(
+                    title = "Text preference",
+                    subtitle = "Text preference summary",
+                    onPreferenceClick = {},
+                )
+            }
+        }
+    }
 }

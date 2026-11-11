@@ -1,15 +1,11 @@
 package eu.kanade.presentation.more.settings
 
 import androidx.compose.foundation.layout.RowScope
-import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
 import dev.icerock.moko.resources.StringResource
-import mihon.icons.materialsymbols.MaterialSymbols
-import mihon.icons.materialsymbols.automirroredrounded.ArrowBack
+import eu.kanade.presentation.components.AppBar
+import tachiyomi.presentation.core.components.material.Scaffold
 import tachiyomi.presentation.core.i18n.stringResource
-import top.yukonga.miuix.kmp.basic.IconButton
-import top.yukonga.miuix.kmp.basic.Scaffold as MiuixScaffold
-import top.yukonga.miuix.kmp.basic.SmallTopAppBar
 
 @Composable
 fun PreferenceScaffold(
@@ -18,21 +14,13 @@ fun PreferenceScaffold(
     onBackPressed: (() -> Unit)? = null,
     itemsProvider: @Composable () -> List<Preference>,
 ) {
-    MiuixScaffold(
+    Scaffold(
         topBar = {
-            SmallTopAppBar(
+            AppBar(
                 title = stringResource(titleRes),
-                navigationIcon = {
-                    if (onBackPressed != null) {
-                        IconButton(onClick = onBackPressed) {
-                            Icon(
-                                imageVector = MaterialSymbols.AutoMirroredRounded.ArrowBack,
-                                contentDescription = null,
-                            )
-                        }
-                    }
-                },
+                navigateUp = onBackPressed,
                 actions = actions,
+                scrollBehavior = it,
             )
         },
         content = { contentPadding ->

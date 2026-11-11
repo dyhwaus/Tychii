@@ -92,30 +92,18 @@ translucent `surfaceContainer` (0.75 alpha), which is KernelSU's own
 non-blur fallback. (An icon-plus-label variant with a selected-tab
 indicator pill was tried and reverted; the bar is icon-only.)
 
-## Settings + More pages (Miuix preference rows, 2026-11-11)
+## Settings + More pages (not restyled)
 
-All settings pages go through one central renderer, so the whole
-settings area was restyled in one place:
-
-- `SwitchPreferenceWidget` → Miuix `SwitchPreference`;
-  `TextPreferenceWidget` → Miuix `ArrowPreference`;
-  `CheckboxPreferenceWidget` → Miuix `CheckboxPreference`
-  (checkbox at the end). List/MultiSelect/EditText rows keep their
-  M3 dialogs for now; the row itself is now an ArrowPreference.
-- `PreferenceScreen.kt`: each settings group is now a Miuix `Card`
-  (16.dp corners, 12.dp side padding, 12.dp between groups) under its
-  group header, like KernelSU's settings. The search highlight scroll
-  index was updated for the new lazy structure (a highlighted row
-  scrolls to its group's Card).
-- `PreferenceScaffold.kt`: Miuix `Scaffold` + `SmallTopAppBar`
-  (back button + actions), covering all settings sub-pages.
-- `MoreScreen.kt`: the three sections (toggles, download/categories/
-  stats/storage, settings/support/about/help) are Miuix Cards;
-  dividers removed. The rows were already Miuix via the widgets above.
-- Not yet converted: the settings main list (`SettingsMainScreen`,
-  its own M3 Scaffold/AppBar + two-pane layout), the shared `AppBar`
-  (main tabs, manga detail), and the reader (explicitly excluded —
-  gesture-driven, high risk). No new dependencies; minSdk stays 26.
+The settings and More pages were restyled to Miuix on 2026-11-11 and
+reverted the same day at the user's request ("不变动其他页面"):
+`PreferenceScreen`, `PreferenceScaffold`, `MoreScreen`, and the
+`SwitchPreferenceWidget` / `TextPreferenceWidget` /
+`CheckboxPreferenceWidget` are back to Mihon's original Material3
+versions. Only the home screen (floating navigation bar), the icon,
+and the splash screen use Miuix / the new design. The "show
+navigation bar labels" setting below is the one exception: it adds a
+single switch row to the Appearance settings, and the home screen
+reads it.
 
 ### Floating bar transparency
 
