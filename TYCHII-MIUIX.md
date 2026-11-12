@@ -134,7 +134,27 @@ changed, and how to build.
   other category shows "书架 · 分类名". HomeScreen only applies the
   reported text while the Library tab is current, so other tabs keep
   their own titles and nothing needs resetting on tab switch. The
-  capsule still hides while searching or selecting.
+  capsule still hides while searching or selecting. Note: since the
+  pill search box below, the capsule is hidden on phones on the
+  Library, History and Browse tabs — the category then shows in the
+  search pill's hint ("搜索书架" / "搜索分类名") and in the category
+  tabs row instead; the capsule text above still applies wherever
+  the capsule is shown.
+- Search pill (2026-11-12, Neko-style): on phones the main tabs'
+  bare search icon is replaced by a rounded search box —
+  48.dp high, full pill radius, `surfaceContainerHigh` background,
+  search icon + hint text. `SearchToolbar` gained an opt-in
+  `pillSearch` parameter (default off); only the Library, History
+  and Browse (Extensions sub-tab) call sites pass it, and only on
+  phones (`!isTabletUi()`), so sub-pages (source browsing, global
+  search, migration search) keep the icon and tablets keep the icon
+  plus their toolbar title. Tapping the pill opens the search field
+  exactly like the icon did; the open state, focus, keyboard and
+  clear/close behaviour are untouched. The pill owns the top band
+  on those three phone tabs, so their title capsule yields to it
+  (their `showTitleCapsule` reports now also require `isTabletUi()`);
+  Updates and More keep the capsule. The Library hint carries the
+  category ("搜索" + category name), History's reads "搜索历史".
 - Top-bar action icons removed on phones (2026-11-12): the capsule
   shares its 64.dp band with each tab's toolbar, and the action icons
   sat under it (Library filter, Updates filter/calendar/refresh,

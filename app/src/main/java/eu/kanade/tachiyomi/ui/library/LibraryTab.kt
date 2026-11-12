@@ -35,6 +35,7 @@ import eu.kanade.presentation.library.components.LibraryToolbar
 import eu.kanade.presentation.manga.components.LibraryBottomActionMenu
 import eu.kanade.presentation.more.onboarding.GETTING_STARTED_URL
 import eu.kanade.presentation.util.Tab
+import eu.kanade.presentation.util.isTabletUi
 import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.data.library.LibraryUpdateWorker
 import eu.kanade.tachiyomi.ui.browse.source.globalsearch.GlobalSearchScreen
@@ -295,9 +296,15 @@ data object LibraryTab : Tab {
         }
 
         // The title capsule hides while selecting or searching (the
-        // selection counter / search field would sit under it).
-        LaunchedEffect(state.selectionMode, state.searchQuery) {
-            HomeScreen.showTitleCapsule(!state.selectionMode && state.searchQuery == null)
+        // selection counter / search field would sit under it), and on
+        // phones it yields to the pill search box, which owns the top
+        // band there instead. Tablets have no capsule, so the check
+        // there is a no-op.
+        val tabletUi = isTabletUi()
+        LaunchedEffect(state.selectionMode, state.searchQuery, tabletUi) {
+            HomeScreen.showTitleCapsule(
+                !state.selectionMode && state.searchQuery == null && tabletUi,
+            )
         }
 
         LaunchedEffect(state.isLoading) {

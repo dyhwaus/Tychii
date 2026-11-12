@@ -58,9 +58,12 @@ fun HistoryScreen(
         contentWindowInsets = WindowInsets(0, 0, 0, 0),
         topBar = { _ ->
             SearchToolbar(
-                // Phones show the page title in the centered capsule
-                // floating over the toolbar (HomeScreen); tablets keep the
-                // title here (no capsule).
+                // Phones show the Neko-style pill search box in the top
+                // band; the title capsule yields to it there (see
+                // HistoryTab). Tablets keep the search icon and their
+                // toolbar title (no capsule).
+                pillSearch = !isTabletUi(),
+                placeholderText = stringResource(MR.strings.action_search) + stringResource(MR.strings.history),
                 titleContent = { if (isTabletUi()) AppBarTitle(stringResource(MR.strings.history)) },
                 searchQuery = state.searchQuery,
                 onChangeSearchQuery = onSearchQueryChange,

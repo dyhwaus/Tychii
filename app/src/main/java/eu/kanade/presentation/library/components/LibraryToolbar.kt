@@ -70,6 +70,12 @@ private fun LibraryRegularToolbar(
 ) {
     val pillAlpha = if (isSystemInDarkTheme()) 0.12f else 0.08f
     SearchToolbar(
+        // Phones show the Neko-style pill search box in the top band;
+        // the title capsule yields to it there (see LibraryTab). The
+        // hint carries the category name, so it stays visible at the
+        // top. Tablets keep the search icon and their toolbar title.
+        pillSearch = !isTabletUi(),
+        placeholderText = stringResource(MR.strings.action_search) + title.text,
         titleContent = {
             // Phones show the page title in the centered capsule floating
             // over the toolbar (HomeScreen), so the toolbar's own title —

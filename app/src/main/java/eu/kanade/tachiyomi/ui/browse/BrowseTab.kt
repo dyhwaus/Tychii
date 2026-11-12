@@ -14,6 +14,7 @@ import cafe.adriel.voyager.navigator.tab.TabOptions
 import dev.zacsweers.metrox.viewmodel.metroViewModel
 import eu.kanade.presentation.components.TabbedScreen
 import eu.kanade.presentation.util.Tab
+import eu.kanade.presentation.util.isTabletUi
 import eu.kanade.presentation.util.rememberAnimatedVectorPainter
 import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.ui.browse.extension.ExtensionsViewModel
@@ -79,9 +80,12 @@ data object BrowseTab : Tab {
             onChangeSearchQuery = extensionsViewModel::search,
         )
         // The title capsule hides while the extensions search field is
-        // open (it would sit under the capsule).
-        LaunchedEffect(extensionsSearchQuery) {
-            HomeScreen.showTitleCapsule(extensionsSearchQuery == null)
+        // open (it would sit under the capsule), and on phones it yields
+        // to the pill search box, which owns the top band there instead.
+        // Tablets have no capsule, so the check there is a no-op.
+        val tabletUi = isTabletUi()
+        LaunchedEffect(extensionsSearchQuery, tabletUi) {
+            HomeScreen.showTitleCapsule(extensionsSearchQuery == null && tabletUi)
         }
         LaunchedEffect(Unit) {
             switchToExtensionTabChannel.receiveAsFlow()

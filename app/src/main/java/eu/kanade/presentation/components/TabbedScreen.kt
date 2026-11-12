@@ -51,9 +51,12 @@ fun TabbedScreen(
             val searchEnabled = tab.searchEnabled
 
             SearchToolbar(
-                // Phones show the page title in the centered capsule
-                // floating over the toolbar (HomeScreen); tablets keep the
-                // title here (no capsule).
+                // Phones show the Neko-style pill search box in the top
+                // band on the Extensions tab (the only sub-tab with
+                // search); the title capsule yields to it there (see
+                // BrowseTab). Tablets keep the search icon and their
+                // toolbar title (no capsule).
+                pillSearch = !isTabletUi(),
                 titleContent = { if (isTabletUi()) AppBarTitle(stringResource(titleRes)) },
                 searchEnabled = searchEnabled,
                 searchQuery = if (searchEnabled) searchQuery else null,
