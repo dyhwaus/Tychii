@@ -30,7 +30,6 @@ import tachiyomi.domain.history.model.HistoryWithRelations
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.components.material.padding
 import tachiyomi.presentation.core.i18n.stringResource
-import top.yukonga.miuix.kmp.basic.HorizontalDivider
 import top.yukonga.miuix.kmp.basic.IconButton
 import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle
@@ -109,7 +108,6 @@ fun HistoryItem(
                 )
             }
         }
-        HorizontalDivider(modifier = Modifier.padding(start = 16.dp))
     }
 }
 

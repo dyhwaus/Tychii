@@ -47,7 +47,6 @@ import tachiyomi.presentation.core.components.material.DISABLED_ALPHA
 import tachiyomi.presentation.core.components.material.padding
 import tachiyomi.presentation.core.i18n.stringResource
 import tachiyomi.presentation.core.util.selectedBackground
-import top.yukonga.miuix.kmp.basic.HorizontalDivider
 
 internal fun LazyListScope.updatesLastUpdatedItem(
     lastUpdated: Long,
@@ -246,6 +245,5 @@ private fun UpdatesUiItem(
                 onClick = { onDownloadChapter?.invoke(it) },
             )
         }
-        HorizontalDivider(modifier = Modifier.padding(start = 16.dp))
     }
 }

@@ -173,6 +173,10 @@ private fun UpdatesAppBar(
 ) {
     AppBar(
         modifier = modifier,
+        // Same as the Library page: the bar sits on the page background,
+        // not Miuix surface (pure black in dark mode). Action mode keeps
+        // AppBar's own tinted color, so null is passed then.
+        backgroundColor = if (actionModeCounter > 0) null else MaterialTheme.colorScheme.background,
         // Phones show the page title in the centered capsule floating over
         // the toolbar (HomeScreen); tablets keep the title here (no capsule).
         title = if (isTabletUi()) stringResource(MR.strings.label_recent_updates) else null,

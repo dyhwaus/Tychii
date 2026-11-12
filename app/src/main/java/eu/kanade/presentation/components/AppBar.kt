@@ -308,6 +308,10 @@ fun SearchToolbar(
     searchQuery: String?,
     onChangeSearchQuery: (String?) -> Unit,
     modifier: Modifier = Modifier,
+    // Null keeps AppBar's own default (Miuix surface). The five main tabs
+    // pass the page background so the bar melts into the list instead of
+    // drawing a black band across the top in dark mode.
+    backgroundColor: Color? = null,
     titleContent: @Composable () -> Unit = {},
     navigateUp: (() -> Unit)? = null,
     searchEnabled: Boolean = true,
@@ -339,6 +343,7 @@ fun SearchToolbar(
 
     AppBar(
         modifier = modifier,
+        backgroundColor = backgroundColor,
         titleContent = {
             if (searchQuery == null) return@AppBar titleContent()
 

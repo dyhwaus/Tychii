@@ -51,6 +51,9 @@ fun TabbedScreen(
             val searchEnabled = tab.searchEnabled
 
             SearchToolbar(
+                // The bar sits on the page background: AppBar's Miuix-surface
+                // default is pure black in dark mode and showed as a band.
+                backgroundColor = MaterialTheme.colorScheme.background,
                 titleContent = { if (isTabletUi()) AppBarTitle(stringResource(titleRes)) },
                 searchEnabled = searchEnabled,
                 searchQuery = if (searchEnabled) searchQuery else null,

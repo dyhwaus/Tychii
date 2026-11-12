@@ -70,6 +70,9 @@ private fun LibraryRegularToolbar(
 ) {
     val pillAlpha = if (isSystemInDarkTheme()) 0.12f else 0.08f
     SearchToolbar(
+        // The bar sits on the page background: AppBar's Miuix-surface
+        // default is pure black in dark mode and showed as a band.
+        backgroundColor = MaterialTheme.colorScheme.background,
         titleContent = {
             // Phones show the page title in the centered capsule floating
             // over the toolbar (HomeScreen), so the toolbar's own title —

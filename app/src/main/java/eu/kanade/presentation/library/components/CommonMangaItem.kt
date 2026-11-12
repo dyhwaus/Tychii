@@ -341,6 +341,9 @@ fun MangaListItem(
     isSelected: Boolean = false,
     coverAlpha: Float = 1f,
     onClickContinueReading: (() -> Unit)? = null,
+    // The Library tab hides the divider so the list is one continuous
+    // background; other lists keep it.
+    showDivider: Boolean = true,
 ) {
     Column {
         Row(
@@ -379,7 +382,9 @@ fun MangaListItem(
                 )
             }
         }
-        HorizontalDivider(modifier = Modifier.padding(start = 16.dp))
+        if (showDivider) {
+            HorizontalDivider(modifier = Modifier.padding(start = 16.dp))
+        }
     }
 }
 

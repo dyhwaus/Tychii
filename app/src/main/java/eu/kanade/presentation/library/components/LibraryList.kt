@@ -44,6 +44,9 @@ internal fun LibraryList(
         ) { libraryItem ->
             val manga = libraryItem.libraryManga.manga
             MangaListItem(
+                // No divider under each item: the list stays one
+                // continuous background instead of a ruled list.
+                showDivider = false,
                 isSelected = manga.id in selection,
                 title = manga.title,
                 coverData = MangaCover(

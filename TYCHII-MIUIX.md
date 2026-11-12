@@ -34,7 +34,19 @@ from Set.add/remove — both now carry an explicit `() -> Unit` type;
 picker; `TrackerSearch` used `onSurfaceVariant`, which Miuix's
 color scheme doesn't have — its Monet mapping sends Material
 `onSurfaceVariant` to `onSurfaceVariantActions`, so that's the tint
-now. The 0.1.2 release is the
+now. Seam unification 2026-11-12 (user screenshot of the Library
+page, dark mode): two splits — (1) the top toolbar band was pure
+black while the page is the theme background, because the shared
+AppBar paints Miuix `surface` by default; the four tab toolbars
+(Library, Updates, History, Browse via TabbedScreen) now pass
+`MaterialTheme.colorScheme.background` (SearchToolbar gained a
+`backgroundColor` passthrough for this; the AppBar default is
+unchanged so pushed screens keep their look, and action-mode tint
+is kept by passing null while selecting). (2) the list-item
+`HorizontalDivider` under every row drew a grey ruled line, so it
+is gone on the three tab lists: Library (new `showDivider = false`
+on MangaListItem, other callers keep the divider), Updates, History.
+The More tab has no toolbar and no list dividers. The 0.1.2 release is the
 full-page Miuix restyle (2026-11-12): every user-visible page except
 the reader now follows the Miuix style — settings, manga detail,
 browse/source/extensions/migration, updates/history list items,

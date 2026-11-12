@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
@@ -58,6 +59,9 @@ fun HistoryScreen(
         contentWindowInsets = WindowInsets(0, 0, 0, 0),
         topBar = { _ ->
             SearchToolbar(
+                // The bar sits on the page background: AppBar's Miuix-surface
+                // default is pure black in dark mode and showed as a band.
+                backgroundColor = MaterialTheme.colorScheme.background,
                 titleContent = { if (isTabletUi()) AppBarTitle(stringResource(MR.strings.history)) },
                 searchQuery = state.searchQuery,
                 onChangeSearchQuery = onSearchQueryChange,
