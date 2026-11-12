@@ -53,14 +53,47 @@ changed, and how to build.
   `layerBackdrop`, and never put the bar inside the recorded layer —
   either makes hwui recurse infinitely in `RenderNode::prepareTreeImpl`
   and crash on launch.
-- Toggle: `UiPreferences.bottomBarGlass` (`pref_bottom_bar_glass`,
-  default true), SwitchPreference in Settings → Appearance. On API < 32
-  it has no visible effect.
+- Style: one 3-state `UiPreferences.barStyle` (`BarStyle` enum in
+  `domain/ui/model`, key `pref_bar_style`, default `LIQUID_GLASS`)
+  controls BOTH the bottom bar and the title capsule: `OPAQUE` (solid
+  surfaceContainer), `TRANSLUCENT` (surfaceContainer at 0.75 alpha),
+  `LIQUID_GLASS` (blur + vibrancy + highlight; on API < 32 it resolves
+  to `TRANSLUCENT`). Setting is a ListPreference in Settings →
+  Appearance ("栏样式" / "Bar style"). The old boolean
+  `bottomBarGlass` / `pref_bottom_bar_glass` was removed.
 - `lens()` only works on `CornerBasedShape`, so the bar uses
   `RoundedCornerShape(32.dp)` (64.dp bar → capsule), not `CircleShape`.
 - Deliberately NOT ported: Wenku8Reader's main-screen Miuix components
   (MiuixPage / MiuixSection grouped cards), its reader, and its settings
   pages. Settings / More stay Material3 per the user's instruction.
+
+## Centered title capsule (2026-11-12)
+
+- Each main tab's page name is shown in a centered Miuix capsule at the
+  top (`MiuixCapsuleTitle` in `eu.kanade.presentation.miuix`), instead of
+  Mihon's top-left toolbar title. It is a floating overlay in HomeScreen's
+  outer Box (same layer as the bottom bar, OUTSIDE the recorded content
+  layer — the glass capsule consumes the same backdrop, so it must never
+  sit inside a tab's toolbar or content). It follows the same `BarStyle`
+  as the bottom bar (opaque / translucent / liquid glass); its glass is
+  blur + vibrancy + specular highlight only, no lens refraction, so the
+  small pill's text is never distorted.
+- The title comes from the current tab (`tabNavigator.current.options.title`)
+  and updates on tab switch. Each tab's own toolbar title is hidden on
+  phones only (gated on `!isTabletUi()` in LibraryToolbar, UpdatesAppBar,
+  HistoryScreen, TabbedScreen); tablets keep their top-left titles and get
+  no capsule. More has no toolbar title — its LogoHeader stays, so the
+  capsule partly overlaps the Taiji icon at scroll top.
+- The capsule hides while a tab is searching or selecting (the search
+  field / selection counter would sit under it): each tab reports via
+  `HomeScreen.showTitleCapsule` (Library: not selecting and no search
+  query; Updates: not selecting; History/Browse: no search query; More:
+  always shown). Sub-screens (manga detail, settings, reader) are
+  unaffected — the capsule is under pushed screens in the navigation
+  stack, and their own AppBars are untouched.
+- Library's category name + manga-count pill are hidden with its title on
+  phones (the capsule only shows "Library"); the category is still visible
+  in the category tabs row.
 
 ## What changed
 

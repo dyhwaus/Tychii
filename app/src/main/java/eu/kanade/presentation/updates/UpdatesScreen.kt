@@ -23,6 +23,7 @@ import eu.kanade.presentation.components.AppBar
 import eu.kanade.presentation.components.AppBarActions
 import eu.kanade.presentation.manga.components.ChapterDownloadAction
 import eu.kanade.presentation.manga.components.MangaBottomActionMenu
+import eu.kanade.presentation.util.isTabletUi
 import eu.kanade.tachiyomi.data.download.model.Download
 import eu.kanade.tachiyomi.ui.updates.UpdatesItem
 import eu.kanade.tachiyomi.ui.updates.UpdatesViewModel
@@ -168,7 +169,9 @@ private fun UpdatesAppBar(
 ) {
     AppBar(
         modifier = modifier,
-        title = stringResource(MR.strings.label_recent_updates),
+        // Phones show the page title in the centered capsule floating over
+        // the toolbar (HomeScreen); tablets keep the title here (no capsule).
+        title = if (isTabletUi()) stringResource(MR.strings.label_recent_updates) else null,
         actions = {
             AppBarActions(
                 listOf(

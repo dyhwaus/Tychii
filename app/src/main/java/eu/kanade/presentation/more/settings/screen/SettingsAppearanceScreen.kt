@@ -12,6 +12,7 @@ import androidx.core.app.ActivityCompat
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import eu.kanade.domain.ui.UiPreferences
+import eu.kanade.domain.ui.model.BarStyle
 import eu.kanade.domain.ui.model.TabletUiMode
 import eu.kanade.domain.ui.model.ThemeMode
 import eu.kanade.domain.ui.model.TimeFormat
@@ -170,10 +171,19 @@ object SettingsAppearanceScreen : SearchableSettings {
                     preference = uiPreferences.showNavBarLabels,
                     title = stringResource(MR.strings.pref_show_navbar_labels),
                 ),
-                Preference.PreferenceItem.SwitchPreference(
-                    preference = uiPreferences.bottomBarGlass,
-                    title = stringResource(MR.strings.pref_bottom_bar_glass),
-                    subtitle = stringResource(MR.strings.pref_bottom_bar_glass_summary),
+                Preference.PreferenceItem.ListPreference(
+                    preference = uiPreferences.barStyle,
+                    entries = BarStyle.entries
+                        .associateWith { stringResource(it.titleRes) },
+                    title = stringResource(MR.strings.pref_bar_style),
+                    subtitleProvider = { value, entries ->
+                        val current = entries[value]
+                        if (value == BarStyle.LIQUID_GLASS) {
+                            "$current — ${stringResource(MR.strings.pref_bar_style_glass_note)}"
+                        } else {
+                            current
+                        }
+                    },
                 ),
             ),
         )

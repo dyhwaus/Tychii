@@ -117,7 +117,8 @@ internal fun RowScope.FloatingBottomBarItem(
  * @param onSelected 拖动/点击切换后的回调
  * @param backdrop 页面内容的模糊源
  * @param tabsCount Tab 数量（拖动范围 0..tabsCount-1）
- * @param isBlurEnabled 是否启用玻璃（关闭时退化为实色胶囊）
+ * @param isBlurEnabled 是否启用玻璃（关闭时退化为纯色胶囊）
+ * @param containerAlpha 玻璃关闭时容器色的不透明度：1f 为不透明，0.75f 为半透明
  * @param isDark 深色主题：决定薄纱是提亮还是压暗
  */
 @Composable
@@ -129,6 +130,7 @@ internal fun MiuixLiquidBottomBar(
     tabsCount: Int,
     isDark: Boolean,
     isBlurEnabled: Boolean = true,
+    containerAlpha: Float = 1f,
     content: @Composable RowScope.() -> Unit,
 ) {
     // The pill shape MUST be a RoundedCornerShape, not CircleShape: the
@@ -140,7 +142,11 @@ internal fun MiuixLiquidBottomBar(
     val accentColor = MiuixTheme.colorScheme.primary
     val tabContentColor = MiuixTheme.colorScheme.onSurface
     val surfaceContainer = MiuixTheme.colorScheme.surfaceContainer
-    val containerColor = if (isBlurEnabled) surfaceContainer.copy(0.4f) else surfaceContainer
+    val containerColor = if (isBlurEnabled) {
+        surfaceContainer.copy(0.4f)
+    } else {
+        surfaceContainer.copy(alpha = containerAlpha)
+    }
 
     val tabsBackdrop = rememberLayerBackdrop()
     val density = LocalDensity.current

@@ -266,6 +266,12 @@ data object LibraryTab : Tab {
             HomeScreen.showBottomNav(!state.selectionMode)
         }
 
+        // The title capsule hides while selecting or searching (the
+        // selection counter / search field would sit under it).
+        LaunchedEffect(state.selectionMode, state.searchQuery) {
+            HomeScreen.showTitleCapsule(!state.selectionMode && state.searchQuery == null)
+        }
+
         LaunchedEffect(state.isLoading) {
             if (!state.isLoading) {
                 (context as? MainActivity)?.ready = true

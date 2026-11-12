@@ -21,6 +21,7 @@ import eu.kanade.tachiyomi.ui.browse.extension.extensionsTab
 import eu.kanade.tachiyomi.ui.browse.migration.sources.migrateSourceTab
 import eu.kanade.tachiyomi.ui.browse.source.globalsearch.GlobalSearchScreen
 import eu.kanade.tachiyomi.ui.browse.source.sourcesTab
+import eu.kanade.tachiyomi.ui.home.HomeScreen
 import eu.kanade.tachiyomi.ui.main.MainActivity
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.channels.Channel
@@ -77,6 +78,11 @@ data object BrowseTab : Tab {
             searchQuery = extensionsSearchQuery,
             onChangeSearchQuery = extensionsViewModel::search,
         )
+        // The title capsule hides while the extensions search field is
+        // open (it would sit under the capsule).
+        LaunchedEffect(extensionsSearchQuery) {
+            HomeScreen.showTitleCapsule(extensionsSearchQuery == null)
+        }
         LaunchedEffect(Unit) {
             switchToExtensionTabChannel.receiveAsFlow()
                 .collectLatest { state.scrollToPage(1) }

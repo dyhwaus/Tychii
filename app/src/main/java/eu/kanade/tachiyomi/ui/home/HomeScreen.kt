@@ -12,8 +12,11 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.material3.Badge
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -46,6 +49,8 @@ import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import cafe.adriel.voyager.navigator.tab.LocalTabNavigator
 import cafe.adriel.voyager.navigator.tab.TabNavigator
+import eu.kanade.domain.ui.model.BarStyle
+import eu.kanade.presentation.miuix.MiuixCapsuleTitle
 import eu.kanade.presentation.miuix.TychiiLiquidBar
 import eu.kanade.presentation.theme.isMiuixGlassSupported
 import eu.kanade.presentation.util.Screen
@@ -76,6 +81,7 @@ object HomeScreen : Screen() {
     private val librarySearchEvent = Channel<String>()
     private val openTabEvent = Channel<Tab>()
     private val showBottomNavEvent = Channel<Boolean>()
+    private val showTitleCapsuleEvent = Channel<Boolean>()
 
     @Suppress("ConstPropertyName")
     private const val TabFadeDuration = 200
@@ -104,12 +110,18 @@ object HomeScreen : Screen() {
         val showNavBarLabels by remember {
             context.appGraph.uiPreferences.showNavBarLabels
         }.collectAsState()
-        val bottomBarGlass by remember {
-            context.appGraph.uiPreferences.bottomBarGlass
+        val barStyle by remember {
+            context.appGraph.uiPreferences.barStyle
         }.collectAsState()
-        // Liquid glass only runs on API 32+; below that the bar falls back
-        // to a translucent solid color (see MiuixGlass.kt).
-        val glassEnabled = bottomBarGlass && isMiuixGlassSupported
+        // One style for both floating bars (bottom navigation + title
+        // capsule). Liquid glass only runs on API 32+; below that it
+        // behaves like translucent (see MiuixGlass.kt).
+        val effectiveBarStyle = if (barStyle == BarStyle.LIQUID_GLASS && !isMiuixGlassSupported) {
+            BarStyle.TRANSLUCENT
+        } else {
+            barStyle
+        }
+        val glassEnabled = effectiveBarStyle == BarStyle.LIQUID_GLASS
         // The blur source. Created unconditionally (it is only a handle);
         // it is only *applied* to the content layer when glass is enabled.
         val backdrop = rememberLayerBackdrop()
@@ -123,6 +135,13 @@ object HomeScreen : Screen() {
                 var showNavBar by remember { mutableStateOf(true) }
                 LaunchedEffect(Unit) {
                     showBottomNavEvent.receiveAsFlow().collectLatest { showNavBar = it }
+                }
+                // The title capsule hides while a tab's toolbar is in
+                // search or selection mode (its text field / counter would
+                // sit under the capsule). Each tab reports its own state.
+                var showTitleCapsule by remember { mutableStateOf(true) }
+                LaunchedEffect(Unit) {
+                    showTitleCapsuleEvent.receiveAsFlow().collectLatest { showTitleCapsule = it }
                 }
 
                 if (tabletUi) {
@@ -150,12 +169,13 @@ object HomeScreen : Screen() {
                     }
                 } else {
                     // Phones use the liquid-glass floating bar (Wenku8Reader
-                    // style). The bar must stay OUTSIDE the layer recorded by
-                    // the backdrop: the backdrop is applied only to the tab
-                    // content below, and the bar is a sibling in an outer
-                    // Box. Putting the bar inside the recorded layer would
-                    // make it blur itself and crash hwui (infinite recursion
-                    // in RenderNode::prepareTreeImpl — see Wenku8Reader's
+                    // style). The bar and the title capsule must stay OUTSIDE
+                    // the layer recorded by the backdrop: the backdrop is
+                    // applied only to the tab content below, and both bars
+                    // are siblings in an outer Box. Putting either inside
+                    // the recorded layer would make it blur itself and crash
+                    // hwui (infinite recursion in
+                    // RenderNode::prepareTreeImpl — see Wenku8Reader's
                     // MainScaffold for the two verified pitfalls).
                     Box(Modifier.fillMaxSize()) {
                         MiuixScaffold(
@@ -180,6 +200,32 @@ object HomeScreen : Screen() {
                                     ),
                             ) {
                                 TabContent(tabNavigator)
+                            }
+                        }
+                        // Centered page-title capsule, replacing the
+                        // top-left title of each tab's own toolbar. The Box
+                        // is the 64.dp toolbar band below the status bar,
+                        // and the capsule is centered in it. Hidden while
+                        // a tab is searching or selecting (see
+                        // showTitleCapsule above).
+                        Box(
+                            modifier = Modifier
+                                .align(Alignment.TopCenter)
+                                .statusBarsPadding()
+                                .height(64.dp)
+                                .fillMaxWidth(),
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            AnimatedVisibility(
+                                visible = showTitleCapsule,
+                                enter = fadeIn(),
+                                exit = fadeOut(),
+                            ) {
+                                MiuixCapsuleTitle(
+                                    title = tabNavigator.current.options.title,
+                                    barStyle = effectiveBarStyle,
+                                    backdrop = backdrop,
+                                )
                             }
                         }
                         AnimatedVisibility(
@@ -209,7 +255,7 @@ object HomeScreen : Screen() {
                                     }
                                 },
                                 showLabels = showNavBarLabels,
-                                glassEnabled = glassEnabled,
+                                barStyle = effectiveBarStyle,
                                 backdrop = backdrop,
                                 tabBadge = { tab -> tabBadge(tab) },
                             )
@@ -373,6 +419,10 @@ object HomeScreen : Screen() {
 
     suspend fun showBottomNav(show: Boolean) {
         showBottomNavEvent.send(show)
+    }
+
+    suspend fun showTitleCapsule(show: Boolean) {
+        showTitleCapsuleEvent.send(show)
     }
 
     sealed interface Tab {

@@ -22,6 +22,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.zIndex
 import dev.icerock.moko.resources.StringResource
+import eu.kanade.presentation.util.isTabletUi
 import kotlinx.coroutines.launch
 import tachiyomi.presentation.core.components.material.Scaffold
 import tachiyomi.presentation.core.components.material.TabText
@@ -44,7 +45,10 @@ fun TabbedScreen(
             val searchEnabled = tab.searchEnabled
 
             SearchToolbar(
-                titleContent = { AppBarTitle(stringResource(titleRes)) },
+                // Phones show the page title in the centered capsule
+                // floating over the toolbar (HomeScreen); tablets keep the
+                // title here (no capsule).
+                titleContent = { if (isTabletUi()) AppBarTitle(stringResource(titleRes)) },
                 searchEnabled = searchEnabled,
                 searchQuery = if (searchEnabled) searchQuery else null,
                 onChangeSearchQuery = onChangeSearchQuery,

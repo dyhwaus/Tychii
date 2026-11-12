@@ -117,6 +117,9 @@ data object UpdatesTab : Tab {
 
         LaunchedEffect(state.selectionMode) {
             HomeScreen.showBottomNav(!state.selectionMode)
+            // The title capsule hides in selection mode (the action-mode
+            // counter would sit under it).
+            HomeScreen.showTitleCapsule(!state.selectionMode)
         }
 
         LaunchedEffect(state.isLoading) {

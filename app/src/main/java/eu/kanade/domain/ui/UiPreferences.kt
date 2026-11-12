@@ -5,6 +5,7 @@ import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.Inject
 import dev.zacsweers.metro.SingleIn
 import eu.kanade.domain.ui.model.AppTheme
+import eu.kanade.domain.ui.model.BarStyle
 import eu.kanade.domain.ui.model.TabletUiMode
 import eu.kanade.domain.ui.model.ThemeMode
 import eu.kanade.domain.ui.model.TimeFormat
@@ -51,7 +52,10 @@ class UiPreferences(
 
     val showNavBarLabels: Preference<Boolean> = preferenceStore.getBoolean("pref_show_navbar_labels", true)
 
-    val bottomBarGlass: Preference<Boolean> = preferenceStore.getBoolean("pref_bottom_bar_glass", true)
+    // One style for both floating bars (bottom navigation + title capsule).
+    // LIQUID_GLASS is the default to preserve the current look; on API < 32
+    // it falls back to TRANSLUCENT (see HomeScreen).
+    val barStyle: Preference<BarStyle> = preferenceStore.getEnum("pref_bar_style", BarStyle.LIQUID_GLASS)
 
     companion object {
         fun dateFormat(format: String, locale: Locale): DateTimeFormatter = when (format) {
