@@ -10,13 +10,9 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.text.input.TextFieldLineLimits
 import androidx.compose.foundation.text.input.TextObfuscationMode
 import androidx.compose.foundation.text.input.rememberTextFieldState
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedSecureTextField
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
@@ -37,7 +33,6 @@ import androidx.compose.ui.semantics.contentType
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import dev.icerock.moko.resources.StringResource
 import eu.kanade.domain.track.model.AutoTrackState
@@ -59,12 +54,17 @@ import kotlinx.coroutines.withContext
 import mihon.app.di.appGraph
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.automirroredrounded.Help
-import mihon.icons.materialsymbols.rounded.Close
 import mihon.icons.materialsymbols.roundedfilled.Visibility
 import mihon.icons.materialsymbols.roundedfilled.VisibilityOff
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.components.material.padding
 import tachiyomi.presentation.core.i18n.stringResource
+import top.yukonga.miuix.kmp.basic.Button
+import top.yukonga.miuix.kmp.basic.ButtonDefaults
+import top.yukonga.miuix.kmp.basic.IconButton
+import top.yukonga.miuix.kmp.basic.Text as MiuixText
+import top.yukonga.miuix.kmp.basic.TextButton
+import top.yukonga.miuix.kmp.overlay.OverlayDialog
 
 object SettingsTrackingScreen : SearchableSettings {
 
@@ -217,23 +217,12 @@ object SettingsTrackingScreen : SearchableSettings {
         var processing by remember { mutableStateOf(false) }
         var inputError by remember { mutableStateOf(false) }
 
-        AlertDialog(
+        OverlayDialog(
+            show = true,
+            title = stringResource(MR.strings.login_title, tracker.name),
             onDismissRequest = onDismissRequest,
-            title = {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text(
-                        text = stringResource(MR.strings.login_title, tracker.name),
-                        modifier = Modifier.weight(1f),
-                    )
-                    IconButton(onClick = onDismissRequest) {
-                        Icon(
-                            imageVector = MaterialSymbols.Rounded.Close,
-                            contentDescription = stringResource(MR.strings.action_close),
-                        )
-                    }
-                }
-            },
-            text = {
+        ) {
+            Column {
                 Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                     OutlinedTextField(
                         modifier = Modifier
@@ -277,31 +266,32 @@ object SettingsTrackingScreen : SearchableSettings {
                         isError = inputError && !processing,
                     )
                 }
-            },
-            confirmButton = {
-                Button(
-                    modifier = Modifier.fillMaxWidth(),
-                    enabled = !processing && username.text.isNotBlank() && password.text.isNotBlank(),
-                    onClick = {
-                        scope.launch(Dispatchers.IO) {
-                            processing = true
-                            val result = checkLogin(
-                                context = context,
-                                tracker = tracker,
-                                username = username.text.toString(),
-                                password = password.text.toString(),
-                            )
-                            inputError = !result
-                            if (result) onDismissRequest()
-                            processing = false
-                        }
-                    },
-                ) {
-                    val id = if (processing) MR.strings.logging_in else MR.strings.login
-                    Text(text = stringResource(id))
                 }
-            },
-        )
+                Column(modifier = Modifier.padding(top = 12.dp)) {
+                    Button(
+                        modifier = Modifier.fillMaxWidth(),
+                        enabled = !processing && username.text.isNotBlank() && password.text.isNotBlank(),
+                        onClick = {
+                            scope.launch(Dispatchers.IO) {
+                                processing = true
+                                val result = checkLogin(
+                                    context = context,
+                                    tracker = tracker,
+                                    username = username.text.toString(),
+                                    password = password.text.toString(),
+                                )
+                                inputError = !result
+                                if (result) onDismissRequest()
+                                processing = false
+                            }
+                        },
+                    ) {
+                        val id = if (processing) MR.strings.logging_in else MR.strings.login
+                        MiuixText(text = stringResource(id))
+                    }
+                }
+            }
+        }
     }
 
     private suspend fun checkLogin(
@@ -327,40 +317,33 @@ object SettingsTrackingScreen : SearchableSettings {
         onDismissRequest: () -> Unit,
     ) {
         val context = LocalContext.current
-        AlertDialog(
+        OverlayDialog(
+            show = true,
+            title = stringResource(MR.strings.logout_title, tracker.name),
             onDismissRequest = onDismissRequest,
-            title = {
-                Text(
-                    text = stringResource(MR.strings.logout_title, tracker.name),
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier.fillMaxWidth(),
+        ) {
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                TextButton(
+                    text = stringResource(MR.strings.action_cancel),
+                    onClick = onDismissRequest,
+                    modifier = Modifier.weight(1f),
                 )
-            },
-            confirmButton = {
-                Row(horizontalArrangement = Arrangement.spacedBy(MaterialTheme.padding.extraSmall)) {
-                    OutlinedButton(
-                        modifier = Modifier.weight(1f),
-                        onClick = onDismissRequest,
-                    ) {
-                        Text(text = stringResource(MR.strings.action_cancel))
-                    }
-                    Button(
-                        modifier = Modifier.weight(1f),
-                        onClick = {
-                            tracker.logout()
-                            onDismissRequest()
-                            context.toast(MR.strings.logout_success)
-                        },
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = MaterialTheme.colorScheme.error,
-                            contentColor = MaterialTheme.colorScheme.onError,
-                        ),
-                    ) {
-                        Text(text = stringResource(MR.strings.logout))
-                    }
+                Button(
+                    modifier = Modifier.weight(1f),
+                    onClick = {
+                        tracker.logout()
+                        onDismissRequest()
+                        context.toast(MR.strings.logout_success)
+                    },
+                    colors = ButtonDefaults.buttonColors(
+                        color = MaterialTheme.colorScheme.error,
+                        contentColor = MaterialTheme.colorScheme.onError,
+                    ),
+                ) {
+                    MiuixText(text = stringResource(MR.strings.logout))
                 }
-            },
-        )
+            }
+        }
     }
 }
 

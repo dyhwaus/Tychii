@@ -337,9 +337,10 @@ uses MaterialExpressiveTheme.
 - **Not done (and why):** Neko's Feed merge (Updates+History into
   one tab) and its edge-attached NavigationBar are not copied —
   Tychii keeps its 5 tabs and floating bar. The per-manga palette
-  detail screen, the search top bar, and the settings restyle are
-  also not done (settings stay original Mihon per the user's
-  "不变动其他页面"). The reader is untouched.
+  detail screen and the search top bar are also not done. The
+  settings restyle, listed here as not done on 2026-11-12, was
+  done the same day after the user reversed "不变动其他页面" —
+  see "Settings pages" below. The reader is untouched.
 
 The settings and More pages were restyled to Miuix on 2026-11-11 and
 reverted the same day at the user's request ("不变动其他页面"):
@@ -350,7 +351,10 @@ versions. Only the home screen (floating navigation bar), the icon,
 and the splash screen use Miuix / the new design. The "show
 navigation bar labels" setting below is the one exception: it adds a
 single switch row to the Appearance settings, and the home screen
-reads it.
+reads it. (The settings revert itself was reversed on 2026-11-12:
+the user asked for all pages to be Miuix, and the settings pages
+were migrated then — see "Settings pages" below. Only the More
+page's revert note still applies to nothing; More is Miuix.)
 
 ### Floating bar transparency
 
@@ -388,17 +392,82 @@ no color.
 A rendered preview is in `~/workspace/imagine_media/` as
 `media-generation-tychii-icon-bw-preview-0-*.webp`.
 
+## Settings pages (2026-11-12)
+
+All settings pages are Miuix now (the 2026-11-11 "don't touch other
+pages" instruction was reversed by the user the next day). Only the
+presentation layer changed: ViewModels, data layer, navigation and
+setting keys are untouched, and every switch / option value /
+`onValueChanged` gate behaves as before. Appearance's nav-bar-labels
+switch and bar-style list are preserved.
+
+- **Central renderer** (`presentation/more/settings/`):
+  `PreferenceScaffold` is a Miuix `Scaffold` + `SmallTopAppBar`
+  (back icon is Mihon's `MaterialSymbols.AutoMirroredRounded.ArrowBack`,
+  not a Compose material icon); `PreferenceScreen` puts each
+  `PreferenceGroup` under a `SmallTitle` header and inside one Miuix
+  `Card` (12.dp side margins, 12.dp between groups, no dividers);
+  top-level items get a one-row card. Search-highlight scrolling counts
+  three lazy items per group (header, card, spacer). The highlight
+  blink (`highlightBackground`, M3 surfaceTint) is kept and applied to
+  the Miuix rows.
+- **Widgets** (`widget/`): `SwitchPreferenceWidget` /
+  `TextPreferenceWidget` / `CheckboxPreferenceWidget` are thin wrappers
+  over Miuix `SwitchPreference` / `ArrowPreference` /
+  `CheckboxPreference` (checkbox at the end, as before); row icons go in
+  the `startAction` slot as M3 icons in primary tint with 6.dp end
+  padding. `TextPreferenceWidget` always draws the Miuix arrow, even on
+  rows that are actions rather than navigation (e.g. About's version
+  row). `ListPreferenceWidget` is an `OverlaySpinnerPreference`
+  (value also stays in the subtitle, `showValue = false`); the
+  `ListPreferenceDialog` used by extension source settings is an
+  `OverlayDialog` with `RadioButtonPreference` rows. Multi-select uses
+  an `OverlayDialog` with Miuix `Checkbox` rows and OK-only submit.
+  Edit-text uses an `OverlayDialog` with a Miuix `TextField`. Sliders
+  use Miuix `SliderPreference` with an Int/Float round-trip.
+  `TrackingPreferenceWidget` is a Miuix `BasicComponent` row (logo,
+  name, username, refresh + green check). `InfoWidget` is Miuix text.
+  Theme mode is a Miuix `TabRow` (system / light / dark); the theme
+  preview list keeps its Material3 preview cards (the previews render
+  each theme, so M3 colors are the point). `TriStateListDialog` is an
+  `OverlayDialog` with Miuix `Checkbox` in `ToggleableState`
+  (indeterminate = excluded). Dialogs are the `Overlay*` variants
+  throughout (the window variants can crash when the host page is
+  replaced while the popup is showing); option lists are capped at
+  400.dp high and scroll.
+- **Main list** (`SettingsMainScreen`): Miuix `Scaffold` +
+  `SmallTopAppBar` with a Miuix search button; the ten entries are
+  `ArrowPreference` rows in a single grouped card. The tablet two-pane
+  structure (`TwoPanelBox`, selected row, `getPalerSurface`) is
+  unchanged; the per-row scroll-to-selected is gone (one card, nothing
+  to scroll to).
+- **About / search** (`AboutScreen`, `SettingsSearchScreen`): About
+  uses a Miuix top bar and one grouped card for its rows (LogoHeader
+  and the social links row are untouched); the search page keeps its
+  own text field in a plain Miuix top-bar row (Miuix `SearchBar` is a
+  full search UI and did not fit) and its M3 result rows.
+- **Data / Advanced / Tracking**: top-bar help buttons are Miuix
+  `IconButton`s; the backup create/restore segmented buttons are two
+  Miuix `Button`s; the export-column dialog, the Shizuku-missing
+  dialog and the tracking login/logout dialogs are `OverlayDialog`s.
+  The tracking login dialog keeps M3 text fields (username + secure
+  password with visibility toggle) inside the Miuix dialog shell; the
+  logout button keeps its red color via `ButtonDefaults.buttonColors`.
+- **Sub-pages (next batch, not yet done)**: language, licences,
+  clear-database, extension stores, backup create/restore, and the
+  debug screens are still Material3 and are the next batch.
+- **Kept Material3**: M3 text fields where Miuix has no equivalent
+  input (tracking login — Miuix `TextField` has no
+  `supportingText`/`isError`, so messages are plain text lines under
+  the field), M3 `CircularProgressIndicator`s, and the M3
+  `ScrollbarLazyColumn` / `LazyColumnWithAction` containers. The
+  not-yet-migrated sub-pages are still fully Material3.
+
 ## Deliberately NOT migrated
 
 - The app shell's other screens, top bars, dialogs and lists still use
-  Material3. Only the home navigation shell moved to Miuix.
-- The settings/preference widgets (`SwitchPreferenceWidget`,
-  `CheckboxPreferenceWidget`, `SettingsItems`, `LabeledCheckbox`,
-  `SectionCard`, `Slider`) were not swapped for Miuix's preference rows.
-  Miuix preferences are complete rows (title + summary + control in one
-  call) while Mihon's are split widgets, so that migration restructures
-  the settings screens rather than swapping widgets. It is the natural
-  next step.
+  Material3. Only the home navigation shell moved to Miuix. (Settings
+  pages are the exception since 2026-11-12 — see "Settings pages".)
 - No `miuix-blur`: the floating bar has no blurred backdrop (solid
   `surfaceContainer`). Blur would need minSdk 33.
 - `miuix-nav` was not adopted; Mihon's existing navigation stays.

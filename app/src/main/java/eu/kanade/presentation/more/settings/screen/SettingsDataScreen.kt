@@ -6,22 +6,15 @@ import android.net.Uri
 import androidx.activity.compose.ManagedActivityResultLauncher
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
-import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Checkbox
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MultiChoiceSegmentedButtonRow
-import androidx.compose.material3.SegmentedButton
-import androidx.compose.material3.SegmentedButtonDefaults
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.ReadOnlyComposable
@@ -36,6 +29,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalUriHandler
+import androidx.compose.ui.state.ToggleableState
+import androidx.compose.ui.unit.dp
 import androidx.core.net.toUri
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
@@ -68,9 +63,13 @@ import tachiyomi.domain.backup.service.BackupPreferences
 import tachiyomi.domain.manga.model.Manga
 import tachiyomi.domain.storage.service.StoragePreferences
 import tachiyomi.i18n.MR
-import tachiyomi.presentation.core.components.material.TextButton
 import tachiyomi.presentation.core.i18n.stringResource
 import tachiyomi.presentation.core.util.collectAsState
+import top.yukonga.miuix.kmp.basic.Button
+import top.yukonga.miuix.kmp.basic.Checkbox
+import top.yukonga.miuix.kmp.basic.IconButton
+import top.yukonga.miuix.kmp.basic.Text
+import top.yukonga.miuix.kmp.overlay.OverlayDialog
 
 object SettingsDataScreen : SearchableSettings {
 
@@ -214,24 +213,20 @@ object SettingsDataScreen : SearchableSettings {
                 ) {
                     BasePreferenceWidget(
                         subcomponent = {
-                            MultiChoiceSegmentedButtonRow(
+                            Row(
+                                horizontalArrangement = Arrangement.spacedBy(8.dp),
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .height(intrinsicSize = IntrinsicSize.Min)
                                     .padding(horizontal = PrefsHorizontalPadding),
                             ) {
-                                SegmentedButton(
-                                    modifier = Modifier.fillMaxHeight(),
-                                    checked = false,
-                                    onCheckedChange = { navigator.push(CreateBackupScreen()) },
-                                    shape = SegmentedButtonDefaults.itemShape(0, 2),
+                                Button(
+                                    onClick = { navigator.push(CreateBackupScreen()) },
+                                    modifier = Modifier.weight(1f),
                                 ) {
-                                    Text(stringResource(MR.strings.pref_create_backup))
+                                    Text(text = stringResource(MR.strings.pref_create_backup))
                                 }
-                                SegmentedButton(
-                                    modifier = Modifier.fillMaxHeight(),
-                                    checked = false,
-                                    onCheckedChange = {
+                                Button(
+                                    onClick = {
                                         scope.launch {
                                             if (!BackupRestoreWorker.isRunning(context.workManager)) {
                                                 if (DeviceUtil.isMiui && DeviceUtil.isMiuiOptimizationDisabled()) {
@@ -243,9 +238,9 @@ object SettingsDataScreen : SearchableSettings {
                                             }
                                         }
                                     },
-                                    shape = SegmentedButtonDefaults.itemShape(1, 2),
+                                    modifier = Modifier.weight(1f),
                                 ) {
-                                    Text(stringResource(MR.strings.pref_restore_backup))
+                                    Text(text = stringResource(MR.strings.pref_restore_backup))
                                 }
                             }
                         },
@@ -402,67 +397,72 @@ object SettingsDataScreen : SearchableSettings {
         var authorSelected by remember { mutableStateOf(options.includeAuthor) }
         var artistSelected by remember { mutableStateOf(options.includeArtist) }
 
-        AlertDialog(
+        OverlayDialog(
+            show = true,
+            title = stringResource(MR.strings.migration_dialog_what_to_include),
             onDismissRequest = onDismissRequest,
-            title = {
-                Text(text = stringResource(MR.strings.migration_dialog_what_to_include))
-            },
-            text = {
-                Column {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Checkbox(
-                            checked = titleSelected,
-                            onCheckedChange = { checked ->
-                                titleSelected = checked
-                                if (!checked) {
-                                    authorSelected = false
-                                    artistSelected = false
-                                }
-                            },
-                        )
-                        Text(text = stringResource(MR.strings.title))
-                    }
+        ) {
+            Column {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Checkbox(
+                        state = if (titleSelected) ToggleableState.On else ToggleableState.Off,
+                        modifier = Modifier.padding(end = 8.dp),
+                        onClick = {
+                            titleSelected = !titleSelected
+                            if (!titleSelected) {
+                                authorSelected = false
+                                artistSelected = false
+                            }
+                        },
+                    )
+                    Text(text = stringResource(MR.strings.title))
+                }
 
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Checkbox(
-                            checked = authorSelected,
-                            onCheckedChange = { authorSelected = it },
-                            enabled = titleSelected,
-                        )
-                        Text(text = stringResource(MR.strings.author))
-                    }
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Checkbox(
+                        state = if (authorSelected) ToggleableState.On else ToggleableState.Off,
+                        modifier = Modifier.padding(end = 8.dp),
+                        onClick = { authorSelected = !authorSelected },
+                        enabled = titleSelected,
+                    )
+                    Text(text = stringResource(MR.strings.author))
+                }
 
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Checkbox(
-                            checked = artistSelected,
-                            onCheckedChange = { artistSelected = it },
-                            enabled = titleSelected,
-                        )
-                        Text(text = stringResource(MR.strings.artist))
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Checkbox(
+                        state = if (artistSelected) ToggleableState.On else ToggleableState.Off,
+                        modifier = Modifier.padding(end = 8.dp),
+                        onClick = { artistSelected = !artistSelected },
+                        enabled = titleSelected,
+                    )
+                    Text(text = stringResource(MR.strings.artist))
+                }
+
+                Column(modifier = Modifier.padding(top = 12.dp)) {
+                    Button(
+                        onClick = {
+                            onConfirm(
+                                ExportOptions(
+                                    includeTitle = titleSelected,
+                                    includeAuthor = authorSelected,
+                                    includeArtist = artistSelected,
+                                ),
+                            )
+                            onDismissRequest()
+                        },
+                        modifier = Modifier.fillMaxWidth(),
+                    ) {
+                        Text(text = stringResource(MR.strings.action_save))
+                    }
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Button(
+                        onClick = onDismissRequest,
+                        modifier = Modifier.fillMaxWidth(),
+                    ) {
+                        Text(text = stringResource(MR.strings.action_cancel))
                     }
                 }
-            },
-            confirmButton = {
-                TextButton(
-                    onClick = {
-                        onConfirm(
-                            ExportOptions(
-                                includeTitle = titleSelected,
-                                includeAuthor = authorSelected,
-                                includeArtist = artistSelected,
-                            ),
-                        )
-                        onDismissRequest()
-                    },
-                ) {
-                    Text(text = stringResource(MR.strings.action_save))
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = onDismissRequest) {
-                    Text(text = stringResource(MR.strings.action_cancel))
-                }
-            },
-        )
+            }
+        }
     }
 }
