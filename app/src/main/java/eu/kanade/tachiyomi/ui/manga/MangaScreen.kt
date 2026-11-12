@@ -1,6 +1,7 @@
 package eu.kanade.tachiyomi.ui.manga
 
 import android.content.Context
+import android.graphics.Bitmap
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.systemBarsPadding
@@ -15,8 +16,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.core.graphics.drawable.toBitmap
 import androidx.core.net.toUri
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.palette.graphics.Palette
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.Navigator
 import cafe.adriel.voyager.navigator.currentOrThrow
@@ -49,8 +52,10 @@ import eu.kanade.tachiyomi.ui.reader.ReaderActivity
 import eu.kanade.tachiyomi.ui.setting.SettingsScreen
 import eu.kanade.tachiyomi.ui.webview.WebViewScreen
 import eu.kanade.tachiyomi.util.system.copyToClipboard
+import eu.kanade.tachiyomi.util.system.getBestColor
 import eu.kanade.tachiyomi.util.system.toShareIntent
 import eu.kanade.tachiyomi.util.system.toast
+import kotlin.math.roundToInt
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -83,6 +88,7 @@ class MangaScreen(
             }
 
         val state by viewModel.state.collectAsStateWithLifecycle()
+        val vibrantColor by viewModel.vibrantColor.collectAsStateWithLifecycle()
 
         if (state is MangaViewModel.State.Loading) {
             LoadingScreen()
@@ -108,6 +114,26 @@ class MangaScreen(
             state = successState,
             snackbarHostState = viewModel.snackbarHostState,
             nextUpdate = successState.manga.expectedNextUpdate,
+            vibrantColor = vibrantColor,
+            onGeneratePalette = { drawable ->
+                // Palette only needs the broad color masses, so the
+                // backdrop is downscaled before scanning.
+                val bitmap = drawable.toBitmap()
+                val scaled = if (bitmap.width > 200) {
+                    Bitmap.createScaledBitmap(
+                        bitmap,
+                        200,
+                        (bitmap.height * 200f / bitmap.width).roundToInt().coerceAtLeast(1),
+                        true,
+                    )
+                } else {
+                    bitmap
+                }
+                Palette.from(scaled).generate { palette ->
+                    val color = palette?.getBestColor() ?: return@generate
+                    viewModel.updateMangaColor(color)
+                }
+            },
             isTabletUi = isTabletUi(),
             chapterSwipeStartAction = viewModel.chapterSwipeStartAction,
             chapterSwipeEndAction = viewModel.chapterSwipeEndAction,

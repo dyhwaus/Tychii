@@ -6,6 +6,7 @@ import androidx.compose.animation.core.spring
 import androidx.compose.animation.graphics.res.animatedVectorResource
 import androidx.compose.animation.graphics.res.rememberAnimatedVectorPainter
 import androidx.compose.animation.graphics.vector.AnimatedImageVector
+import android.graphics.drawable.Drawable
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -64,8 +65,10 @@ import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import coil3.asDrawable
 import coil3.compose.AsyncImage
 import coil3.request.ImageRequest
+import coil3.request.allowHardware
 import coil3.request.crossfade
 import com.mikepenz.markdown.model.markdownAnnotator
 import com.mikepenz.markdown.model.markdownAnnotatorConfig
@@ -121,6 +124,10 @@ fun MangaInfoBox(
     onCoverClick: () -> Unit,
     doSearch: (query: String, global: Boolean) -> Unit,
     modifier: Modifier = Modifier,
+    // Cover-derived theme color (null = default theme). Only tints the
+    // backdrop overlay; text keeps its theme colors.
+    themeColor: Color? = null,
+    onGeneratePalette: ((Drawable) -> Unit)? = null,
 ) {
     Box(modifier = modifier) {
         // Backdrop
@@ -128,13 +135,21 @@ fun MangaInfoBox(
             Color.Transparent,
             MaterialTheme.colorScheme.background,
         )
+        val context = LocalContext.current
         AsyncImage(
-            model = ImageRequest.Builder(LocalContext.current)
+            model = ImageRequest.Builder(context)
                 .data(manga)
                 .crossfade(true)
+                // Hardware bitmaps cannot be read by Palette, so the
+                // backdrop decodes in software; only this request pays
+                // that cost, not the small cover below.
+                .allowHardware(false)
                 .build(),
             contentDescription = null,
             contentScale = ContentScale.Crop,
+            onSuccess = { result ->
+                onGeneratePalette?.invoke(result.result.image.asDrawable(context.resources))
+            },
             modifier = Modifier
                 .matchParentSize()
                 .drawWithContent {
@@ -146,6 +161,15 @@ fun MangaInfoBox(
                 .blur(4.dp)
                 .alpha(0.2f),
         )
+        // A faint wash of the cover color over the backdrop. Kept at a
+        // low alpha on purpose: the page stays close to the theme.
+        if (themeColor != null) {
+            Box(
+                modifier = Modifier
+                    .matchParentSize()
+                    .background(themeColor.copy(alpha = 0.25f)),
+            )
+        }
 
         // Manga & source info
         CompositionLocalProvider(LocalContentColor provides MaterialTheme.colorScheme.onSurface) {
@@ -187,6 +211,9 @@ fun MangaActionRow(
     onEditIntervalClicked: (() -> Unit)?,
     onEditCategory: (() -> Unit)?,
     modifier: Modifier = Modifier,
+    // Cover-derived accent for the active states (falls back to the
+    // theme primary when the cover has not produced a color yet).
+    accentColor: Color,
 ) {
     val defaultActionButtonColor = MaterialTheme.colorScheme.onSurface.copy(alpha = DISABLED_ALPHA)
 
@@ -208,7 +235,7 @@ fun MangaActionRow(
                 stringResource(MR.strings.add_to_library)
             },
             icon = if (favorite) MaterialSymbols.RoundedFilled.Favorite else MaterialSymbols.Rounded.Favorite,
-            color = if (favorite) MaterialTheme.colorScheme.primary else defaultActionButtonColor,
+            color = if (favorite) accentColor else defaultActionButtonColor,
             onClick = onAddToLibraryClicked,
             onLongClick = onEditCategory,
         )
@@ -223,7 +250,7 @@ fun MangaActionRow(
                 )
             },
             icon = MaterialSymbols.Rounded.HourglassEmpty,
-            color = if (isUserIntervalMode) MaterialTheme.colorScheme.primary else defaultActionButtonColor,
+            color = if (isUserIntervalMode) accentColor else defaultActionButtonColor,
             onClick = { onEditIntervalClicked?.invoke() },
         )
         MangaActionButton(
@@ -233,7 +260,7 @@ fun MangaActionRow(
                 pluralStringResource(MR.plurals.num_trackers, count = trackingCount, trackingCount)
             },
             icon = if (trackingCount == 0) MaterialSymbols.Rounded.Sync else MaterialSymbols.Rounded.Check,
-            color = if (trackingCount == 0) defaultActionButtonColor else MaterialTheme.colorScheme.primary,
+            color = if (trackingCount == 0) defaultActionButtonColor else accentColor,
             onClick = onTrackingClicked,
         )
         if (onWebViewClicked != null) {

@@ -140,6 +140,27 @@ changed, and how to build.
   search pill's hint ("搜索书架" / "搜索分类名") and in the category
   tabs row instead; the capsule text above still applies wherever
   the capsule is shown.
+- Detail page cover palette (2026-11-12, Neko-style, kept quiet): the
+  manga detail page now takes one color from its cover and uses it in
+  only two places — a faint 0.25-alpha wash over the backdrop image
+  and the active color of the action row (in-library / interval /
+  tracking). Title, author, description and chapter rows keep their
+  theme colors. The chain: the backdrop `AsyncImage` in `MangaInfoBox`
+  decodes with `.allowHardware(false)` (Palette cannot read hardware
+  bitmaps) and reports its drawable on success; the ui `MangaScreen`
+  downscales it to 200px wide and runs `Palette`, picking via Neko's
+  `getBestColor()` (adapted, with attribution header); the color lives
+  in `MangaViewModel.vibrantColor` (in-memory only, re-extracted on
+  each visit, no persistence, no setting switch); the presentation
+  `MangaScreen` derives the display color with `rememberThemeColor`,
+  which first clamps saturation to 0.4 (`Color.quietVibrant`, a Tychii
+  addition — Neko has no such step and can still come out garish)
+  and then applies Neko's luminance nudge (dark mode lightens toward
+  white, light mode darkens toward black). New dependency
+  `androidx.palette:palette:1.1.0`. If the cover fails to load, or no
+  swatch qualifies, the page silently stays on the default theme
+  colors. Scope deliberately kept small: no chapter-row / TopBar /
+  ripple / Snackbar tinting, no global theme change.
 - More page grouped cards (2026-11-12): the More page now uses Miuix
   grouped cards — one `Card` per group (`SwitchPreference` for the
   two switches, `ArrowPreference` for the five navigation rows), no

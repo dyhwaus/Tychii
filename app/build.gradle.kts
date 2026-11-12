@@ -248,6 +248,7 @@ dependencies {
     implementation(libs.androidx.biometric)
     implementation(libs.androidx.constraintLayout)
     implementation(libs.androidx.core)
+    implementation(libs.androidx.palette)
     implementation(libs.androidx.coreSplashScreen)
     implementation(libs.androidx.recyclerView)
     implementation(libs.androidx.viewPager)

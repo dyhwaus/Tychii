@@ -1,7 +1,9 @@
 package eu.kanade.presentation.manga
 
+import android.graphics.drawable.Drawable
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -23,6 +25,7 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SmallExtendedFloatingActionButton
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -36,6 +39,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalContext
@@ -56,11 +61,13 @@ import eu.kanade.presentation.manga.components.MangaInfoBox
 import eu.kanade.presentation.manga.components.MangaToolbar
 import eu.kanade.presentation.manga.components.MissingChapterCountListItem
 import eu.kanade.presentation.util.formatChapterNumber
+import androidx.core.graphics.ColorUtils
 import eu.kanade.tachiyomi.data.download.model.Download
 import eu.kanade.tachiyomi.source.getNameForMangaInfo
 import eu.kanade.tachiyomi.ui.manga.ChapterList
 import eu.kanade.tachiyomi.ui.manga.MangaViewModel
 import eu.kanade.tachiyomi.util.system.copyToClipboard
+import eu.kanade.tachiyomi.util.system.quietVibrant
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.roundedfilled.PlayArrow
 import tachiyomi.domain.chapter.model.Chapter
@@ -82,6 +89,10 @@ fun MangaScreen(
     state: MangaViewModel.State.Success,
     snackbarHostState: SnackbarHostState,
     nextUpdate: Instant?,
+    // Cover-derived theme color (null = default theme colors), and the
+    // callback the backdrop image uses to produce it.
+    vibrantColor: Int?,
+    onGeneratePalette: (Drawable) -> Unit,
     isTabletUi: Boolean,
     chapterSwipeStartAction: LibraryPreferences.ChapterSwipeAction,
     chapterSwipeEndAction: LibraryPreferences.ChapterSwipeAction,
@@ -128,6 +139,7 @@ fun MangaScreen(
     onInvertSelection: () -> Unit,
 ) {
     val context = LocalContext.current
+    val themeColor = rememberThemeColor(vibrantColor)
     val onCopyTagToClipboard: (tag: String) -> Unit = {
         if (it.isNotEmpty()) {
             context.copyToClipboard(it, it)
@@ -170,6 +182,8 @@ fun MangaScreen(
             onChapterSelected = onChapterSelected,
             onAllChapterSelected = onAllChapterSelected,
             onInvertSelection = onInvertSelection,
+            themeColor = themeColor,
+            onGeneratePalette = onGeneratePalette,
         )
     } else {
         MangaScreenLargeImpl(
@@ -207,6 +221,8 @@ fun MangaScreen(
             onChapterSelected = onChapterSelected,
             onAllChapterSelected = onAllChapterSelected,
             onInvertSelection = onInvertSelection,
+            themeColor = themeColor,
+            onGeneratePalette = onGeneratePalette,
         )
     }
 }
@@ -260,6 +276,10 @@ private fun MangaScreenSmallImpl(
     onChapterSelected: (ChapterList.Item, Boolean, Boolean) -> Unit,
     onAllChapterSelected: (Boolean) -> Unit,
     onInvertSelection: () -> Unit,
+
+    // Cover-derived theme color, null while unknown.
+    themeColor: Color?,
+    onGeneratePalette: (Drawable) -> Unit,
 ) {
     val chapterListState = rememberLazyListState()
 
@@ -378,6 +398,8 @@ private fun MangaScreenSmallImpl(
                             isStubSource = remember { state.source is StubSource },
                             onCoverClick = onCoverClicked,
                             doSearch = onSearch,
+                            themeColor = themeColor,
+                            onGeneratePalette = onGeneratePalette,
                         )
                     }
 
@@ -396,6 +418,7 @@ private fun MangaScreenSmallImpl(
                             onTrackingClicked = onTrackingClicked,
                             onEditIntervalClicked = onEditIntervalClicked,
                             onEditCategory = onEditCategoryClicked,
+                            accentColor = themeColor ?: MaterialTheme.colorScheme.primary,
                         )
                     }
 
@@ -493,6 +516,10 @@ fun MangaScreenLargeImpl(
     onChapterSelected: (ChapterList.Item, Boolean, Boolean) -> Unit,
     onAllChapterSelected: (Boolean) -> Unit,
     onInvertSelection: () -> Unit,
+
+    // Cover-derived theme color, null while unknown.
+    themeColor: Color?,
+    onGeneratePalette: (Drawable) -> Unit,
 ) {
     val layoutDirection = LocalLayoutDirection.current
     val density = LocalDensity.current
@@ -603,6 +630,8 @@ fun MangaScreenLargeImpl(
                             isStubSource = remember { state.source is StubSource },
                             onCoverClick = onCoverClicked,
                             doSearch = onSearch,
+                            themeColor = themeColor,
+                            onGeneratePalette = onGeneratePalette,
                         )
                         MangaActionRow(
                             favorite = state.manga.favorite,
@@ -615,6 +644,7 @@ fun MangaScreenLargeImpl(
                             onTrackingClicked = onTrackingClicked,
                             onEditIntervalClicked = onEditIntervalClicked,
                             onEditCategory = onEditCategoryClicked,
+                            accentColor = themeColor ?: MaterialTheme.colorScheme.primary,
                         )
                         ExpandableMangaDescription(
                             defaultExpandState = true,
@@ -806,5 +836,31 @@ private fun onChapterItemClick(
         chapterItem.selected -> onToggleSelection(false)
         isAnyChapterSelected -> onToggleSelection(true)
         else -> onChapterClicked(chapterItem.chapter)
+    }
+}
+
+/**
+ * Derives the detail page's quiet theme color from the cover's vibrant
+ * color, or null while the cover has not produced one. Saturation is
+ * already clamped by [quietVibrant]; the luminance nudge below is
+ * adapted from Neko's getButtonThemeColor
+ * (https://github.com/nekomangaorg/Neko): in dark mode dim colors are
+ * lightened toward white, in light mode bright ones are darkened toward
+ * black, so the color stays readable on the page background.
+ */
+@Composable
+private fun rememberThemeColor(vibrantColor: Int?): Color? {
+    val isDark = isSystemInDarkTheme()
+    return remember(vibrantColor, isDark) {
+        vibrantColor?.let { Color(it).quietVibrant() }?.let { color ->
+            val luminance = ColorUtils.calculateLuminance(color.toArgb()).toFloat()
+            val target = if (isDark) Color.White else Color.Black
+            val ratio = if (isDark) (-(luminance - 1)) * .33f else luminance * .3f
+            if ((isDark && luminance <= 0.6f) || (!isDark && luminance > 0.4f)) {
+                Color(ColorUtils.blendARGB(color.toArgb(), target.toArgb(), ratio))
+            } else {
+                color
+            }
+        }
     }
 }

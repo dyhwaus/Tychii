@@ -191,6 +191,15 @@ class MangaViewModel(
 
     private val isRefreshingData = MutableStateFlow(false)
 
+    // Cover-derived theme color for the detail page (in-memory only: it
+    // is re-extracted from the backdrop image each time the page opens).
+    private val _vibrantColor = MutableStateFlow<Int?>(null)
+    val vibrantColor: StateFlow<Int?> = _vibrantColor.asStateFlow()
+
+    fun updateMangaColor(color: Int) {
+        if (_vibrantColor.value != color) _vibrantColor.value = color
+    }
+
     private val downloadStates = MutableStateFlow(emptyMap<Long, Download.State>())
 
     // Progress ticks often, so only the download indicators that read it recompose instead of every tick rebuilding
