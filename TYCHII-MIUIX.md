@@ -12,7 +12,15 @@ Current version: **v0.1.2** (versionCode 41). Build fix 2026-11-12: the
 build failed with "No value passed for parameter 'state'". Fixed by
 passing `ToggleableState.On/Off` with `onClick = null` (the row
 handles the click); every other Miuix `Checkbox` call site in the
-app already used `state`. The 0.1.2 release is the
+app already used `state`. Two more missing imports from the same
+0.1.2 migration, fixed 2026-11-12: `CategoryDialogs.kt` used
+`Arrangement.End` with no `layout.Arrangement` import, and the
+detail page `MangaScreen.kt` used `0.dp` / `16.dp` (FAB offset,
+two layouts) with no `unit.dp` import — upstream had no `.dp`
+usage there at all, so the migration added the usage without the
+import. A tree-wide scan for missing `dp` / `sp` /
+`ToggleableState` / `Arrangement` / `asStateFlow` imports then
+came back clean. The 0.1.2 release is the
 full-page Miuix restyle (2026-11-12): every user-visible page except
 the reader now follows the Miuix style — settings, manga detail,
 browse/source/extensions/migration, updates/history list items,
