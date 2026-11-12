@@ -41,6 +41,7 @@ fun UpcomingItem(
         MangaCover.Book(
             modifier = Modifier.fillMaxHeight(),
             data = upcoming.asMangaCover(),
+            glassEffect = true,
         )
         Text(
             modifier = Modifier.weight(1f),

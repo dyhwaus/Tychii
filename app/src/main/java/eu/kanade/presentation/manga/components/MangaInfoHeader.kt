@@ -368,6 +368,7 @@ private fun MangaAndSourceTitlesLarge(
                 .build(),
             contentDescription = stringResource(MR.strings.manga_cover),
             onClick = onCoverClick,
+            glassEffect = true,
         )
         Spacer(modifier = Modifier.height(16.dp))
         MangaContentInfo(
@@ -411,6 +412,7 @@ private fun MangaAndSourceTitlesSmall(
                 .build(),
             contentDescription = stringResource(MR.strings.manga_cover),
             onClick = onCoverClick,
+            glassEffect = true,
         )
         Column(
             verticalArrangement = Arrangement.spacedBy(2.dp),

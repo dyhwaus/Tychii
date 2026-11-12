@@ -286,6 +286,7 @@ private fun SearchResultItem(
                 MangaCover.Book(
                     data = trackSearch.cover_url,
                     modifier = Modifier.height(96.dp),
+                    glassEffect = true,
                 )
                 Spacer(modifier = Modifier.width(12.dp))
                 Column {

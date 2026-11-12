@@ -192,6 +192,13 @@ uses MaterialExpressiveTheme.
   bottom-right, like laminated glass. Static on purpose — covers are
   opaque, so there is no backdrop blur, and a tilt-following
   highlight would recompose the whole grid on every sensor update.
+  The gloss is now on every manga cover in the app (not just the
+  bookshelf): the `glassEffect` flag on `MangaCover` is enabled at
+  all 12 call sites — bookshelf grid/list (`CommonMangaItem`),
+  source browsing (same components), History, Updates, Upcoming,
+  manga detail header (`MangaInfoHeader`, both layouts), tracker
+  search, migration list, duplicate-manga dialog, and the shared
+  `BaseMangaListItem`.
 - **Floating bar:** selected tab now uses the app primary color
   (Neko pink/yellow) instead of onSurfaceContainer; unselected uses
   onSurfaceVariant. The bar itself is unchanged (Miuix pill, labels

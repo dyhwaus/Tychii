@@ -57,6 +57,7 @@ fun HistoryItem(
             modifier = Modifier.fillMaxHeight(),
             data = history.coverData,
             onClick = onClickCover,
+            glassEffect = true,
         )
         Column(
             modifier = Modifier
