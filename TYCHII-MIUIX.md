@@ -156,7 +156,10 @@ changed, and how to build.
   white, light mode darkens toward black). New dependency
   `androidx.palette:palette:1.1.0`. If the cover fails to load, or no
   swatch qualifies, the page silently stays on the default theme
-  colors. Scope deliberately kept small: no chapter-row / TopBar /
+  colors. Fix 2026-11-12: `MangaViewModel` was missing the
+  `kotlinx.coroutines.flow.asStateFlow` import, so the local build
+  failed with "Unresolved reference 'asStateFlow'" at the
+  `vibrantColor` declaration — one import line. Scope deliberately kept small: no chapter-row / TopBar /
   ripple / Snackbar tinting, no global theme change.
 - More page grouped cards (2026-11-12): the More page now uses Miuix
   grouped cards — one `Card` per group (`SwitchPreference` for the
