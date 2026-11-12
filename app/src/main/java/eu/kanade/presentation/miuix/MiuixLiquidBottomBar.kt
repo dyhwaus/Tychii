@@ -46,7 +46,6 @@ import androidx.compose.runtime.snapshotFlow
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.dropShadow
 import androidx.compose.ui.geometry.Offset
@@ -57,7 +56,6 @@ import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.semantics.Role
-import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastCoerceIn
@@ -65,15 +63,12 @@ import androidx.compose.ui.util.fastRoundToInt
 import androidx.compose.ui.util.lerp
 import eu.kanade.presentation.miuix.liquid.DampedDragAnimation
 import eu.kanade.presentation.miuix.liquid.InteractiveHighlight
-import eu.kanade.presentation.miuix.liquid.rememberCombinedBackdrop
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.launch
 import top.yukonga.miuix.kmp.blur.Backdrop
 import top.yukonga.miuix.kmp.blur.blur
 import top.yukonga.miuix.kmp.blur.drawBackdrop
-import top.yukonga.miuix.kmp.blur.layerBackdrop
-import top.yukonga.miuix.kmp.blur.rememberLayerBackdrop
 import top.yukonga.miuix.kmp.theme.LocalContentColor
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import kotlin.math.sign
@@ -148,7 +143,6 @@ internal fun MiuixLiquidBottomBar(
         surfaceContainer.copy(alpha = containerAlpha)
     }
 
-    val tabsBackdrop = rememberLayerBackdrop()
     val density = LocalDensity.current
     val isLtr = LocalLayoutDirection.current == LayoutDirection.Ltr
     val animationScope = rememberCoroutineScope()
@@ -251,8 +245,6 @@ internal fun MiuixLiquidBottomBar(
     val baseHighlight = rememberTiltBrightHighlight(extraDegrees = -45f)
     val pillHighlight = rememberTiltBrightHighlight(extraDegrees = 90f)
 
-    val combinedBackdrop = rememberCombinedBackdrop(backdrop, tabsBackdrop)
-
     Box(
         modifier = modifier.width(IntrinsicSize.Min),
         contentAlignment = Alignment.CenterStart,
@@ -318,44 +310,6 @@ internal fun MiuixLiquidBottomBar(
             }
         }
 
-        if (isBlurEnabled) {
-            // 第二层玻璃：同样绘制 Tab 内容，但用强调色 + 按压放大，并且**完全透明**
-            // （alpha(0f)）——它只作为 `tabsBackdrop` 的模糊源存在。
-            // 滑块再对"页面 + 这一层"做折射，于是选中项的强调色会出现在滑块玻璃内部。
-            CompositionLocalProvider(
-                LocalFloatingBottomBarTabScale provides {
-                    lerp(1f, 1.2f, dampedDragAnimation.pressProgress)
-                },
-                LocalContentColor provides accentColor,
-            ) {
-                Row(
-                    Modifier
-                        .clearAndSetSemantics {}
-                        .alpha(0f)
-                        .layerBackdrop(tabsBackdrop)
-                        .graphicsLayer { translationX = panelOffset }
-                        .drawBackdrop(
-                            backdrop = backdrop,
-                            shape = { pillShape },
-                            effects = {
-                                vibrancy()
-                                blur(4.dp.toPx(), 4.dp.toPx())
-                                lens(
-                                    refractionHeight = 24.dp.toPx(),
-                                    refractionAmount = 24.dp.toPx(),
-                                )
-                            },
-                            onDrawSurface = { drawRect(containerColor) },
-                        )
-                        .then(interactiveHighlight.modifier)
-                        .height(56.dp)
-                        .padding(horizontal = 4.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    content = content,
-                )
-            }
-        }
-
         if (tabWidthPx > 0f) {
             val tabWidthDp = with(density) { tabWidthPx.toDp() }
             if (isBlurEnabled) {
@@ -373,7 +327,16 @@ internal fun MiuixLiquidBottomBar(
                         .then(interactiveHighlight.gestureModifier)
                         .then(dampedDragAnimation.modifier)
                         .drawBackdrop(
-                            backdrop = combinedBackdrop,
+                            // The pill refracts the page backdrop directly.
+                            // (An earlier version also refracted a second,
+                            // invisible accent-colored layer so the pill
+                            // showed the selected tab's color inside it;
+                            // that duplicate full glass pass — vibrancy +
+                            // blur + lens on the whole bar, every frame —
+                            // cost too much GPU time for a subtle effect,
+                            // so it was removed. The selected icon itself
+                            // is still drawn in the accent color.)
+                            backdrop = backdrop,
                             shape = { pillShape },
                             effects = {
                                 val progress = dampedDragAnimation.pressProgress

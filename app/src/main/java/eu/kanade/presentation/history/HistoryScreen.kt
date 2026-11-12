@@ -1,6 +1,7 @@
 package eu.kanade.presentation.history
 
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.SnackbarHost
@@ -49,7 +50,13 @@ fun HistoryScreen(
     onDialogChange: (HistoryViewModel.Dialog?) -> Unit,
 ) {
     Scaffold(
-        topBar = { scrollBehavior ->
+        // Same as the Library page: HomeScreen's outer Scaffold already
+        // applies the system-bar insets, so this inner Scaffold must not
+        // re-apply them (dead strips top and bottom). And no scroll
+        // behavior on the toolbar: a pinned scroll behavior would tint
+        // the toolbar (surfaceTint overlay) as soon as the list scrolls.
+        contentWindowInsets = WindowInsets(0, 0, 0, 0),
+        topBar = { _ ->
             SearchToolbar(
                 // Phones show the page title in the centered capsule
                 // floating over the toolbar (HomeScreen); tablets keep the
@@ -70,7 +77,6 @@ fun HistoryScreen(
                         ),
                     )
                 },
-                scrollBehavior = scrollBehavior,
             )
         },
         snackbarHost = { SnackbarHost(hostState = snackbarHostState) },

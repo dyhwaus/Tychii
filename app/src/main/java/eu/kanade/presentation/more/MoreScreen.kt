@@ -1,6 +1,7 @@
 package eu.kanade.presentation.more
 
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.unit.dp
@@ -34,7 +35,12 @@ fun MoreScreen(
     onClickDataAndStorage: () -> Unit,
     onClickSettings: () -> Unit,
 ) {
-    Scaffold { contentPadding ->
+    Scaffold(
+        // Same as the Library page: HomeScreen's outer Scaffold already
+        // applies the system-bar insets, so this inner Scaffold must not
+        // re-apply them (dead strips top and bottom).
+        contentWindowInsets = WindowInsets(0, 0, 0, 0),
+    ) { contentPadding ->
         ScrollbarLazyColumn(contentPadding = contentPadding) {
             item {
                 LogoHeader(

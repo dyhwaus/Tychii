@@ -2,6 +2,7 @@ package eu.kanade.presentation.components
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.calculateEndPadding
 import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.layout.fillMaxSize
@@ -19,6 +20,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.zIndex
 import dev.icerock.moko.resources.StringResource
@@ -40,6 +42,10 @@ fun TabbedScreen(
     val snackbarHostState = remember { SnackbarHostState() }
 
     Scaffold(
+        // Same as the Library page: HomeScreen's outer Scaffold already
+        // applies the system-bar insets, so this inner Scaffold must not
+        // re-apply them (dead strips top and bottom).
+        contentWindowInsets = WindowInsets(0, 0, 0, 0),
         topBar = {
             val tab = tabs[state.currentPage]
             val searchEnabled = tab.searchEnabled
@@ -67,6 +73,10 @@ fun TabbedScreen(
             PrimaryTabRow(
                 selectedTabIndex = state.currentPage,
                 modifier = Modifier.zIndex(1f),
+                // No divider and no container color: the tab row must not
+                // draw a line or a band under the tabs.
+                containerColor = Color.Transparent,
+                divider = {},
             ) {
                 tabs.forEachIndexed { index, tab ->
                     Tab(

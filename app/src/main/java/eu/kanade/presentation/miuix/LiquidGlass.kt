@@ -8,6 +8,7 @@
 package eu.kanade.presentation.miuix
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.foundation.shape.CornerBasedShape
@@ -26,6 +27,7 @@ import top.yukonga.miuix.kmp.blur.highlight.LightSource
 import top.yukonga.miuix.kmp.blur.sensor.rememberDeviceTilt
 import kotlin.math.PI
 import kotlin.math.cos
+import kotlin.math.roundToInt
 import kotlin.math.sin
 import kotlin.math.sqrt
 
@@ -61,6 +63,11 @@ private const val LIGHT_REF_X = 0.5f
 private const val LIGHT_REF_Y = 0.7f
 private const val GRAVITY_DIR_THRESHOLD_SQ = 0.01f
 
+// Snap a gravity component to a 0.05 grid: fine enough that the highlight
+// moves smoothly when the phone tilts, coarse enough that sensor noise
+// (typically < 0.01) never changes the snapped value.
+private fun snapTilt(value: Float): Float = (value / 0.05f).roundToInt() * 0.05f
+
 /**
  * 让 [base] 的主光源**跟随手机倾角**旋转（可再叠加 [extraDegrees] 的固定偏角）。
  *
@@ -74,11 +81,24 @@ fun rememberTiltBrightHighlight(
     extraDegrees: Float = 0f,
 ): Highlight {
     val baseStyle = base.style as? BloomStroke ?: return base
-    val tilt by rememberDeviceTilt()
-    val rotatedPrimary = remember(tilt, baseStyle.primaryLight, extraDegrees) {
+    val tiltState = rememberDeviceTilt()
+    // The rotation sensor fires ~50x/s and writes state on every event.
+    // Reading it directly here would recompose the bar and capsule that
+    // often — a constant recomposition storm that competes with scrolling.
+    // Snap the gravity vector to a coarse grid via derivedStateOf, so
+    // downstream only re-reads when the snapped value actually changes:
+    // the highlight still follows real tilts, but sensor noise no longer
+    // recomposes anything.
+    val snappedGravity by remember {
+        derivedStateOf {
+            val tilt = tiltState.value
+            snapTilt(tilt.gravityX) to snapTilt(tilt.gravityY)
+        }
+    }
+    val rotatedPrimary = remember(snappedGravity, baseStyle.primaryLight, extraDegrees) {
         val basePrimary = baseStyle.primaryLight
-        val gx = tilt.gravityX
-        val gy = tilt.gravityY
+        val gx = snappedGravity.first
+        val gy = snappedGravity.second
         val magnitudeSq = gx * gx + gy * gy
         val (lx0, ly0) = if (magnitudeSq > GRAVITY_DIR_THRESHOLD_SQ) {
             val invMagnitude = 1f / sqrt(magnitudeSq)

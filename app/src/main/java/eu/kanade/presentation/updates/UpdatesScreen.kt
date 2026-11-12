@@ -2,6 +2,7 @@ package eu.kanade.presentation.updates
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -9,7 +10,6 @@ import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.TopAppBarScrollBehavior
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -72,7 +72,13 @@ fun UpdateScreen(
     val scope = rememberCoroutineScope()
 
     Scaffold(
-        topBar = { scrollBehavior ->
+        // Same as the Library page: HomeScreen's outer Scaffold already
+        // applies the system-bar insets, so this inner Scaffold must not
+        // re-apply them (dead strips top and bottom). And no scroll
+        // behavior on the toolbar: a pinned scroll behavior would tint
+        // the toolbar (surfaceTint overlay) as soon as the list scrolls.
+        contentWindowInsets = WindowInsets(0, 0, 0, 0),
+        topBar = { _ ->
             UpdatesAppBar(
                 onCalendarClicked = { onCalendarClicked() },
                 onUpdateLibrary = { scope.launch { onUpdateLibrary() } },
@@ -82,7 +88,6 @@ fun UpdateScreen(
                 onSelectAll = { onSelectAll(true) },
                 onInvertSelection = { onInvertSelection() },
                 onCancelActionMode = { onSelectAll(false) },
-                scrollBehavior = scrollBehavior,
             )
         },
         bottomBar = {
@@ -164,7 +169,6 @@ private fun UpdatesAppBar(
     onSelectAll: () -> Unit,
     onInvertSelection: () -> Unit,
     onCancelActionMode: () -> Unit,
-    scrollBehavior: TopAppBarScrollBehavior,
     modifier: Modifier = Modifier,
 ) {
     AppBar(
@@ -212,7 +216,8 @@ private fun UpdatesAppBar(
                 ),
             )
         },
-        scrollBehavior = scrollBehavior,
+        // No scroll behavior (see the Scaffold above): the toolbar must
+        // never tint while scrolling.
     )
 }
 

@@ -63,6 +63,21 @@ changed, and how to build.
   `bottomBarGlass` / `pref_bottom_bar_glass` was removed.
 - `lens()` only works on `CornerBasedShape`, so the bar uses
   `RoundedCornerShape(32.dp)` (64.dp bar → capsule), not `CircleShape`.
+- Performance (2026-11-12, user reported heavy lag while scrolling):
+  two fixes. (1) Tilt throttle: the rotation sensor fires ~50x/s and
+  `rememberDeviceTilt` writes state on every event, which recomposed
+  the bar (twice) and the capsule that often. `rememberTiltBrightHighlight`
+  now snaps the gravity vector to a 0.05 grid via `derivedStateOf`, so
+  the highlight still follows real tilts but sensor noise no longer
+  recomposes anything. (2) The bar's second, invisible glass layer
+  (an accent-colored copy of the tab content, alpha 0f, existing only
+  so the selected pill could refract the accent color inside it) ran
+  a full duplicate glass pass — vibrancy + blur + lens on the whole
+  bar, every frame — so it was removed; the pill now refracts the page
+  backdrop directly (`liquid/CombinedBackdrop.kt` is now unused). The
+  selected icon itself is still drawn in the accent color. The backdrop
+  itself is still re-recorded every scroll frame (inherent to liquid
+  glass); if lag remains, the next lever is the lens refraction.
 - Deliberately NOT ported: Wenku8Reader's main-screen Miuix components
   (MiuixPage / MiuixSection grouped cards), its reader, and its settings
   pages. Settings / More stay Material3 per the user's instruction.
@@ -107,6 +122,16 @@ changed, and how to build.
   (`divider = {}`, transparent container). The toolbar stays on the page
   background (surface == background in the Neko scheme), so it is
   invisible; only its action icons show.
+- The same treatment now applies to the other four main tabs (2026-11-12):
+  Updates (UpdatesScreen: no scroll behavior on UpdatesAppBar, inner
+  Scaffold `contentWindowInsets = WindowInsets(0, 0, 0, 0)`), History
+  (HistoryScreen: same for its SearchToolbar), Browse (TabbedScreen:
+  inner Scaffold insets zeroed, PrimaryTabRow `divider = {}` +
+  transparent container; its toolbar already had no scroll behavior),
+  More (MoreScreen: inner Scaffold insets zeroed; its two
+  HorizontalDividers between sections are deliberate content separators
+  and were kept). Selection/action-mode toolbar tint is untouched
+  (deliberate signal), sub-screens are untouched.
 
 ## What changed
 
