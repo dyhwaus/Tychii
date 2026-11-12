@@ -154,6 +154,12 @@ object HomeScreen : Screen() {
                     // Phones use a Miuix floating navigation bar: a detached
                     // pill that floats above the content.
                     MiuixScaffold(
+                        // The Scaffold background must match the app theme
+                        // background. Miuix's own dark surface is pure black
+                        // while the app background is #1A1C1E, and that
+                        // mismatch showed as a visible seam behind the
+                        // floating bar in dark mode.
+                        containerColor = MaterialTheme.colorScheme.background,
                         floatingToolbar = {
                             AnimatedVisibility(
                                 visible = showNavBar,
