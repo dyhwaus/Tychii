@@ -185,7 +185,13 @@ uses MaterialExpressiveTheme.
 - **Library grid:** cover radius 12.dp with a 0.75.dp `#9D9D9D`
   outline (`MangaCover`), grid gaps 16.dp horizontal / 4.dp vertical,
   comfortable title below the cover in bodyMedium Medium (max 3
-  lines), compact title on a black gradient scrim.
+  lines), compact title on a black gradient scrim. Bookshelf covers
+  also get a static glass gloss (`glassEffect = true`, only in
+  `CommonMangaItem`): a diagonal linear gradient, white 0.18 alpha
+  top-left fading to transparent with a faint black 0.08 edge at the
+  bottom-right, like laminated glass. Static on purpose — covers are
+  opaque, so there is no backdrop blur, and a tilt-following
+  highlight would recompose the whole grid on every sensor update.
 - **Floating bar:** selected tab now uses the app primary color
   (Neko pink/yellow) instead of onSurfaceContainer; unselected uses
   onSurfaceVariant. The bar itself is unchanged (Miuix pill, labels
