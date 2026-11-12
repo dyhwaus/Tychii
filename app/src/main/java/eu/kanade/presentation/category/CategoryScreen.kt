@@ -26,7 +26,7 @@ import tachiyomi.presentation.core.components.material.Scaffold
 import tachiyomi.presentation.core.components.material.padding
 import tachiyomi.presentation.core.components.material.topSmallPaddingValues
 import tachiyomi.presentation.core.i18n.stringResource
-import tachiyomi.presentation.core.screens.EmptyScreen
+import eu.kanade.presentation.components.QuietEmptyScreen
 import tachiyomi.presentation.core.util.plus
 
 @Composable
@@ -55,7 +55,7 @@ fun CategoryScreen(
         },
     ) { paddingValues ->
         if (state.isEmpty) {
-            EmptyScreen(
+            QuietEmptyScreen(
                 stringRes = MR.strings.information_empty_category,
                 modifier = Modifier.padding(paddingValues),
             )

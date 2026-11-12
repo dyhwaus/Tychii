@@ -1,9 +1,12 @@
 package eu.kanade.presentation.updates
 
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+import top.yukonga.miuix.kmp.basic.TextButton
+import top.yukonga.miuix.kmp.overlay.OverlayDialog
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.i18n.stringResource
 
@@ -12,23 +15,26 @@ fun UpdatesDeleteConfirmationDialog(
     onDismissRequest: () -> Unit,
     onConfirm: () -> Unit,
 ) {
-    AlertDialog(
-        text = {
-            Text(text = stringResource(MR.strings.confirm_delete_chapters))
-        },
+    OverlayDialog(
+        show = true,
+        summary = stringResource(MR.strings.confirm_delete_chapters),
         onDismissRequest = onDismissRequest,
-        confirmButton = {
-            TextButton(onClick = {
-                onConfirm()
-                onDismissRequest()
-            }) {
-                Text(text = stringResource(MR.strings.action_ok))
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismissRequest) {
-                Text(text = stringResource(MR.strings.action_cancel))
-            }
-        },
-    )
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.End,
+        ) {
+            TextButton(
+                text = stringResource(MR.strings.action_cancel),
+                onClick = onDismissRequest,
+            )
+            TextButton(
+                text = stringResource(MR.strings.action_ok),
+                onClick = {
+                    onConfirm()
+                    onDismissRequest()
+                },
+            )
+        }
+    }
 }

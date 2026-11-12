@@ -15,10 +15,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -42,8 +39,6 @@ import androidx.compose.ui.layout.LayoutCoordinates
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
-import androidx.compose.ui.unit.dp
-import eu.kanade.presentation.components.DropdownMenu
 import eu.kanade.tachiyomi.data.download.model.Download
 import eu.kanade.tachiyomi.source.model.Page
 import eu.kanade.tachiyomi.ui.download.DownloadQueueSection
@@ -61,6 +56,13 @@ import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.components.ListGroupHeader
 import tachiyomi.presentation.core.components.material.padding
 import tachiyomi.presentation.core.i18n.stringResource
+import top.yukonga.miuix.kmp.basic.DropdownDefaults
+import top.yukonga.miuix.kmp.basic.DropdownEntry
+import top.yukonga.miuix.kmp.basic.DropdownItem
+import top.yukonga.miuix.kmp.basic.IconButton
+import top.yukonga.miuix.kmp.basic.LinearProgressIndicator
+import top.yukonga.miuix.kmp.popup.OverlayDropdownPopup
+import top.yukonga.miuix.kmp.theme.MiuixTheme
 
 @Composable
 fun DownloadQueueList(
@@ -354,7 +356,7 @@ private fun ReorderableCollectionItemScope.DownloadQueueItem(
                     style = MaterialTheme.typography.bodySmall,
                 )
                 LinearProgressIndicator(
-                    progress = { animatedProgress },
+                    progress = animatedProgress,
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(top = MaterialTheme.padding.extraSmall),
@@ -404,61 +406,86 @@ private fun DownloadQueueItemMenu(
                 contentDescription = stringResource(MR.strings.action_menu),
             )
         }
-        DropdownMenu(expanded = expanded, onDismissRequest = closeMenu) {
-            if (canMoveToTop) {
-                DropdownMenuItem(
-                    text = { Text(stringResource(MR.strings.action_move_to_top)) },
-                    onClick = {
-                        closeMenu()
-                        onMove(true)
+        OverlayDropdownPopup(
+            entries = listOf(
+                DropdownEntry(
+                    items = buildList {
+                        if (canMoveToTop) {
+                            add(
+                                DropdownItem(
+                                    text = stringResource(MR.strings.action_move_to_top),
+                                    onClick = {
+                                        closeMenu()
+                                        onMove(true)
+                                    },
+                                ),
+                            )
+                        }
+                        add(
+                            DropdownItem(
+                                text = stringResource(MR.strings.action_move_to_top_all_for_series),
+                                onClick = {
+                                    closeMenu()
+                                    onMoveSeries(true)
+                                },
+                            ),
+                        )
+                        if (canMoveToBottom) {
+                            add(
+                                DropdownItem(
+                                    text = stringResource(MR.strings.action_move_to_bottom),
+                                    onClick = {
+                                        closeMenu()
+                                        onMove(false)
+                                    },
+                                ),
+                            )
+                        }
+                        add(
+                            DropdownItem(
+                                text = stringResource(MR.strings.action_move_to_bottom_all_for_series),
+                                onClick = {
+                                    closeMenu()
+                                    onMoveSeries(false)
+                                },
+                            ),
+                        )
+                        add(
+                            DropdownItem(
+                                text = stringResource(MR.strings.action_cancel),
+                                onClick = {
+                                    closeMenu()
+                                    onCancel()
+                                },
+                            ),
+                        )
+                        add(
+                            DropdownItem(
+                                text = stringResource(MR.strings.cancel_all_for_series),
+                                onClick = {
+                                    closeMenu()
+                                    onCancelSeries()
+                                },
+                            ),
+                        )
                     },
-                )
-            }
-            DropdownMenuItem(
-                text = { Text(stringResource(MR.strings.action_move_to_top_all_for_series)) },
-                onClick = {
-                    closeMenu()
-                    onMoveSeries(true)
-                },
-            )
-            if (canMoveToBottom) {
-                DropdownMenuItem(
-                    text = { Text(stringResource(MR.strings.action_move_to_bottom)) },
-                    onClick = {
-                        closeMenu()
-                        onMove(false)
-                    },
-                )
-            }
-            DropdownMenuItem(
-                text = { Text(stringResource(MR.strings.action_move_to_bottom_all_for_series)) },
-                onClick = {
-                    closeMenu()
-                    onMoveSeries(false)
-                },
-            )
-            DropdownMenuItem(
-                text = { Text(stringResource(MR.strings.action_cancel)) },
-                onClick = {
-                    closeMenu()
-                    onCancel()
-                },
-            )
-            DropdownMenuItem(
-                text = { Text(stringResource(MR.strings.cancel_all_for_series)) },
-                onClick = {
-                    closeMenu()
-                    onCancelSeries()
-                },
-            )
-        }
+                ),
+            ),
+            show = expanded,
+            onDismiss = closeMenu,
+            onDismissFinished = {},
+            maxHeight = null,
+            dropdownColors = DropdownDefaults.dropdownColors(),
+            renderInRootScaffold = true,
+            collapseOnSelection = true,
+        )
     }
 }
 
 // A neutral lifted surface while dragged, rather than Material's tertiaryContainer list tint
 @Composable
 private fun listItemContainerColor(isDragging: Boolean): Color {
-    return if (isDragging) MaterialTheme.colorScheme.surfaceContainerHigh else MaterialTheme.colorScheme.background
+    return if (isDragging) MiuixTheme.colorScheme.surfaceContainerHigh else MaterialTheme.colorScheme.background
 }
 
 @Composable

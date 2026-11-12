@@ -7,7 +7,6 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -31,6 +30,8 @@ import tachiyomi.domain.history.model.HistoryWithRelations
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.components.material.padding
 import tachiyomi.presentation.core.i18n.stringResource
+import top.yukonga.miuix.kmp.basic.HorizontalDivider
+import top.yukonga.miuix.kmp.basic.IconButton
 import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle
 
@@ -46,66 +47,69 @@ fun HistoryItem(
     onClickFavorite: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    Row(
-        modifier = modifier
-            .clickable(onClick = onClickResume)
-            .height(HistoryItemHeight)
-            .padding(horizontal = MaterialTheme.padding.medium, vertical = MaterialTheme.padding.small),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        MangaCover.Book(
-            modifier = Modifier.fillMaxHeight(),
-            data = history.coverData,
-            onClick = onClickCover,
-        )
-        Column(
-            modifier = Modifier
-                .weight(1f)
-                .padding(start = MaterialTheme.padding.medium, end = MaterialTheme.padding.small),
+    Column {
+        Row(
+            modifier = modifier
+                .clickable(onClick = onClickResume)
+                .height(HistoryItemHeight)
+                .padding(horizontal = MaterialTheme.padding.medium, vertical = MaterialTheme.padding.small),
+            verticalAlignment = Alignment.CenterVertically,
         ) {
-            val textStyle = MaterialTheme.typography.bodyMedium
-            Text(
-                text = history.title,
-                fontWeight = FontWeight.SemiBold,
-                maxLines = 2,
-                overflow = TextOverflow.Ellipsis,
-                style = textStyle,
+            MangaCover.Book(
+                modifier = Modifier.fillMaxHeight(),
+                data = history.coverData,
+                onClick = onClickCover,
             )
-            val readAt = remember(timeFormatter, history.readAt) {
-                history.readAt?.toTimestampString(timeFormatter) ?: ""
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(start = MaterialTheme.padding.medium, end = MaterialTheme.padding.small),
+            ) {
+                val textStyle = MaterialTheme.typography.bodyMedium
+                Text(
+                    text = history.title,
+                    fontWeight = FontWeight.SemiBold,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
+                    style = textStyle,
+                )
+                val readAt = remember(timeFormatter, history.readAt) {
+                    history.readAt?.toTimestampString(timeFormatter) ?: ""
+                }
+                Text(
+                    text = if (history.chapterNumber > -1) {
+                        stringResource(
+                            MR.strings.recent_manga_time,
+                            formatChapterNumber(history.chapterNumber),
+                            readAt,
+                        )
+                    } else {
+                        readAt
+                    },
+                    modifier = Modifier.padding(top = 4.dp),
+                    style = textStyle,
+                )
             }
-            Text(
-                text = if (history.chapterNumber > -1) {
-                    stringResource(
-                        MR.strings.recent_manga_time,
-                        formatChapterNumber(history.chapterNumber),
-                        readAt,
-                    )
-                } else {
-                    readAt
-                },
-                modifier = Modifier.padding(top = 4.dp),
-                style = textStyle,
-            )
-        }
 
-        if (!history.coverData.isMangaFavorite) {
-            IconButton(onClick = onClickFavorite) {
+            if (!history.coverData.isMangaFavorite) {
+                IconButton(onClick = onClickFavorite) {
+                    Icon(
+                        imageVector = MaterialSymbols.Rounded.Favorite,
+                        contentDescription = stringResource(MR.strings.add_to_library),
+                        tint = MaterialTheme.colorScheme.onSurface,
+                    )
+                }
+            }
+
+            IconButton(onClick = onClickDelete) {
                 Icon(
-                    imageVector = MaterialSymbols.Rounded.Favorite,
-                    contentDescription = stringResource(MR.strings.add_to_library),
+                    imageVector = MaterialSymbols.Rounded.Delete,
+                    contentDescription = stringResource(MR.strings.action_delete),
                     tint = MaterialTheme.colorScheme.onSurface,
                 )
             }
         }
-
-        IconButton(onClick = onClickDelete) {
-            Icon(
-                imageVector = MaterialSymbols.Rounded.Delete,
-                contentDescription = stringResource(MR.strings.action_delete),
-                tint = MaterialTheme.colorScheme.onSurface,
-            )
-        }
+        HorizontalDivider(modifier = Modifier.padding(start = 16.dp))
     }
 }
 

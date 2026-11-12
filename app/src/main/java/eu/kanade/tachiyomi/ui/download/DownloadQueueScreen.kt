@@ -1,10 +1,10 @@
 package eu.kanade.tachiyomi.ui.download
 
 import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SmallExtendedFloatingActionButton
@@ -34,8 +34,6 @@ import cafe.adriel.voyager.navigator.currentOrThrow
 import dev.zacsweers.metrox.viewmodel.metroViewModel
 import eu.kanade.presentation.components.AppBar
 import eu.kanade.presentation.components.AppBarActions
-import eu.kanade.presentation.components.DropdownMenu
-import eu.kanade.presentation.components.NestedMenuItem
 import eu.kanade.presentation.download.DownloadQueueList
 import eu.kanade.presentation.util.Screen
 import mihon.icons.materialsymbols.MaterialSymbols
@@ -46,7 +44,11 @@ import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.components.Pill
 import tachiyomi.presentation.core.components.material.Scaffold
 import tachiyomi.presentation.core.i18n.stringResource
-import tachiyomi.presentation.core.screens.EmptyScreen
+import top.yukonga.miuix.kmp.basic.DropdownDefaults
+import top.yukonga.miuix.kmp.basic.DropdownEntry
+import top.yukonga.miuix.kmp.basic.DropdownItem
+import top.yukonga.miuix.kmp.popup.OverlayDropdownPopup
+import eu.kanade.presentation.components.QuietEmptyScreen
 
 object DownloadQueueScreen : Screen() {
 
@@ -111,59 +113,71 @@ object DownloadQueueScreen : Screen() {
                         if (downloadList.isNotEmpty()) {
                             var sortExpanded by remember { mutableStateOf(false) }
                             val onDismissRequest = { sortExpanded = false }
-                            DropdownMenu(
-                                expanded = sortExpanded,
-                                onDismissRequest = onDismissRequest,
-                            ) {
-                                NestedMenuItem(
-                                    text = { Text(text = stringResource(MR.strings.action_order_by_upload_date)) },
-                                    children = { closeMenu ->
-                                        DropdownMenuItem(
-                                            text = { Text(text = stringResource(MR.strings.action_newest)) },
-                                            onClick = {
-                                                viewModel.reorderQueue(
-                                                    { it.chapter.dateUpload },
-                                                    true,
-                                                )
-                                                closeMenu()
-                                            },
-                                        )
-                                        DropdownMenuItem(
-                                            text = { Text(text = stringResource(MR.strings.action_oldest)) },
-                                            onClick = {
-                                                viewModel.reorderQueue(
-                                                    { it.chapter.dateUpload },
-                                                    false,
-                                                )
-                                                closeMenu()
-                                            },
-                                        )
-                                    },
-                                )
-                                NestedMenuItem(
-                                    text = { Text(text = stringResource(MR.strings.action_order_by_chapter_number)) },
-                                    children = { closeMenu ->
-                                        DropdownMenuItem(
-                                            text = { Text(text = stringResource(MR.strings.action_asc)) },
-                                            onClick = {
-                                                viewModel.reorderQueue(
-                                                    { it.chapter.chapterNumber },
-                                                    false,
-                                                )
-                                                closeMenu()
-                                            },
-                                        )
-                                        DropdownMenuItem(
-                                            text = { Text(text = stringResource(MR.strings.action_desc)) },
-                                            onClick = {
-                                                viewModel.reorderQueue(
-                                                    { it.chapter.chapterNumber },
-                                                    true,
-                                                )
-                                                closeMenu()
-                                            },
-                                        )
-                                    },
+                            Box {
+                                OverlayDropdownPopup(
+                                    entries = listOf(
+                                        DropdownEntry(
+                                            items = listOf(
+                                                DropdownItem(
+                                                    text = stringResource(MR.strings.action_order_by_upload_date),
+                                                    children = listOf(
+                                                        DropdownItem(
+                                                            text = stringResource(MR.strings.action_newest),
+                                                            onClick = {
+                                                                viewModel.reorderQueue(
+                                                                    { it.chapter.dateUpload },
+                                                                    true,
+                                                                )
+                                                                onDismissRequest()
+                                                            },
+                                                        ),
+                                                        DropdownItem(
+                                                            text = stringResource(MR.strings.action_oldest),
+                                                            onClick = {
+                                                                viewModel.reorderQueue(
+                                                                    { it.chapter.dateUpload },
+                                                                    false,
+                                                                )
+                                                                onDismissRequest()
+                                                            },
+                                                        ),
+                                                    ),
+                                                ),
+                                                DropdownItem(
+                                                    text = stringResource(MR.strings.action_order_by_chapter_number),
+                                                    children = listOf(
+                                                        DropdownItem(
+                                                            text = stringResource(MR.strings.action_asc),
+                                                            onClick = {
+                                                                viewModel.reorderQueue(
+                                                                    { it.chapter.chapterNumber },
+                                                                    false,
+                                                                )
+                                                                onDismissRequest()
+                                                            },
+                                                        ),
+                                                        DropdownItem(
+                                                            text = stringResource(MR.strings.action_desc),
+                                                            onClick = {
+                                                                viewModel.reorderQueue(
+                                                                    { it.chapter.chapterNumber },
+                                                                    true,
+                                                                )
+                                                                onDismissRequest()
+                                                            },
+                                                        ),
+                                                    ),
+                                                ),
+                                            ),
+                                        ),
+                                    ),
+                                    show = sortExpanded,
+                                    onDismiss = onDismissRequest,
+                                    onDismissFinished = {},
+                                    maxHeight = null,
+                                    dropdownColors = DropdownDefaults.dropdownColors(),
+                                    renderInRootScaffold = true,
+                                    collapseOnSelection = true,
                                 )
                             }
 
@@ -220,7 +234,7 @@ object DownloadQueueScreen : Screen() {
             },
         ) { contentPadding ->
             if (downloadList.isEmpty()) {
-                EmptyScreen(
+                QuietEmptyScreen(
                     stringRes = MR.strings.information_no_downloads,
                     modifier = Modifier.padding(contentPadding),
                 )

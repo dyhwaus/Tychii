@@ -1,18 +1,17 @@
 package tachiyomi.presentation.core.components
 
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyItemScope
-import androidx.compose.material3.ElevatedCard
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import dev.icerock.moko.resources.StringResource
-import tachiyomi.presentation.core.components.material.padding
 import tachiyomi.presentation.core.i18n.stringResource
+import top.yukonga.miuix.kmp.basic.Card
+import top.yukonga.miuix.kmp.basic.SmallTitle
 
 @Composable
 fun LazyItemScope.SectionCard(
@@ -20,24 +19,14 @@ fun LazyItemScope.SectionCard(
     content: @Composable ColumnScope.() -> Unit,
 ) {
     if (titleRes != null) {
-        Text(
-            modifier = Modifier.padding(horizontal = MaterialTheme.padding.extraLarge),
-            text = stringResource(titleRes),
-            style = MaterialTheme.typography.titleSmall,
-        )
+        SmallTitle(text = stringResource(titleRes))
     }
 
-    ElevatedCard(
+    Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(
-                horizontal = MaterialTheme.padding.medium,
-                vertical = MaterialTheme.padding.small,
-            ),
-        shape = MaterialTheme.shapes.extraLarge,
-    ) {
-        Column(modifier = Modifier.padding(MaterialTheme.padding.medium)) {
-            content()
-        }
-    }
+            .padding(horizontal = 12.dp, vertical = 4.dp),
+        insideMargin = PaddingValues(16.dp),
+        content = content,
+    )
 }

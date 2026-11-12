@@ -15,7 +15,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyGridScope
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.material3.Checkbox
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExposedDropdownMenu
 import androidx.compose.material3.ExposedDropdownMenuAnchorType
@@ -37,6 +36,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.state.ToggleableState
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
@@ -48,9 +48,6 @@ import dev.icerock.moko.resources.StringResource
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.rounded.ArrowDownward
 import mihon.icons.materialsymbols.rounded.ArrowUpward
-import mihon.icons.materialsymbols.rounded.CheckBoxOutlineBlank
-import mihon.icons.materialsymbols.roundedfilled.CheckBox
-import mihon.icons.materialsymbols.roundedfilled.DisabledByDefault
 import tachiyomi.core.common.preference.Preference
 import tachiyomi.core.common.preference.TriState
 import tachiyomi.core.common.preference.toggle
@@ -61,6 +58,7 @@ import tachiyomi.presentation.core.i18n.stringResource
 import tachiyomi.presentation.core.theme.header
 import tachiyomi.presentation.core.util.collectAsState
 import tachiyomi.presentation.core.util.secondaryItemAlpha
+import top.yukonga.miuix.kmp.basic.Checkbox
 
 object SettingsItemsPaddings {
     val Horizontal = 24.dp
@@ -345,21 +343,17 @@ fun TriStateItem(
     ) {
         val stateAlpha = if (enabled && onClick != null) 1f else DISABLED_ALPHA
 
-        Icon(
-            imageVector = when (state) {
-                TriState.DISABLED -> MaterialSymbols.Rounded.CheckBoxOutlineBlank
-                TriState.ENABLED_IS -> MaterialSymbols.RoundedFilled.CheckBox
-                TriState.ENABLED_NOT -> MaterialSymbols.RoundedFilled.DisabledByDefault
+        // Miuix has no tri-state checkbox at the preference layer, so the
+        // basic Checkbox is used with its ToggleableState (indeterminate
+        // means excluded), the same pattern as the settings TriStateListDialog.
+        Checkbox(
+            state = when (state) {
+                TriState.DISABLED -> ToggleableState.Off
+                TriState.ENABLED_IS -> ToggleableState.On
+                TriState.ENABLED_NOT -> ToggleableState.Indeterminate
             },
-            contentDescription = null,
-            tint = if (!enabled || state == TriState.DISABLED) {
-                MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = stateAlpha)
-            } else {
-                when (onClick) {
-                    null -> MaterialTheme.colorScheme.onSurface.copy(alpha = DISABLED_ALPHA)
-                    else -> MaterialTheme.colorScheme.primary
-                }
-            },
+            onClick = null,
+            enabled = enabled && onClick != null,
         )
         Text(
             text = label,

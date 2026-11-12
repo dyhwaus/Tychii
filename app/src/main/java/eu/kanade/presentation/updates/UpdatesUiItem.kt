@@ -47,6 +47,7 @@ import tachiyomi.presentation.core.components.material.DISABLED_ALPHA
 import tachiyomi.presentation.core.components.material.padding
 import tachiyomi.presentation.core.i18n.stringResource
 import tachiyomi.presentation.core.util.selectedBackground
+import top.yukonga.miuix.kmp.basic.HorizontalDivider
 
 internal fun LazyListScope.updatesLastUpdatedItem(
     lastUpdated: Long,
@@ -157,91 +158,94 @@ private fun UpdatesUiItem(
     val haptic = LocalHapticFeedback.current
     val textAlpha = if (update.read) DISABLED_ALPHA else 1f
 
-    Row(
-        modifier = modifier
-            .selectedBackground(selected)
-            .combinedClickable(
-                onClick = onClick,
-                onLongClick = {
-                    onLongClick()
-                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                },
-            )
-            .height(56.dp)
-            .padding(horizontal = MaterialTheme.padding.medium),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        MangaCover.Square(
-            modifier = Modifier
-                .padding(vertical = 6.dp)
-                .fillMaxHeight(),
-            data = update.coverData,
-            onClick = onClickCover,
-        )
-
-        Column(
-            modifier = Modifier
-                .padding(horizontal = MaterialTheme.padding.medium)
-                .weight(1f),
+    Column {
+        Row(
+            modifier = modifier
+                .selectedBackground(selected)
+                .combinedClickable(
+                    onClick = onClick,
+                    onLongClick = {
+                        onLongClick()
+                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                    },
+                )
+                .height(56.dp)
+                .padding(horizontal = MaterialTheme.padding.medium),
+            verticalAlignment = Alignment.CenterVertically,
         ) {
-            Text(
-                text = update.mangaTitle,
-                maxLines = 1,
-                style = MaterialTheme.typography.bodyMedium,
-                color = LocalContentColor.current.copy(alpha = textAlpha),
-                overflow = TextOverflow.Ellipsis,
+            MangaCover.Square(
+                modifier = Modifier
+                    .padding(vertical = 6.dp)
+                    .fillMaxHeight(),
+                data = update.coverData,
+                onClick = onClickCover,
             )
 
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                var textHeight by remember { mutableIntStateOf(0) }
-                if (!update.read) {
-                    Icon(
-                        imageVector = MaterialSymbols.RoundedFilled.Circle,
-                        contentDescription = stringResource(MR.strings.unread),
-                        modifier = Modifier
-                            .height(8.dp)
-                            .padding(end = 4.dp),
-                        tint = MaterialTheme.colorScheme.primary,
-                    )
-                }
-                if (update.bookmark) {
-                    Icon(
-                        imageVector = MaterialSymbols.RoundedFilled.Bookmark,
-                        contentDescription = stringResource(MR.strings.action_filter_bookmarked),
-                        modifier = Modifier
-                            .sizeIn(maxHeight = with(LocalDensity.current) { textHeight.toDp() - 2.dp }),
-                        tint = MaterialTheme.colorScheme.primary,
-                    )
-                    Spacer(modifier = Modifier.width(2.dp))
-                }
+            Column(
+                modifier = Modifier
+                    .padding(horizontal = MaterialTheme.padding.medium)
+                    .weight(1f),
+            ) {
                 Text(
-                    text = update.chapterName,
+                    text = update.mangaTitle,
                     maxLines = 1,
-                    style = MaterialTheme.typography.bodySmall,
+                    style = MaterialTheme.typography.bodyMedium,
                     color = LocalContentColor.current.copy(alpha = textAlpha),
                     overflow = TextOverflow.Ellipsis,
-                    onTextLayout = { textHeight = it.size.height },
-                    modifier = Modifier
-                        .weight(weight = 1f, fill = false),
                 )
-                if (readProgress != null) {
-                    DotSeparatorText()
+
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    var textHeight by remember { mutableIntStateOf(0) }
+                    if (!update.read) {
+                        Icon(
+                            imageVector = MaterialSymbols.RoundedFilled.Circle,
+                            contentDescription = stringResource(MR.strings.unread),
+                            modifier = Modifier
+                                .height(8.dp)
+                                .padding(end = 4.dp),
+                            tint = MaterialTheme.colorScheme.primary,
+                        )
+                    }
+                    if (update.bookmark) {
+                        Icon(
+                            imageVector = MaterialSymbols.RoundedFilled.Bookmark,
+                            contentDescription = stringResource(MR.strings.action_filter_bookmarked),
+                            modifier = Modifier
+                                .sizeIn(maxHeight = with(LocalDensity.current) { textHeight.toDp() - 2.dp }),
+                            tint = MaterialTheme.colorScheme.primary,
+                        )
+                        Spacer(modifier = Modifier.width(2.dp))
+                    }
                     Text(
-                        text = readProgress,
+                        text = update.chapterName,
                         maxLines = 1,
-                        color = LocalContentColor.current.copy(alpha = DISABLED_ALPHA),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = LocalContentColor.current.copy(alpha = textAlpha),
                         overflow = TextOverflow.Ellipsis,
+                        onTextLayout = { textHeight = it.size.height },
+                        modifier = Modifier
+                            .weight(weight = 1f, fill = false),
                     )
+                    if (readProgress != null) {
+                        DotSeparatorText()
+                        Text(
+                            text = readProgress,
+                            maxLines = 1,
+                            color = LocalContentColor.current.copy(alpha = DISABLED_ALPHA),
+                            overflow = TextOverflow.Ellipsis,
+                        )
+                    }
                 }
             }
-        }
 
-        ChapterDownloadIndicator(
-            enabled = onDownloadChapter != null,
-            modifier = Modifier.padding(start = 4.dp),
-            downloadStateProvider = downloadStateProvider,
-            downloadProgressProvider = downloadProgressProvider,
-            onClick = { onDownloadChapter?.invoke(it) },
-        )
+            ChapterDownloadIndicator(
+                enabled = onDownloadChapter != null,
+                modifier = Modifier.padding(start = 4.dp),
+                downloadStateProvider = downloadStateProvider,
+                downloadProgressProvider = downloadProgressProvider,
+                onClick = { onDownloadChapter?.invoke(it) },
+            )
+        }
+        HorizontalDivider(modifier = Modifier.padding(start = 16.dp))
     }
 }
