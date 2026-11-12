@@ -5,6 +5,15 @@ Tychii is a fork of Mihon, restyled with the Miuix component library
 from Mihon. This note records what changed, what was deliberately not
 changed, and how to build.
 
+Current version: **v0.1.2** (versionCode 41). The 0.1.2 release is the
+full-page Miuix restyle (2026-11-12): every user-visible page except
+the reader now follows the Miuix style — settings, manga detail,
+browse/source/extensions/migration, updates/history list items,
+download queue, categories, stats, upcoming, and the shared AppBar,
+TabbedDialog and AdaptiveSheet. The reader is untouched (gesture-driven
+fullscreen viewer, highest risk). The title capsule won over the pill
+search box the same day (the capsule stays, the pill is gone).
+
 ## Miuix (v0.9.4)
 
 - Maven: `top.yukonga.miuix.kmp:miuix-ui-android:0.9.4`,
