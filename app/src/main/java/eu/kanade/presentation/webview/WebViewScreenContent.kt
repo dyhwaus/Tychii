@@ -16,7 +16,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
@@ -60,6 +59,7 @@ import tachiyomi.core.common.util.system.logcat
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.components.material.Scaffold
 import tachiyomi.presentation.core.i18n.stringResource
+import top.yukonga.miuix.kmp.basic.LinearProgressIndicator
 
 class WebViewWindow(webContent: WebContent, val navigator: WebViewNavigator) {
     var state by mutableStateOf(WebViewState(webContent))
@@ -332,7 +332,7 @@ fun WebViewScreenContent(
                             .align(Alignment.BottomCenter),
                     )
                     is LoadingState.Loading -> LinearProgressIndicator(
-                        progress = { loadingState.progress },
+                        progress = loadingState.progress,
                         modifier = Modifier
                             .fillMaxWidth()
                             .align(Alignment.BottomCenter),

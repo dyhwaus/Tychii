@@ -30,15 +30,9 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.text.input.TextFieldLineLimits
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.text.input.clearText
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -65,7 +59,7 @@ import androidx.compose.ui.text.toLowerCase
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.unit.dp
-import eu.kanade.presentation.components.DropdownMenu
+import eu.kanade.presentation.components.AppBar
 import eu.kanade.presentation.manga.components.MangaCover
 import eu.kanade.presentation.theme.TachiyomiPreviewTheme
 import eu.kanade.tachiyomi.data.track.model.TrackSearch
@@ -81,6 +75,14 @@ import tachiyomi.presentation.core.components.ScrollbarLazyColumn
 import tachiyomi.presentation.core.components.material.Scaffold
 import tachiyomi.presentation.core.components.material.padding
 import tachiyomi.presentation.core.i18n.stringResource
+import top.yukonga.miuix.kmp.basic.Button
+import top.yukonga.miuix.kmp.basic.DropdownDefaults
+import top.yukonga.miuix.kmp.basic.DropdownEntry
+import top.yukonga.miuix.kmp.basic.DropdownItem
+import top.yukonga.miuix.kmp.basic.HorizontalDivider
+import top.yukonga.miuix.kmp.basic.IconButton
+import top.yukonga.miuix.kmp.popup.OverlayDropdownPopup
+import top.yukonga.miuix.kmp.theme.MiuixTheme
 import tachiyomi.presentation.core.screens.EmptyScreen
 import tachiyomi.presentation.core.screens.LoadingScreen
 import tachiyomi.presentation.core.util.plus
@@ -108,17 +110,8 @@ fun TrackerSearch(
     Scaffold(
         topBar = {
             Column {
-                TopAppBar(
-                    navigationIcon = {
-                        IconButton(onClick = onDismissRequest) {
-                            Icon(
-                                imageVector = MaterialSymbols.AutoMirroredRounded.ArrowBack,
-                                contentDescription = null,
-                                tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                            )
-                        }
-                    },
-                    title = {
+                AppBar(
+                    titleContent = {
                         BasicTextField(
                             state = state,
                             modifier = Modifier
@@ -143,6 +136,8 @@ fun TrackerSearch(
                             },
                         )
                     },
+                    navigateUp = onDismissRequest,
+                    navigationIcon = MaterialSymbols.AutoMirroredRounded.ArrowBack,
                     actions = {
                         if (state.text.isNotEmpty()) {
                             IconButton(
@@ -154,7 +149,7 @@ fun TrackerSearch(
                                 Icon(
                                     imageVector = MaterialSymbols.Rounded.Close,
                                     contentDescription = null,
-                                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    tint = MiuixTheme.colorScheme.onSurfaceVariant,
                                 )
                             }
                         }
@@ -179,14 +174,12 @@ fun TrackerSearch(
                     Button(
                         onClick = { onConfirmSelection(false) },
                         modifier = Modifier.weight(1f),
-                        elevation = ButtonDefaults.elevatedButtonElevation(),
                     ) {
                         Text(text = stringResource(MR.strings.action_track))
                     }
                     if (supportsPrivateTracking) {
                         Button(
                             onClick = { onConfirmSelection(true) },
-                            elevation = ButtonDefaults.elevatedButtonElevation(),
                         ) {
                             Icon(
                                 imageVector = MaterialSymbols.RoundedFilled.VisibilityOff,
@@ -250,7 +243,7 @@ private fun SearchResultItem(
     val status = trackSearch.publishing_status.toLowerCase(locale).capitalize(locale)
     val description = trackSearch.summary.trim()
     val shape = RoundedCornerShape(16.dp)
-    val borderColor = if (selected) MaterialTheme.colorScheme.outline else Color.Transparent
+    val borderColor = if (selected) MiuixTheme.colorScheme.primary else Color.Transparent
     var dropDownMenuExpanded by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
     Box(
@@ -258,7 +251,7 @@ private fun SearchResultItem(
             .fillMaxWidth()
             .padding(horizontal = 12.dp)
             .clip(shape)
-            .background(MaterialTheme.colorScheme.surface)
+            .background(MiuixTheme.colorScheme.surfaceContainer)
             .border(
                 width = 2.dp,
                 color = borderColor,
@@ -372,24 +365,34 @@ private fun SearchResultItemDropDownMenu(
     onCopyName: () -> Unit,
     onOpenInBrowser: () -> Unit,
 ) {
-    DropdownMenu(
-        expanded = expanded,
-        onDismissRequest = onCollapseMenu,
-    ) {
-        DropdownMenuItem(
-            text = { Text(stringResource(MR.strings.action_copy_to_clipboard)) },
-            onClick = {
-                onCopyName()
-                onCollapseMenu()
-            },
-        )
-        DropdownMenuItem(
-            text = { Text(stringResource(MR.strings.action_open_in_browser)) },
-            onClick = {
-                onOpenInBrowser()
-            },
-        )
-    }
+    OverlayDropdownPopup(
+        entries = listOf(
+            DropdownEntry(
+                items = listOf(
+                    DropdownItem(
+                        text = stringResource(MR.strings.action_copy_to_clipboard),
+                        onClick = {
+                            onCopyName()
+                            onCollapseMenu()
+                        },
+                    ),
+                    DropdownItem(
+                        text = stringResource(MR.strings.action_open_in_browser),
+                        onClick = {
+                            onOpenInBrowser()
+                        },
+                    ),
+                ),
+            ),
+        ),
+        show = expanded,
+        onDismiss = onCollapseMenu,
+        onDismissFinished = {},
+        maxHeight = null,
+        dropdownColors = DropdownDefaults.dropdownColors(),
+        renderInRootScaffold = true,
+        collapseOnSelection = true,
+    )
 }
 
 @Composable

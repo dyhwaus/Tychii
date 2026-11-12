@@ -14,11 +14,9 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBarDefaults
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -31,9 +29,12 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.rounded.Newspaper
-import tachiyomi.presentation.core.components.material.Scaffold
 import tachiyomi.presentation.core.components.material.padding
 import tachiyomi.presentation.core.util.secondaryItemAlpha
+import top.yukonga.miuix.kmp.basic.Button
+import top.yukonga.miuix.kmp.basic.ButtonDefaults
+import top.yukonga.miuix.kmp.basic.Scaffold
+import top.yukonga.miuix.kmp.theme.MiuixTheme
 
 @Composable
 fun InfoScreen(
@@ -51,7 +52,7 @@ fun InfoScreen(
     Scaffold(
         bottomBar = {
             val strokeWidth = Dp.Hairline
-            val borderColor = MaterialTheme.colorScheme.outline
+            val borderColor = MiuixTheme.colorScheme.dividerLine
             Column(
                 modifier = Modifier
                     .background(MaterialTheme.colorScheme.background)
@@ -73,12 +74,13 @@ fun InfoScreen(
                     modifier = Modifier.fillMaxWidth(),
                     enabled = canAccept,
                     onClick = onAcceptClick,
+                    colors = ButtonDefaults.buttonColorsPrimary(),
                 ) {
                     Text(text = acceptText)
                 }
                 if (rejectText != null && onRejectClick != null) {
                     Row(horizontalArrangement = Arrangement.spacedBy(MaterialTheme.padding.extraSmall)) {
-                        OutlinedButton(
+                        Button(
                             modifier = Modifier.weight(1f),
                             onClick = onRejectClick,
                         ) {

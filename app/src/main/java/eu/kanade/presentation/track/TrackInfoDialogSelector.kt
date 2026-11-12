@@ -16,13 +16,10 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.DatePicker
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.RadioButton
 import androidx.compose.material3.SelectableDates
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.minimumInteractiveComponentSize
 import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
@@ -40,6 +37,9 @@ import tachiyomi.presentation.core.components.WheelTextPicker
 import tachiyomi.presentation.core.components.material.AlertDialogContent
 import tachiyomi.presentation.core.components.material.padding
 import tachiyomi.presentation.core.i18n.stringResource
+import top.yukonga.miuix.kmp.basic.HorizontalDivider
+import top.yukonga.miuix.kmp.basic.RadioButton
+import top.yukonga.miuix.kmp.basic.TextButton
 
 @Composable
 fun TrackStatusSelector(
@@ -167,17 +167,20 @@ fun TrackDateSelector(
                     horizontalArrangement = Arrangement.spacedBy(MaterialTheme.padding.small, Alignment.End),
                 ) {
                     if (onRemove != null) {
-                        TextButton(onClick = onRemove) {
-                            Text(text = stringResource(MR.strings.action_remove))
-                        }
+                        TextButton(
+                            text = stringResource(MR.strings.action_remove),
+                            onClick = onRemove,
+                        )
                         Spacer(modifier = Modifier.weight(1f))
                     }
-                    TextButton(onClick = onDismissRequest) {
-                        Text(text = stringResource(MR.strings.action_cancel))
-                    }
-                    TextButton(onClick = { onConfirm(pickerState.selectedDateMillis!!) }) {
-                        Text(text = stringResource(MR.strings.action_ok))
-                    }
+                    TextButton(
+                        text = stringResource(MR.strings.action_cancel),
+                        onClick = onDismissRequest,
+                    )
+                    TextButton(
+                        text = stringResource(MR.strings.action_ok),
+                        onClick = { onConfirm(pickerState.selectedDateMillis!!) },
+                    )
                 }
             }
         },
@@ -210,12 +213,14 @@ private fun BaseSelector(
                     thirdButton()
                     Spacer(modifier = Modifier.weight(1f))
                 }
-                TextButton(onClick = onDismissRequest) {
-                    Text(text = stringResource(MR.strings.action_cancel))
-                }
-                TextButton(onClick = onConfirm) {
-                    Text(text = stringResource(MR.strings.action_ok))
-                }
+                TextButton(
+                    text = stringResource(MR.strings.action_cancel),
+                    onClick = onDismissRequest,
+                )
+                TextButton(
+                    text = stringResource(MR.strings.action_ok),
+                    onClick = onConfirm,
+                )
             }
         },
     )

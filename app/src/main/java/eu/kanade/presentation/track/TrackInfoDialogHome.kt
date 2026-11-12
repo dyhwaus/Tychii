@@ -22,17 +22,10 @@ import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Badge
-import androidx.compose.material3.BadgedBox
-import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.material3.VerticalDivider
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -48,13 +41,11 @@ import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.unit.dp
 import dev.icerock.moko.resources.StringResource
-import eu.kanade.presentation.components.DropdownMenu
 import eu.kanade.presentation.theme.TachiyomiPreviewTheme
 import eu.kanade.presentation.track.components.TrackLogoIcon
 import eu.kanade.tachiyomi.data.track.Tracker
 import eu.kanade.tachiyomi.ui.manga.track.TrackItem
 import eu.kanade.tachiyomi.util.lang.toJavaLocalDate
-import eu.kanade.tachiyomi.util.lang.toLocalDate
 import eu.kanade.tachiyomi.util.system.copyToClipboard
 import kotlinx.datetime.toJavaLocalDate
 import mihon.icons.materialsymbols.MaterialSymbols
@@ -62,6 +53,17 @@ import mihon.icons.materialsymbols.rounded.MoreVert
 import mihon.icons.materialsymbols.roundedfilled.VisibilityOff
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.i18n.stringResource
+import top.yukonga.miuix.kmp.basic.Badge
+import top.yukonga.miuix.kmp.basic.BadgedBox
+import top.yukonga.miuix.kmp.basic.DropdownDefaults
+import top.yukonga.miuix.kmp.basic.DropdownEntry
+import top.yukonga.miuix.kmp.basic.DropdownItem
+import top.yukonga.miuix.kmp.basic.HorizontalDivider
+import top.yukonga.miuix.kmp.basic.IconButton
+import top.yukonga.miuix.kmp.basic.TextButton
+import top.yukonga.miuix.kmp.basic.VerticalDivider
+import top.yukonga.miuix.kmp.popup.OverlayDropdownPopup
+import top.yukonga.miuix.kmp.theme.MiuixTheme
 import java.time.format.DateTimeFormatter
 
 @Composable
@@ -224,7 +226,7 @@ private fun TrackInfoItem(
             modifier = Modifier
                 .padding(top = 12.dp)
                 .clip(MaterialTheme.shapes.medium)
-                .background(MaterialTheme.colorScheme.surfaceContainerHighest)
+                .background(MiuixTheme.colorScheme.surfaceContainerHighest)
                 .padding(8.dp)
                 .clip(RoundedCornerShape(6.dp)),
         ) {
@@ -312,13 +314,12 @@ private fun TrackInfoItemEmpty(
     ) {
         TrackLogoIcon(tracker)
         TextButton(
+            text = stringResource(MR.strings.add_tracking),
             onClick = onNewSearch,
             modifier = Modifier
                 .padding(start = 16.dp)
                 .weight(1f),
-        ) {
-            Text(text = stringResource(MR.strings.add_tracking))
-        }
+        )
     }
 }
 
@@ -338,51 +339,65 @@ private fun TrackInfoItemMenu(
                 contentDescription = stringResource(MR.strings.label_more),
             )
         }
-        DropdownMenu(
-            expanded = expanded,
-            onDismissRequest = { expanded = false },
-        ) {
-            DropdownMenuItem(
-                text = { Text(stringResource(MR.strings.action_open_in_browser)) },
-                onClick = {
-                    onOpenInBrowser()
-                    expanded = false
-                },
-            )
-            DropdownMenuItem(
-                text = { Text(stringResource(MR.strings.action_copy_link)) },
-                onClick = {
-                    onCopyLink()
-                    expanded = false
-                },
-            )
-            if (onTogglePrivate != null) {
-                DropdownMenuItem(
-                    text = {
-                        Text(
-                            stringResource(
-                                if (private) {
-                                    MR.strings.action_toggle_private_off
-                                } else {
-                                    MR.strings.action_toggle_private_on
+        OverlayDropdownPopup(
+            entries = listOf(
+                DropdownEntry(
+                    items = buildList {
+                        add(
+                            DropdownItem(
+                                text = stringResource(MR.strings.action_open_in_browser),
+                                onClick = {
+                                    onOpenInBrowser()
+                                    expanded = false
+                                },
+                            ),
+                        )
+                        add(
+                            DropdownItem(
+                                text = stringResource(MR.strings.action_copy_link),
+                                onClick = {
+                                    onCopyLink()
+                                    expanded = false
+                                },
+                            ),
+                        )
+                        if (onTogglePrivate != null) {
+                            add(
+                                DropdownItem(
+                                    text = stringResource(
+                                        if (private) {
+                                            MR.strings.action_toggle_private_off
+                                        } else {
+                                            MR.strings.action_toggle_private_on
+                                        },
+                                    ),
+                                    onClick = {
+                                        onTogglePrivate()
+                                        expanded = false
+                                    },
+                                ),
+                            )
+                        }
+                        add(
+                            DropdownItem(
+                                text = stringResource(MR.strings.action_remove),
+                                onClick = {
+                                    onRemoved()
+                                    expanded = false
                                 },
                             ),
                         )
                     },
-                    onClick = {
-                        onTogglePrivate()
-                        expanded = false
-                    },
-                )
-            }
-            DropdownMenuItem(
-                text = { Text(stringResource(MR.strings.action_remove)) },
-                onClick = {
-                    onRemoved()
-                    expanded = false
-                },
-            )
-        }
+                ),
+            ),
+            show = expanded,
+            onDismiss = { expanded = false },
+            onDismissFinished = {},
+            maxHeight = null,
+            dropdownColors = DropdownDefaults.dropdownColors(),
+            renderInRootScaffold = true,
+            collapseOnSelection = true,
+        )
     }
 }
 

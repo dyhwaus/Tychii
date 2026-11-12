@@ -1,16 +1,15 @@
 package eu.kanade.presentation.more
 
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -30,6 +29,10 @@ import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.components.material.padding
 import tachiyomi.presentation.core.i18n.stringResource
 import tachiyomi.presentation.core.screens.InfoScreen
+import top.yukonga.miuix.kmp.basic.Button
+import top.yukonga.miuix.kmp.basic.IconButton
+import top.yukonga.miuix.kmp.basic.TextButton
+import top.yukonga.miuix.kmp.overlay.OverlayDialog
 
 @Composable
 fun NewUpdateScreen(
@@ -45,26 +48,29 @@ fun NewUpdateScreen(
     var showSkipDialog by remember { mutableStateOf(false) }
     if (showSkipDialog) {
         val dismiss = { showSkipDialog = false }
-        AlertDialog(
+        OverlayDialog(
+            show = true,
+            title = stringResource(MR.strings.update_check_skip_title, versionName),
+            summary = stringResource(MR.strings.update_check_skip_message),
             onDismissRequest = dismiss,
-            title = { Text(text = stringResource(MR.strings.update_check_skip_title, versionName)) },
-            text = { Text(text = stringResource(MR.strings.update_check_skip_message)) },
-            dismissButton = {
-                TextButton(onClick = dismiss) {
-                    Text(text = stringResource(MR.strings.action_cancel))
-                }
-            },
-            confirmButton = {
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.End,
+            ) {
                 TextButton(
+                    text = stringResource(MR.strings.action_cancel),
+                    onClick = dismiss,
+                )
+                TextButton(
+                    text = stringResource(MR.strings.action_ok),
                     onClick = {
                         dismiss()
                         onSkipUpdate()
                     },
-                ) {
-                    Text(text = stringResource(MR.strings.action_ok))
-                }
-            },
-        )
+                )
+            }
+        }
     }
 
     InfoScreen(
@@ -85,7 +91,7 @@ fun NewUpdateScreen(
         rejectText = stringResource(MR.strings.action_not_now),
         onRejectClick = onRejectUpdate,
         rejectAction = {
-            OutlinedButton(onClick = { showSkipDialog = true }) {
+            IconButton(onClick = { showSkipDialog = true }) {
                 Icon(
                     imageVector = MaterialSymbols.Rounded.UpdateDisabled,
                     contentDescription = stringResource(MR.strings.update_check_skip),
@@ -103,7 +109,7 @@ fun NewUpdateScreen(
                 flavour = remember { GFMFlavourDescriptor() },
             )
 
-            TextButton(
+            Button(
                 onClick = onOpenInBrowser,
                 modifier = Modifier.padding(top = MaterialTheme.padding.small),
             ) {

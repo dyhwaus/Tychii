@@ -627,6 +627,123 @@ navigation and all click / drag behaviour are untouched.
   `surfaceContainer`). Blur would need minSdk 33.
 - `miuix-nav` was not adopted; Mihon's existing navigation stays.
 
+## Remaining pages: updates, history, download, category, stats, upcoming, misc (2026-11-12)
+
+The second half of the browse batch: the main-tab list items and
+sub-pages, plus the track dialogs and the WebView page. Only the
+presentation layer changed: ViewModels, data layer, navigation and
+all click / drag behaviour are untouched.
+
+Shared core (one change, many callers):
+
+- `ListGroupHeader` is now a Miuix `SmallTitle` (16.dp horizontal /
+  8.dp vertical inside margin). This covers the date group headers
+  in Updates, History and the download queue in one place.
+- `TriStateItem` (in `SettingsItems.kt`) is now a Miuix basic
+  `Checkbox` with `ToggleableState` (Off / On / Indeterminate =
+  excluded), the same pattern as the settings `TriStateListDialog`.
+  Used by the updates filter dialog.
+- `SectionCard` is now a Miuix `Card` (12.dp horizontal / 4.dp
+  vertical margins, 16.dp inside margin) with a `SmallTitle`
+  header. Its only callers are the stats sections.
+- `InfoScreen` is now a Miuix `Scaffold` with a Miuix primary
+  `Button` for accept and a Miuix `Button` for reject, and the
+  divider colour is Miuix `dividerLine`. Onboarding and the crash
+  screen call `InfoScreen` directly, so they needed no edit of
+  their own.
+
+Updates / history:
+
+- Chapter rows (`UpdatesUiItem`) and history rows (`HistoryItem`)
+  now have a Miuix `HorizontalDivider` with a 16.dp start inset
+  under them; action icons in history rows are Miuix `IconButton`s.
+- The updates filter dialog uses Miuix `Switch` / dividers (its
+  rows are the now-Miuix `TriStateItem`); the delete-confirmation
+  dialog and both history delete dialogs are `OverlayDialog`s
+  with Miuix `TextButton`s. `UpdatesScreen` / `HistoryScreen`
+  themselves needed no edit (shared `AppBar` / `SearchToolbar` /
+  `ListGroupHeader` / `QuietEmptyScreen` already).
+
+Download queue:
+
+- Progress is a Miuix `LinearProgressIndicator` (Float progress,
+  not a lambda); the item menu is an `OverlayDropdownPopup`; the
+  dragged row colour is Miuix `surfaceContainerHigh`. Reorder
+  and drag-handle logic are untouched.
+- The sort menu in `DownloadQueueScreen` (a `DropdownMenu` with
+  two nested submenus via `NestedMenuItem`) is now a single
+  `OverlayDropdownPopup` using `DropdownItem(children = ...)`
+  cascading items. `NestedMenuItem` now has zero callers.
+
+Category:
+
+- The empty state is `QuietEmptyScreen`; category rows use a
+  Miuix `Card(onClick = onRename)` with Miuix `IconButton`s, drag
+  handle kept.
+- All four category dialogs are `OverlayDialog`s. Create / Rename
+  keep the M3 `OutlinedTextField` inside: Miuix `TextField` has
+  no `supportingText` / `isError`, and the duplicate-name message
+  is part of the UI. Delete and both `ChangeCategoryDialog`
+  branches use Miuix `TextButton`s; checkboxes are Miuix
+  `Checkbox` (`ToggleableState`, via `asToggleableState()` for
+  tri-state).
+
+Stats / upcoming:
+
+- Stats needed no direct edit beyond `SectionCard` (top bar is
+  the shared `AppBar`).
+- Upcoming date headings are `SmallTitle` rows with a Miuix
+  `Badge` for the count; upcoming items have the Miuix divider;
+  calendar prev/next are Miuix `IconButton`s; the divider in
+  `UpcomingScreen` is Miuix. The calendar day grid itself
+  (`Calendar.kt` / `CalendarDay.kt` / `CalendarIndicator.kt`) is
+  a custom layout with no Miuix equivalent and was not changed.
+
+Misc sub-pages:
+
+- `NewUpdateScreen`: the skip dialog is an `OverlayDialog`, the
+  reject-action `OutlinedButton` is a Miuix `IconButton`, the
+  open-in-browser `TextButton` is a Miuix `Button`.
+- `SupportUsScreen`: M3 `Scaffold` / `Card` are now Miuix
+  `Scaffold` / `Card` (rows already used Miuix preference
+  widgets).
+- `WebViewScreenContent`: the two loading progress bars are
+  Miuix `LinearProgressIndicator`s. The `WebView` itself, JS
+  dialogs and navigation logic are untouched.
+
+Track dialogs:
+
+- `TrackInfoDialogHome`: the private badge is a Miuix `Badge` /
+  `BadgedBox`, dividers and the overflow `IconButton` are Miuix,
+  the item menu is an `OverlayDropdownPopup`, the add-tracking
+  button is a Miuix `TextButton`.
+- `TrackerSearch`: the top bar is the shared Miuix-style `AppBar`
+  (title slot holds the search field), the bottom confirm buttons
+  are Miuix `Button`s, the result card uses Miuix
+  `surfaceContainer` with a Miuix primary border when selected,
+  and its long-press menu is an `OverlayDropdownPopup`.
+- `TrackInfoDialogSelector`: radio buttons and dialog buttons
+  are Miuix (`RadioButton`, `TextButton`, `HorizontalDivider`).
+  The `DatePicker` stays Material3 (Miuix has no date picker),
+  and the selectors still render inside the M3
+  `AlertDialogContent` host in `TrackInfoDialog.kt` (manga
+  detail area, out of scope for this batch).
+
+Deliberately kept Material3 in this batch:
+
+- Extended FABs (`CategoryFloatingActionButton`,
+  `MigrateMangaScreen`): Miuix has no extended FAB.
+- The calendar day grid (see above) and the track `DatePicker`.
+- Text fields with a hint / error message under them
+  (migration sheet extra-search-query field, category
+  create/rename dialogs): Miuix `TextField` has no
+  `supportingText` / `isError`.
+- The `TrackInfoDialog` host dialog (`AlertDialogContent` in
+  `ui/manga/track/TrackInfoDialog.kt`): out of scope, belongs
+  to the manga detail area.
+- Tooltips everywhere (Miuix has none).
+
+
 ## Icon: Taiji (2026-11-12)
 
 The launcher icon is now a Taiji (yin-yang) symbol, replacing the
