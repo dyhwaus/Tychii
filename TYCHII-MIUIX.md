@@ -107,7 +107,14 @@ changed, and how to build.
   unaffected — the capsule is under pushed screens in the navigation
   stack, and their own AppBars are untouched.
 - Library's category name + manga-count pill are hidden with its title on
-  phones; the category is still visible in the category tabs row. The
+  phones; the category is still visible in the category tabs row, which
+  is now capsule-styled (2026-11-12): the tab row keeps its transparent
+  container and no divider, but the underline indicator is gone and the
+  selected category is a filled capsule in Miuix `surfaceContainer`
+  with bold `onSurface` text, echoing the title capsule; unselected
+  categories are plain text in `onSurfaceVariant`. The count `Pill`
+  badge is unchanged. (`TabText` gained a defaulted `fontWeight`
+  parameter for this; its other two call sites are unaffected.) The
   capsule itself now follows the active category (2026-11-12):
   the Library tab reports its capsule text through a
   `HomeScreen.setCapsuleTitle` channel (same pattern as

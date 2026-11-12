@@ -5,19 +5,21 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.layout.Layout
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.offset
 import androidx.compose.ui.unit.sp
 import tachiyomi.presentation.core.components.Pill
 
 @Composable
-fun TabText(text: String, badgeCount: Int? = null) {
+fun TabText(text: String, badgeCount: Int? = null, fontWeight: FontWeight = FontWeight.Normal) {
     val pillAlpha = if (isSystemInDarkTheme()) 0.12f else 0.08f
 
     Layout(
         content = {
             Text(
                 text = text,
+                fontWeight = fontWeight,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
             )
