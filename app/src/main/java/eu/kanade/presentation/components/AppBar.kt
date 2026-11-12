@@ -1,19 +1,10 @@
 package eu.kanade.presentation.components
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.basicMarquee
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.widthIn
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.text.input.TextFieldLineLimits
@@ -46,9 +37,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusDirection
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
@@ -275,10 +264,6 @@ fun AppBarActions(
  * @param searchEnabled Set to false if you don't want to show search action.
  * @param searchQuery If null, use normal toolbar.
  * @param placeholderText If null, [MR.strings.action_search_hint] is used.
- * @param pillSearch Show a Neko-style rounded search box instead of the
- * bare search icon while closed. Only the main tabs opt in; sub-pages
- * keep the icon. The open state, focus and keyboard behaviour are the
- * same either way.
  */
 @Composable
 fun SearchToolbar(
@@ -289,7 +274,6 @@ fun SearchToolbar(
     navigateUp: (() -> Unit)? = null,
     searchEnabled: Boolean = true,
     placeholderText: String? = null,
-    pillSearch: Boolean = false,
     onSearch: (String) -> Unit = {},
     onClickCloseSearch: () -> Unit = { onChangeSearchQuery(null) },
     actions: @Composable RowScope.() -> Unit = {},
@@ -380,58 +364,23 @@ fun SearchToolbar(
                 if (!searchEnabled) {
                     // Don't show search action
                 } else if (searchQuery == null) {
-                    if (pillSearch) {
-                        // Neko-style search entry: a rounded box with an
-                        // icon and the hint text, instead of a bare icon.
-                        // Tapping it opens the search field exactly like
-                        // the icon did (empty query, keyboard pops up).
-                        Box(
-                            modifier = Modifier
-                                .height(48.dp)
-                                .widthIn(max = 200.dp)
-                                .clip(RoundedCornerShape(50))
-                                .background(MaterialTheme.colorScheme.surfaceContainerHigh)
-                                .clickable(onClick = onClick)
-                                .padding(horizontal = 12.dp),
-                            contentAlignment = Alignment.Center,
-                        ) {
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                            ) {
-                                Icon(
-                                    imageVector = MaterialSymbols.Rounded.Search,
-                                    contentDescription = stringResource(MR.strings.action_search),
-                                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                                )
-                                Text(
-                                    text = placeholderText ?: stringResource(MR.strings.action_search_hint),
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                    maxLines = 1,
-                                    overflow = TextOverflow.Ellipsis,
-                                    style = MaterialTheme.typography.bodyMedium,
-                                )
+                    TooltipBox(
+                        positionProvider = rememberTooltipPositionProvider(TooltipAnchorPosition.Above),
+                        tooltip = {
+                            PlainTooltip {
+                                Text(stringResource(MR.strings.action_search))
                             }
-                        }
-                    } else {
-                        TooltipBox(
-                            positionProvider = rememberTooltipPositionProvider(TooltipAnchorPosition.Above),
-                            tooltip = {
-                                PlainTooltip {
-                                    Text(stringResource(MR.strings.action_search))
-                                }
-                            },
-                            state = rememberTooltipState(),
-                            focusable = false,
+                        },
+                        state = rememberTooltipState(),
+                        focusable = false,
+                    ) {
+                        IconButton(
+                            onClick = onClick,
                         ) {
-                            IconButton(
-                                onClick = onClick,
-                            ) {
-                                Icon(
-                                    MaterialSymbols.Rounded.Search,
-                                    contentDescription = stringResource(MR.strings.action_search),
-                                )
-                            }
+                            Icon(
+                                MaterialSymbols.Rounded.Search,
+                                contentDescription = stringResource(MR.strings.action_search),
+                            )
                         }
                     }
                 } else if (searchQuery.isNotEmpty()) {

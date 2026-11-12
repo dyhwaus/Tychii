@@ -22,7 +22,6 @@ import eu.kanade.presentation.history.components.HistoryDeleteAllDialog
 import eu.kanade.presentation.history.components.HistoryDeleteDialog
 import eu.kanade.presentation.manga.DuplicateMangaDialog
 import eu.kanade.presentation.util.Tab
-import eu.kanade.presentation.util.isTabletUi
 import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.ui.category.CategoryScreen
 import eu.kanade.tachiyomi.ui.home.HomeScreen
@@ -68,12 +67,10 @@ data object HistoryTab : Tab {
         val state by viewModel.state.collectAsStateWithLifecycle()
 
         // The title capsule hides while searching (the search field would
-        // sit under it), and on phones it yields to the pill search box,
-        // which owns the top band there instead. Tablets have no capsule,
-        // so the check there is a no-op.
-        val tabletUi = isTabletUi()
-        LaunchedEffect(state.searchQuery, tabletUi) {
-            HomeScreen.showTitleCapsule(state.searchQuery == null && tabletUi)
+        // sit under it). Tablets have no capsule, so the check there is
+        // a no-op.
+        LaunchedEffect(state.searchQuery) {
+            HomeScreen.showTitleCapsule(state.searchQuery == null)
         }
 
         HistoryScreen(

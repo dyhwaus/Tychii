@@ -127,16 +127,14 @@ changed, and how to build.
   categories are plain text in `onSurfaceVariant`. The count `Pill`
   badge is unchanged. (`TabText` gained a defaulted `fontWeight`
   parameter for this; its other two call sites are unaffected.) The
-  capsule itself used to follow the active category (2026-11-12):
-  the Library tab reported "书架 · 分类名" through a
-  `HomeScreen.setCapsuleTitle` channel. That channel was removed
-  after the user chose to keep the pill search box and let the
-  capsule yield (2026-11-12): on phones the capsule is hidden on
-  the Library, History and Browse tabs, so the reported text never
-  rendered anywhere (tablets have no capsule at all). The category
-  now shows in the search pill's hint ("搜索书架" / "搜索分类名")
-  and in the category tabs row instead. The capsule still hides
-  while searching or selecting.
+  capsule itself follows the active category: the Library tab reports
+  "书架 · 分类名" through a `HomeScreen.setCapsuleTitle` channel
+  (`capsuleTitleEvent` + `libraryCapsuleTitle` state in HomeScreen;
+  default/system categories report just "书架"). The channel was
+  briefly removed on 2026-11-12 (commit 224b52a4) when the user chose
+  to keep the pill search box and let the capsule yield, then restored
+  the same day when the user changed their mind: keep the capsule,
+  drop the search box (see "Search pill" below).
 - Detail page cover palette (2026-11-12, Neko-style, kept quiet): the
   manga detail page now takes one color from its cover and uses it in
   only two places — a faint 0.25-alpha wash over the backdrop image
@@ -172,21 +170,24 @@ changed, and how to build.
   occupying the band under the title capsule, but this page has no
   top bar, so without the spacer its first row slid under the
   capsule and overlapped it.
-- Search pill (2026-11-12, Neko-style): on phones the main tabs'
-  bare search icon is replaced by a rounded search box —
-  48.dp high, full pill radius, `surfaceContainerHigh` background,
-  search icon + hint text. `SearchToolbar` gained an opt-in
-  `pillSearch` parameter (default off); only the Library, History
-  and Browse (Extensions sub-tab) call sites pass it, and only on
-  phones (`!isTabletUi()`), so sub-pages (source browsing, global
-  search, migration search) keep the icon and tablets keep the icon
-  plus their toolbar title. Tapping the pill opens the search field
-  exactly like the icon did; the open state, focus, keyboard and
-  clear/close behaviour are untouched. The pill owns the top band
-  on those three phone tabs, so their title capsule yields to it
-  (their `showTitleCapsule` reports now also require `isTabletUi()`);
-  Updates and More keep the capsule. The Library hint carries the
-  category ("搜索" + category name), History's reads "搜索历史".
+- Search pill (2026-11-12, Neko-style — removed the same day): on phones
+  the main tabs' bare search icon was briefly replaced by a rounded
+  search box — 48.dp high, full pill radius, `surfaceContainerHigh`
+  background, search icon + hint text. `SearchToolbar` had gained an
+  opt-in `pillSearch` parameter; only the Library, History and Browse
+  (Extensions sub-tab) call sites passed it, and only on phones, so
+  sub-pages kept the icon and tablets kept the icon plus their toolbar
+  title. The pill owned the top band on those three phone tabs, so
+  their title capsule yielded to it (their `showTitleCapsule` reports
+  also required `isTabletUi()`), and the Library hint carried the
+  category ("搜索" + category name), History's read "搜索历史". The
+  user changed their mind the same day: keep the title capsule, drop
+  the search box. The `pillSearch` parameter and its branch in
+  `SearchToolbar` are gone, the three call sites are back to the
+  magnifier icon with the default search hint, the three tabs'
+  `showTitleCapsule` reports no longer require `isTabletUi()`, and
+  the capsule category channel (`setCapsuleTitle`) is restored — see
+  the capsule section above.
 - Top-bar action icons removed on phones (2026-11-12): the capsule
   shares its 64.dp band with each tab's toolbar, and the action icons
   sat under it (Library filter, Updates filter/calendar/refresh,

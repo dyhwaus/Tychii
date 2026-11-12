@@ -82,6 +82,7 @@ object HomeScreen : Screen() {
     private val openTabEvent = Channel<Tab>()
     private val showBottomNavEvent = Channel<Boolean>()
     private val showTitleCapsuleEvent = Channel<Boolean>()
+    private val capsuleTitleEvent = Channel<String>()
 
     @Suppress("ConstPropertyName")
     private const val TabFadeDuration = 200
@@ -142,6 +143,15 @@ object HomeScreen : Screen() {
                 var showTitleCapsule by remember { mutableStateOf(true) }
                 LaunchedEffect(Unit) {
                     showTitleCapsuleEvent.receiveAsFlow().collectLatest { showTitleCapsule = it }
+                }
+                // A tab may report its own capsule text (the Library tab
+                // reports "书架 · 分类名"). Only the Library tab uses
+                // this; other tabs keep their TabOptions title, and the
+                // override is ignored while another tab is current, so
+                // no tab needs to reset it.
+                var libraryCapsuleTitle by remember { mutableStateOf<String?>(null) }
+                LaunchedEffect(Unit) {
+                    capsuleTitleEvent.receiveAsFlow().collectLatest { libraryCapsuleTitle = it }
                 }
                 if (tabletUi) {
                     // Tablets keep the Material3 navigation rail; the floating
@@ -221,13 +231,14 @@ object HomeScreen : Screen() {
                                 exit = fadeOut(),
                             ) {
                                 MiuixCapsuleTitle(
-                                    // The capsule always shows the tab's
-                                    // own title. (The Library tab used to
-                                    // report "书架 · 分类名" here, but the
-                                    // pill search box owns the top band on
-                                    // phones now, so the capsule yields and
-                                    // the category lives in the pill hint.)
-                                    title = tabNavigator.current.options.title,
+                                    // The Library tab reports its own
+                                    // title ("书架 · 分类名"); other tabs
+                                    // use their TabOptions title.
+                                    title = if (tabNavigator.current == LibraryTab) {
+                                        libraryCapsuleTitle ?: tabNavigator.current.options.title
+                                    } else {
+                                        tabNavigator.current.options.title
+                                    },
                                     barStyle = effectiveBarStyle,
                                     backdrop = backdrop,
                                 )
@@ -428,6 +439,10 @@ object HomeScreen : Screen() {
 
     suspend fun showTitleCapsule(show: Boolean) {
         showTitleCapsuleEvent.send(show)
+    }
+
+    suspend fun setCapsuleTitle(title: String) {
+        capsuleTitleEvent.send(title)
     }
 
     sealed interface Tab {
