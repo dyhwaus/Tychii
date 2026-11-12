@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="splash">#000000</color>
+    <!-- Splash background matches the launcher icon background: white by day -->
+    <color name="splash">#FFFFFF</color>
 
     <color name="accent_blue">#0058A0</color>
     <color name="icon_background">#FAFAFA</color>

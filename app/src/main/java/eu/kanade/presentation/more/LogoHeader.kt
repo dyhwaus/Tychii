@@ -7,10 +7,10 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import eu.kanade.tachiyomi.R
@@ -26,7 +26,11 @@ fun LogoHeader(
         Icon(
             painter = painterResource(R.drawable.ic_launcher_foreground),
             contentDescription = null,
-            tint = MaterialTheme.colorScheme.onSurface,
+            // No tint: the Taiji keeps its own black/white colors, exactly
+            // like the launcher icon. (A tint would flatten it to a single
+            // solid color.) Day/night adaptation comes from the
+            // night-qualified foreground drawable itself.
+            tint = Color.Unspecified,
             modifier = Modifier
                 .padding(iconPadding)
                 .size(64.dp),
