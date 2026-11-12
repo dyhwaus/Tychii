@@ -14,9 +14,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -43,6 +41,8 @@ import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.components.BadgeGroup
 import tachiyomi.presentation.core.i18n.stringResource
 import tachiyomi.presentation.core.util.selectedBackground
+import top.yukonga.miuix.kmp.basic.HorizontalDivider
+import top.yukonga.miuix.kmp.basic.IconButton
 import tachiyomi.domain.manga.model.MangaCover as MangaCoverModel
 
 object CommonMangaItemDefaults {
@@ -342,41 +342,44 @@ fun MangaListItem(
     coverAlpha: Float = 1f,
     onClickContinueReading: (() -> Unit)? = null,
 ) {
-    Row(
-        modifier = Modifier
-            .selectedBackground(isSelected)
-            .height(56.dp)
-            .combinedClickable(
-                onClick = onClick,
-                onLongClick = onLongClick,
-            )
-            .padding(horizontal = 16.dp, vertical = 8.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        MangaCover.Square(
+    Column {
+        Row(
             modifier = Modifier
-                .fillMaxHeight()
-                .alpha(coverAlpha),
-            data = coverData,
-        )
-        Text(
-            text = title,
-            modifier = Modifier
-                .padding(horizontal = 16.dp)
-                .weight(1f),
-            maxLines = 2,
-            overflow = TextOverflow.Ellipsis,
-            style = MaterialTheme.typography.bodyMedium,
-        )
-        BadgeGroup(content = badge)
-        if (onClickContinueReading != null) {
-            ContinueReadingButton(
-                size = ContinueReadingButtonSizeSmall,
-                iconSize = ContinueReadingButtonIconSizeSmall,
-                onClick = onClickContinueReading,
-                modifier = Modifier.padding(start = ContinueReadingButtonListSpacing),
+                .selectedBackground(isSelected)
+                .height(56.dp)
+                .combinedClickable(
+                    onClick = onClick,
+                    onLongClick = onLongClick,
+                )
+                .padding(horizontal = 16.dp, vertical = 8.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            MangaCover.Square(
+                modifier = Modifier
+                    .fillMaxHeight()
+                    .alpha(coverAlpha),
+                data = coverData,
             )
+            Text(
+                text = title,
+                modifier = Modifier
+                    .padding(horizontal = 16.dp)
+                    .weight(1f),
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
+                style = MaterialTheme.typography.bodyMedium,
+            )
+            BadgeGroup(content = badge)
+            if (onClickContinueReading != null) {
+                ContinueReadingButton(
+                    size = ContinueReadingButtonSizeSmall,
+                    iconSize = ContinueReadingButtonIconSizeSmall,
+                    onClick = onClickContinueReading,
+                    modifier = Modifier.padding(start = ContinueReadingButtonListSpacing),
+                )
+            }
         }
+        HorizontalDivider(modifier = Modifier.padding(start = 16.dp))
     }
 }
 
@@ -388,18 +391,18 @@ private fun ContinueReadingButton(
     modifier: Modifier = Modifier,
 ) {
     Box(modifier = modifier) {
-        FilledIconButton(
+        IconButton(
             onClick = onClick,
-            shape = MaterialTheme.shapes.small,
-            colors = IconButtonDefaults.filledIconButtonColors(
-                containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.9f),
-                contentColor = contentColorFor(MaterialTheme.colorScheme.primaryContainer),
-            ),
             modifier = Modifier.size(size),
+            minWidth = size,
+            minHeight = size,
+            backgroundColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.9f),
+            cornerRadius = 12.dp,
         ) {
             Icon(
                 imageVector = MaterialSymbols.RoundedFilled.PlayArrow,
                 contentDescription = stringResource(MR.strings.action_resume),
+                tint = contentColorFor(MaterialTheme.colorScheme.primaryContainer),
                 modifier = Modifier.size(iconSize),
             )
         }

@@ -1,7 +1,9 @@
 package mihon.feature.migration.config
 
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -9,11 +11,7 @@ import androidx.compose.foundation.lazy.LazyItemScope
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.ElevatedCard
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
-import androidx.compose.material3.ListItem
-import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SmallExtendedFloatingActionButton
 import androidx.compose.material3.Text
@@ -27,7 +25,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastForEachIndexed
@@ -72,6 +70,9 @@ import tachiyomi.presentation.core.components.Pill
 import tachiyomi.presentation.core.components.material.Scaffold
 import tachiyomi.presentation.core.components.material.padding
 import tachiyomi.presentation.core.i18n.stringResource
+import top.yukonga.miuix.kmp.basic.HorizontalDivider
+import top.yukonga.miuix.kmp.basic.SmallTitle
+import top.yukonga.miuix.kmp.theme.MiuixTheme
 import tachiyomi.presentation.core.screens.LoadingScreen
 import tachiyomi.presentation.core.util.shouldExpandFAB
 
@@ -178,7 +179,7 @@ class MigrationConfigScreen(private val mangaIds: Collection<Long>) : Screen() {
                     if (sources.isNotEmpty()) {
                         val headerPrefix = if (selectedSourceList) "selected" else "available"
                         item("$headerPrefix-header") {
-                            Text(
+                            SmallTitle(
                                 text = stringResource(
                                     resource = if (selectedSourceList) {
                                         MR.strings.migrationConfigScreen_selectedHeader
@@ -186,10 +187,7 @@ class MigrationConfigScreen(private val mangaIds: Collection<Long>) : Screen() {
                                         MR.strings.migrationConfigScreen_availableHeader
                                     },
                                 ),
-                                style = MaterialTheme.typography.bodyMedium,
-                                modifier = Modifier
-                                    .padding(MaterialTheme.padding.medium)
-                                    .animateItem(),
+                                modifier = Modifier.animateItem(),
                             )
                         }
                     }
@@ -246,11 +244,14 @@ class MigrationConfigScreen(private val mangaIds: Collection<Long>) : Screen() {
             key = key(source),
             enabled = dragEnabled,
         ) { _ ->
-            ElevatedCard(
-                shape = shape,
+            // Miuix grouped-card look: flat surfaceContainer with the
+            // same first/last rounded corners the card had.
+            Box(
                 modifier = Modifier
                     .padding(horizontal = MaterialTheme.padding.medium)
-                    .animateItem(),
+                    .animateItem()
+                    .clip(shape)
+                    .background(MiuixTheme.colorScheme.surfaceContainer),
             ) {
                 SourceItem(
                     source = source,
@@ -275,41 +276,35 @@ class MigrationConfigScreen(private val mangaIds: Collection<Long>) : Screen() {
         scope: ReorderableCollectionItemScope,
         onClick: () -> Unit,
     ) {
-        ListItem(
-            modifier = Modifier.clickable(onClick = onClick),
-            trailingContent = if (dragEnabled) {
-                {
-                    Icon(
-                        imageVector = MaterialSymbols.Rounded.DragHandle,
-                        contentDescription = null,
-                        modifier = with(scope) {
-                            Modifier.draggableHandle()
-                        },
-                    )
-                }
-            } else {
-                null
-            },
-            colors = ListItemDefaults.colors(containerColor = Color.Transparent),
+        Row(
+            modifier = Modifier
+                .clickable(onClick = onClick)
+                .padding(horizontal = 16.dp, vertical = 12.dp),
+            horizontalArrangement = Arrangement.spacedBy(MaterialTheme.padding.small),
+            verticalAlignment = Alignment.CenterVertically,
         ) {
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(MaterialTheme.padding.small),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                SourceIcon(source = source.source)
-                Text(
-                    text = source.name,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                    style = MaterialTheme.typography.bodyMedium,
-                    modifier = Modifier.weight(1f),
+            SourceIcon(source = source.source)
+            Text(
+                text = source.name,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                style = MaterialTheme.typography.bodyMedium,
+                modifier = Modifier.weight(1f),
+            )
+            if (showLanguage) {
+                Pill(
+                    text = LocaleHelper.getShortDisplayName(source.shortLanguage, uppercase = true),
+                    style = MaterialTheme.typography.bodySmall,
                 )
-                if (showLanguage) {
-                    Pill(
-                        text = LocaleHelper.getShortDisplayName(source.shortLanguage, uppercase = true),
-                        style = MaterialTheme.typography.bodySmall,
-                    )
-                }
+            }
+            if (dragEnabled) {
+                Icon(
+                    imageVector = MaterialSymbols.Rounded.DragHandle,
+                    contentDescription = null,
+                    modifier = with(scope) {
+                        Modifier.draggableHandle()
+                    },
+                )
             }
         }
     }

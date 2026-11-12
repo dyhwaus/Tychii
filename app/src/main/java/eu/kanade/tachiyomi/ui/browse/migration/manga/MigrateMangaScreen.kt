@@ -34,7 +34,7 @@ import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.components.FastScrollLazyColumn
 import tachiyomi.presentation.core.components.material.Scaffold
 import tachiyomi.presentation.core.i18n.stringResource
-import tachiyomi.presentation.core.screens.EmptyScreen
+import eu.kanade.presentation.components.QuietEmptyScreen
 import tachiyomi.presentation.core.screens.LoadingScreen
 import tachiyomi.presentation.core.util.selectedBackground
 import tachiyomi.presentation.core.util.shouldExpandFAB
@@ -97,7 +97,7 @@ data class MigrateMangaScreen(
             },
         ) { contentPadding ->
             if (state.isEmpty) {
-                EmptyScreen(
+                QuietEmptyScreen(
                     stringRes = MR.strings.empty_screen,
                     modifier = Modifier.padding(contentPadding),
                 )

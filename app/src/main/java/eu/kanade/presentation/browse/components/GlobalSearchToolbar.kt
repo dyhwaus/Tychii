@@ -11,18 +11,14 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.material3.FilterChip
-import androidx.compose.material3.FilterChipDefaults
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
-import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarScrollBehavior
-import androidx.compose.material3.VerticalDivider
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import eu.kanade.presentation.components.SearchToolbar
 import eu.kanade.tachiyomi.ui.browse.source.globalsearch.SourceFilter
 import mihon.icons.materialsymbols.MaterialSymbols
@@ -32,6 +28,12 @@ import mihon.icons.materialsymbols.rounded.Keep
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.components.material.padding
 import tachiyomi.presentation.core.i18n.stringResource
+import top.yukonga.miuix.kmp.basic.Button
+import top.yukonga.miuix.kmp.basic.ButtonDefaults
+import top.yukonga.miuix.kmp.basic.HorizontalDivider
+import top.yukonga.miuix.kmp.basic.LinearProgressIndicator
+import top.yukonga.miuix.kmp.basic.VerticalDivider
+import top.yukonga.miuix.kmp.theme.MiuixTheme
 
 @Composable
 fun GlobalSearchToolbar(
@@ -48,7 +50,7 @@ fun GlobalSearchToolbar(
     onToggleResults: () -> Unit,
     scrollBehavior: TopAppBarScrollBehavior,
 ) {
-    Column(modifier = Modifier.background(MaterialTheme.colorScheme.surface)) {
+    Column(modifier = Modifier.background(MiuixTheme.colorScheme.surface)) {
         Box {
             SearchToolbar(
                 searchQuery = searchQuery,
@@ -60,7 +62,7 @@ fun GlobalSearchToolbar(
             )
             if (progress in 1..<total) {
                 LinearProgressIndicator(
-                    progress = { progress / total.toFloat() },
+                    progress = progress / total.toFloat(),
                     modifier = Modifier
                         .align(Alignment.BottomStart)
                         .fillMaxWidth(),
@@ -76,58 +78,56 @@ fun GlobalSearchToolbar(
             verticalAlignment = Alignment.CenterVertically,
         ) {
             // TODO: make this UX better; it only applies when triggering a new search
+            // Miuix has no chip, so the filters are small buttons like the
+            // tags on the manga detail page.
             if (!hideSourceFilter) {
-                FilterChip(
+                FilterButton(
                     selected = sourceFilter == SourceFilter.PinnedOnly,
                     onClick = { onChangeSearchFilter(SourceFilter.PinnedOnly) },
-                    leadingIcon = {
-                        Icon(
-                            imageVector = MaterialSymbols.Rounded.Keep,
-                            contentDescription = null,
-                            modifier = Modifier
-                                .size(FilterChipDefaults.IconSize),
-                        )
-                    },
-                    label = {
-                        Text(text = stringResource(MR.strings.pinned_sources))
-                    },
+                    icon = MaterialSymbols.Rounded.Keep,
+                    label = stringResource(MR.strings.pinned_sources),
                 )
-                FilterChip(
+                FilterButton(
                     selected = sourceFilter == SourceFilter.All,
                     onClick = { onChangeSearchFilter(SourceFilter.All) },
-                    leadingIcon = {
-                        Icon(
-                            imageVector = MaterialSymbols.Rounded.DoneAll,
-                            contentDescription = null,
-                            modifier = Modifier
-                                .size(FilterChipDefaults.IconSize),
-                        )
-                    },
-                    label = {
-                        Text(text = stringResource(MR.strings.all))
-                    },
+                    icon = MaterialSymbols.Rounded.DoneAll,
+                    label = stringResource(MR.strings.all),
                 )
 
-                VerticalDivider(modifier = Modifier.height(FilterChipDefaults.Height))
+                VerticalDivider(modifier = Modifier.height(32.dp))
             }
 
-            FilterChip(
+            FilterButton(
                 selected = onlyShowHasResults,
                 onClick = { onToggleResults() },
-                leadingIcon = {
-                    Icon(
-                        imageVector = MaterialSymbols.Rounded.FilterList,
-                        contentDescription = null,
-                        modifier = Modifier
-                            .size(FilterChipDefaults.IconSize),
-                    )
-                },
-                label = {
-                    Text(text = stringResource(MR.strings.has_results))
-                },
+                icon = MaterialSymbols.Rounded.FilterList,
+                label = stringResource(MR.strings.has_results),
             )
         }
 
         HorizontalDivider()
+    }
+}
+
+@Composable
+private fun FilterButton(
+    selected: Boolean,
+    onClick: () -> Unit,
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    label: String,
+) {
+    Button(
+        onClick = onClick,
+        colors = if (selected) ButtonDefaults.buttonColorsPrimary() else ButtonDefaults.buttonColors(),
+    ) {
+        Icon(
+            imageVector = icon,
+            contentDescription = null,
+            modifier = Modifier.size(18.dp),
+        )
+        Text(
+            text = label,
+            modifier = Modifier.padding(start = 4.dp),
+        )
     }
 }

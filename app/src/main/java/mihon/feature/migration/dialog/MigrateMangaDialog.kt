@@ -7,10 +7,7 @@ import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -45,6 +42,8 @@ import tachiyomi.presentation.core.components.LabeledCheckbox
 import tachiyomi.presentation.core.components.material.padding
 import tachiyomi.presentation.core.i18n.stringResource
 import tachiyomi.presentation.core.screens.LoadingScreen
+import top.yukonga.miuix.kmp.basic.TextButton
+import top.yukonga.miuix.kmp.overlay.OverlayDialog
 
 @Composable
 internal fun Screen.MigrateMangaDialog(
@@ -71,62 +70,55 @@ internal fun Screen.MigrateMangaDialog(
         return
     }
 
-    AlertDialog(
+    OverlayDialog(
+        show = true,
+        title = stringResource(MR.strings.migration_dialog_what_to_include),
         onDismissRequest = onDismissRequest,
-        title = {
-            Text(text = stringResource(MR.strings.migration_dialog_what_to_include))
-        },
-        text = {
-            Column(
-                modifier = Modifier.verticalScroll(rememberScrollState()),
-            ) {
-                state.applicableFlags.fastForEach { flag ->
-                    LabeledCheckbox(
-                        label = stringResource(flag.getLabel()),
-                        checked = flag in state.selectedFlags,
-                        onCheckedChange = { viewModel.toggleSelection(flag) },
-                    )
-                }
+    ) {
+        Column(
+            modifier = Modifier.verticalScroll(rememberScrollState()),
+        ) {
+            state.applicableFlags.fastForEach { flag ->
+                LabeledCheckbox(
+                    label = stringResource(flag.getLabel()),
+                    checked = flag in state.selectedFlags,
+                    onCheckedChange = { viewModel.toggleSelection(flag) },
+                )
             }
-        },
-        confirmButton = {
-            FlowRow(
-                horizontalArrangement = Arrangement.spacedBy(MaterialTheme.padding.extraSmall),
-            ) {
-                TextButton(
-                    onClick = {
-                        onDismissRequest()
-                        onClickTitle()
-                    },
-                ) {
-                    Text(text = stringResource(MR.strings.action_show_manga))
-                }
+        }
+        FlowRow(
+            horizontalArrangement = Arrangement.spacedBy(MaterialTheme.padding.extraSmall),
+        ) {
+            TextButton(
+                text = stringResource(MR.strings.action_show_manga),
+                onClick = {
+                    onDismissRequest()
+                    onClickTitle()
+                },
+            )
 
-                Spacer(modifier = Modifier.weight(1f))
+            Spacer(modifier = Modifier.weight(1f))
 
-                TextButton(
-                    onClick = {
-                        scope.launch(Dispatchers.IO) {
-                            viewModel.migrateManga(replace = false)
-                            withContext(Dispatchers.Main) { onComplete() }
-                        }
-                    },
-                ) {
-                    Text(text = stringResource(MR.strings.copy))
-                }
-                TextButton(
-                    onClick = {
-                        scope.launch(Dispatchers.IO) {
-                            viewModel.migrateManga(replace = true)
-                            withContext(Dispatchers.Main) { onComplete() }
-                        }
-                    },
-                ) {
-                    Text(text = stringResource(MR.strings.migrate))
-                }
-            }
-        },
-    )
+            TextButton(
+                text = stringResource(MR.strings.copy),
+                onClick = {
+                    scope.launch(Dispatchers.IO) {
+                        viewModel.migrateManga(replace = false)
+                        withContext(Dispatchers.Main) { onComplete() }
+                    }
+                },
+            )
+            TextButton(
+                text = stringResource(MR.strings.migrate),
+                onClick = {
+                    scope.launch(Dispatchers.IO) {
+                        viewModel.migrateManga(replace = true)
+                        withContext(Dispatchers.Main) { onComplete() }
+                    }
+                },
+            )
+        }
+    }
 }
 
 @Inject

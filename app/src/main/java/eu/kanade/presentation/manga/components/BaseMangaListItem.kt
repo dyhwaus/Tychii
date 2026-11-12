@@ -2,6 +2,7 @@ package eu.kanade.presentation.manga.components
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -16,6 +17,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import tachiyomi.domain.manga.model.Manga
 import tachiyomi.presentation.core.components.material.padding
+import top.yukonga.miuix.kmp.basic.HorizontalDivider
 
 @Composable
 fun BaseMangaListItem(
@@ -27,16 +29,19 @@ fun BaseMangaListItem(
     actions: @Composable RowScope.() -> Unit = {},
     content: @Composable RowScope.() -> Unit = { defaultContent(manga) },
 ) {
-    Row(
-        modifier = modifier
-            .clickable(onClick = onClickItem)
-            .height(56.dp)
-            .padding(horizontal = MaterialTheme.padding.medium),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        cover()
-        content()
-        actions()
+    Column {
+        Row(
+            modifier = modifier
+                .clickable(onClick = onClickItem)
+                .height(56.dp)
+                .padding(horizontal = MaterialTheme.padding.medium),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            cover()
+            content()
+            actions()
+        }
+        HorizontalDivider(modifier = Modifier.padding(start = 16.dp))
     }
 }
 

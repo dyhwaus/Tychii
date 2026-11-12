@@ -17,11 +17,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -38,7 +34,6 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import eu.kanade.presentation.components.AppBar
 import eu.kanade.presentation.components.AppBarActions
@@ -64,6 +59,12 @@ import tachiyomi.presentation.core.components.material.Scaffold
 import tachiyomi.presentation.core.components.material.padding
 import tachiyomi.presentation.core.components.material.topSmallPaddingValues
 import tachiyomi.presentation.core.i18n.stringResource
+import top.yukonga.miuix.kmp.basic.CircularProgressIndicator
+import top.yukonga.miuix.kmp.basic.DropdownDefaults
+import top.yukonga.miuix.kmp.basic.DropdownEntry
+import top.yukonga.miuix.kmp.basic.DropdownItem
+import top.yukonga.miuix.kmp.basic.IconButton
+import top.yukonga.miuix.kmp.popup.OverlayDropdownPopup
 import tachiyomi.presentation.core.util.plus
 
 @Composable
@@ -340,42 +341,59 @@ private fun MigrationListItemAction(
                         contentDescription = null,
                     )
                 }
-                DropdownMenu(
-                    expanded = menuExpanded,
-                    onDismissRequest = closeMenu,
-                    offset = DpOffset(8.dp, (-56).dp),
-                ) {
-                    DropdownMenuItem(
-                        text = { Text(stringResource(MR.strings.migrationListScreen_searchManuallyActionLabel)) },
-                        onClick = {
-                            closeMenu()
-                            onSearchManually()
-                        },
-                    )
-                    DropdownMenuItem(
-                        text = { Text(stringResource(MR.strings.migrationListScreen_skipActionLabel)) },
-                        onClick = {
-                            closeMenu()
-                            onSkip()
-                        },
-                    )
-                    if (result is MigratingManga.SearchResult.Success) {
-                        DropdownMenuItem(
-                            text = { Text(stringResource(MR.strings.migrationListScreen_migrateNowActionLabel)) },
-                            onClick = {
-                                closeMenu()
-                                onMigrate()
+                OverlayDropdownPopup(
+                    entries = listOf(
+                        DropdownEntry(
+                            items = buildList {
+                                add(
+                                    DropdownItem(
+                                        text = stringResource(MR.strings.migrationListScreen_searchManuallyActionLabel),
+                                        onClick = {
+                                            closeMenu()
+                                            onSearchManually()
+                                        },
+                                    ),
+                                )
+                                add(
+                                    DropdownItem(
+                                        text = stringResource(MR.strings.migrationListScreen_skipActionLabel),
+                                        onClick = {
+                                            closeMenu()
+                                            onSkip()
+                                        },
+                                    ),
+                                )
+                                if (result is MigratingManga.SearchResult.Success) {
+                                    add(
+                                        DropdownItem(
+                                            text = stringResource(MR.strings.migrationListScreen_migrateNowActionLabel),
+                                            onClick = {
+                                                closeMenu()
+                                                onMigrate()
+                                            },
+                                        ),
+                                    )
+                                    add(
+                                        DropdownItem(
+                                            text = stringResource(MR.strings.migrationListScreen_copyNowActionLabel),
+                                            onClick = {
+                                                closeMenu()
+                                                onCopy()
+                                            },
+                                        ),
+                                    )
+                                }
                             },
-                        )
-                        DropdownMenuItem(
-                            text = { Text(stringResource(MR.strings.migrationListScreen_copyNowActionLabel)) },
-                            onClick = {
-                                closeMenu()
-                                onCopy()
-                            },
-                        )
-                    }
-                }
+                        ),
+                    ),
+                    show = menuExpanded,
+                    onDismiss = closeMenu,
+                    onDismissFinished = {},
+                    maxHeight = null,
+                    dropdownColors = DropdownDefaults.dropdownColors(),
+                    renderInRootScaffold = true,
+                    collapseOnSelection = true,
+                )
             }
         }
     }

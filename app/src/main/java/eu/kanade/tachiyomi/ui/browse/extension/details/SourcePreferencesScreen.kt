@@ -287,6 +287,11 @@ private fun entryMap(entries: Array<CharSequence>?, entryValues: Array<CharSeque
 /**
  * Extensions get a real [EditText] through [EditTextPreference.OnBindEditTextListener], and some validate input by
  * disabling the dialog's `android.R.id.button1` found from [EditText.getRootView], so one stands in for the OK button.
+ *
+ * This dialog deliberately stays Material3: it must be a platform [androidx.compose.ui.window.Dialog]
+ * window so extensions can find `android.R.id.button1` in its view hierarchy and so the soft
+ * keyboard can be forced visible through the dialog window. Miuix's OverlayDialog is an overlay
+ * popup, not a platform window, so it cannot host either.
  */
 @Composable
 private fun EditTextPreferenceDialog(
