@@ -224,7 +224,9 @@ private fun MiuixTriStateRow(
     // The preference layer has no tri-state checkbox, so the basic
     // Checkbox (ToggleableState) is paired with a BasicComponent row.
     // Same cycle as the Material TriStateItem: off -> on -> excluded.
-    val cycle = {
+    // Explicit Unit return: the safe-call's Unit? would otherwise make
+    // this lambda () -> Unit?, which BasicComponent's onClick rejects.
+    val cycle: () -> Unit = {
         onClick?.invoke(
             when (state) {
                 TriState.DISABLED -> TriState.ENABLED_IS

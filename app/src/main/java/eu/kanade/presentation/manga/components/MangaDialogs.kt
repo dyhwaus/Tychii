@@ -125,6 +125,9 @@ fun SetIntervalDialog(
                     color = MiuixTheme.colorScheme.onSurface,
                 )
 
+                // NumberPicker's label is a plain (Int) -> String, not a
+                // @Composable lambda, so the string is resolved here instead.
+                val defaultLabel = stringResource(MR.strings.label_default)
                 BoxWithConstraints(
                     modifier = Modifier.fillMaxWidth(),
                     contentAlignment = Alignment.Center,
@@ -135,7 +138,7 @@ fun SetIntervalDialog(
                         range = 0..FetchInterval.MAX_INTERVAL,
                         label = {
                             if (it == 0) {
-                                stringResource(MR.strings.label_default)
+                                defaultLabel
                             } else {
                                 it.toString()
                             }

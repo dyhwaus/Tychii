@@ -265,7 +265,6 @@ object SettingsTrackingScreen : SearchableSettings {
                         isError = inputError && !processing,
                     )
                 }
-                }
                 Column(modifier = Modifier.padding(top = 12.dp)) {
                     Button(
                         modifier = Modifier.fillMaxWidth(),

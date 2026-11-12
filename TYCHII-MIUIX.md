@@ -20,7 +20,21 @@ two layouts) with no `unit.dp` import — upstream had no `.dp`
 usage there at all, so the migration added the usage without the
 import. A tree-wide scan for missing `dp` / `sp` /
 `ToggleableState` / `Arrangement` / `asStateFlow` imports then
-came back clean. The 0.1.2 release is the
+came back clean. Seven more errors from the same migration, all
+fixed 2026-11-12: `CategoryDialogs` closed the OverlayDialog
+content lambda right after the checkbox list, leaving the buttons
+row outside the dialog and a stray `)` behind it; `SettingsTrackingScreen`
+had a duplicated `}` in the login dialog that closed the enclosing
+object early and left its final `}` unmatched; `ChapterSettingsDialog`'s
+`cycle` lambda inferred `() -> Unit?` from a safe call and
+`MultiSelectListPreferenceWidget`'s `toggle` inferred `() -> Boolean`
+from Set.add/remove — both now carry an explicit `() -> Unit` type;
+`MangaDialogs` called `stringResource` inside NumberPicker's plain
+`(Int) -> String` label, so the string is now resolved before the
+picker; `TrackerSearch` used `onSurfaceVariant`, which Miuix's
+color scheme doesn't have — its Monet mapping sends Material
+`onSurfaceVariant` to `onSurfaceVariantActions`, so that's the tint
+now. The 0.1.2 release is the
 full-page Miuix restyle (2026-11-12): every user-visible page except
 the reader now follows the Miuix style — settings, manga detail,
 browse/source/extensions/migration, updates/history list items,

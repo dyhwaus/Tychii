@@ -82,7 +82,9 @@ fun <T> MultiSelectListPreferenceDialog(
                 entries.forEach { current ->
                     item {
                         val isSelected = selected.contains(current.key)
-                        val toggle = {
+                        // Explicit Unit return: Set.add/remove return Boolean,
+                        // which would otherwise make this lambda () -> Boolean.
+                        val toggle: () -> Unit = {
                             if (isSelected) {
                                 selected.remove(current.key)
                             } else {

@@ -263,7 +263,6 @@ fun ChangeCategoryDialog(
                     }
                 }
             }
-        }
         Row {
             TextButton(
                 text = stringResource(MR.strings.action_edit),
@@ -292,5 +291,5 @@ fun ChangeCategoryDialog(
                 },
             )
         }
-    )
+    }
 }

@@ -149,7 +149,9 @@ fun TrackerSearch(
                                 Icon(
                                     imageVector = MaterialSymbols.Rounded.Close,
                                     contentDescription = null,
-                                    tint = MiuixTheme.colorScheme.onSurfaceVariant,
+                                    // Miuix has no onSurfaceVariant; its Monet mapping
+                                    // sends Material onSurfaceVariant to onSurfaceVariantActions.
+                                    tint = MiuixTheme.colorScheme.onSurfaceVariantActions,
                                 )
                             }
                         }
