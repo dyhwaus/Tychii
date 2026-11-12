@@ -37,6 +37,11 @@ dependencies {
     // Miuix (HyperOS-style UI): the floating navigation bar + theme live here
     api("top.yukonga.miuix.kmp:miuix-ui-android:0.9.4")
     api("top.yukonga.miuix.kmp:miuix-preference-android:0.9.4")
+    // miuix-blur: liquid glass for the floating navigation bar (Wenku8Reader style).
+    // The library declares minSdk 32; the manifest uses tools:overrideLibrary
+    // and all blur calls are gated behind isMiuixGlassSupported (API >= 32),
+    // so minSdk stays 26 and older devices fall back to a translucent bar.
+    api("top.yukonga.miuix.kmp:miuix-blur-android:0.9.4")
     implementation(libs.androidx.compose.animation)
     implementation(libs.androidx.compose.animationGraphics)
     debugImplementation(libs.androidx.compose.uiTooling)

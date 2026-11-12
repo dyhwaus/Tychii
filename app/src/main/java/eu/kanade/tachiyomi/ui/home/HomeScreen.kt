@@ -8,15 +8,12 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.animation.togetherWith
-import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.interaction.collectIsPressedAsState
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.selection.selectable
-import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.Badge
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -38,20 +35,19 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
 import tachiyomi.presentation.core.util.collectAsState
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.compose.ui.util.fastForEach
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import cafe.adriel.voyager.navigator.tab.LocalTabNavigator
 import cafe.adriel.voyager.navigator.tab.TabNavigator
+import eu.kanade.presentation.miuix.TychiiLiquidBar
+import eu.kanade.presentation.theme.isMiuixGlassSupported
 import eu.kanade.presentation.util.Screen
 import eu.kanade.presentation.util.isTabletUi
 import eu.kanade.tachiyomi.ui.browse.BrowseTab
@@ -71,10 +67,9 @@ import soup.compose.material.motion.animation.materialFadeThroughIn
 import soup.compose.material.motion.animation.materialFadeThroughOut
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.i18n.pluralStringResource
-import top.yukonga.miuix.kmp.basic.FloatingNavigationBar
-import top.yukonga.miuix.kmp.basic.FloatingNavigationBarDefaults
+import top.yukonga.miuix.kmp.blur.layerBackdrop
+import top.yukonga.miuix.kmp.blur.rememberLayerBackdrop
 import top.yukonga.miuix.kmp.basic.Scaffold as MiuixScaffold
-import top.yukonga.miuix.kmp.theme.MiuixTheme
 
 object HomeScreen : Screen() {
 
@@ -88,12 +83,11 @@ object HomeScreen : Screen() {
     @Suppress("ConstPropertyName")
     private const val TabNavigatorKey = "HomeTabs"
 
-    // Bottom padding for tab content so nothing hides behind the floating bar:
-    // bar height (52.dp without labels, 62.dp with labels) + 32.dp bottom
-    // offset (+ shadow). The navigation-bar inset is already in the
+    // Bottom padding for tab content so nothing hides behind the liquid
+    // bar: the bar is 64.dp tall with or without labels, plus 32.dp of
+    // bottom offset (+ shadow). The navigation-bar inset is already in the
     // Scaffold's PaddingValues.
-    private val FloatingNavBarClearance = 84.dp
-    private val FloatingNavBarClearanceWithLabels = 94.dp
+    private val LiquidNavBarClearance = 96.dp
 
     private val TABS = listOf(
         LibraryTab,
@@ -110,11 +104,15 @@ object HomeScreen : Screen() {
         val showNavBarLabels by remember {
             context.appGraph.uiPreferences.showNavBarLabels
         }.collectAsState()
-        val navBarClearance = if (showNavBarLabels) {
-            FloatingNavBarClearanceWithLabels
-        } else {
-            FloatingNavBarClearance
-        }
+        val bottomBarGlass by remember {
+            context.appGraph.uiPreferences.bottomBarGlass
+        }.collectAsState()
+        // Liquid glass only runs on API 32+; below that the bar falls back
+        // to a translucent solid color (see MiuixGlass.kt).
+        val glassEnabled = bottomBarGlass && isMiuixGlassSupported
+        // The blur source. Created unconditionally (it is only a handle);
+        // it is only *applied* to the content layer when glass is enabled.
+        val backdrop = rememberLayerBackdrop()
         TabNavigator(
             tab = LibraryTab,
             key = TabNavigatorKey,
@@ -151,37 +149,70 @@ object HomeScreen : Screen() {
                         TabContent(tabNavigator)
                     }
                 } else {
-                    // Phones use a Miuix floating navigation bar: a detached
-                    // pill that floats above the content.
-                    MiuixScaffold(
-                        // The Scaffold background must match the app theme
-                        // background. Miuix's own dark surface is pure black
-                        // while the app background is #1A1C1E, and that
-                        // mismatch showed as a visible seam behind the
-                        // floating bar in dark mode.
-                        containerColor = MaterialTheme.colorScheme.background,
-                        floatingToolbar = {
-                            AnimatedVisibility(
-                                visible = showNavBar,
-                                enter = slideInVertically(initialOffsetY = { it }) + fadeIn(),
-                                exit = slideOutVertically(targetOffsetY = { it }) + fadeOut(),
+                    // Phones use the liquid-glass floating bar (Wenku8Reader
+                    // style). The bar must stay OUTSIDE the layer recorded by
+                    // the backdrop: the backdrop is applied only to the tab
+                    // content below, and the bar is a sibling in an outer
+                    // Box. Putting the bar inside the recorded layer would
+                    // make it blur itself and crash hwui (infinite recursion
+                    // in RenderNode::prepareTreeImpl — see Wenku8Reader's
+                    // MainScaffold for the two verified pitfalls).
+                    Box(Modifier.fillMaxSize()) {
+                        MiuixScaffold(
+                            // The Scaffold background must match the app theme
+                            // background. Miuix's own dark surface is pure black
+                            // while the app background is #1A1C1E, and that
+                            // mismatch showed as a visible seam behind the
+                            // floating bar in dark mode.
+                            containerColor = MaterialTheme.colorScheme.background,
+                        ) { paddingValues ->
+                            Box(
+                                modifier = Modifier
+                                    .padding(paddingValues)
+                                    .padding(bottom = LiquidNavBarClearance)
+                                    .background(MaterialTheme.colorScheme.background)
+                                    .then(
+                                        if (glassEnabled) {
+                                            Modifier.layerBackdrop(backdrop)
+                                        } else {
+                                            Modifier
+                                        },
+                                    ),
                             ) {
-                                FloatingNavigationBar(
-                                    // Translucent so the content shows through the bar.
-                                    color = MiuixTheme.colorScheme.surfaceContainer
-                                        .copy(alpha = 0.75f),
-                                ) {
-                                    TABS.fastForEach { FloatingNavItem(it, showNavBarLabels) }
-                                }
+                                TabContent(tabNavigator)
                             }
-                        },
-                    ) { paddingValues ->
-                        Box(
+                        }
+                        AnimatedVisibility(
+                            visible = showNavBar,
+                            enter = slideInVertically(initialOffsetY = { it }) + fadeIn(),
+                            exit = slideOutVertically(targetOffsetY = { it }) + fadeOut(),
                             modifier = Modifier
-                                .padding(paddingValues)
-                                .padding(bottom = navBarClearance),
+                                .align(Alignment.BottomCenter)
+                                .navigationBarsPadding(),
                         ) {
-                            TabContent(tabNavigator)
+                            val scope = rememberCoroutineScope()
+                            TychiiLiquidBar(
+                                tabs = TABS,
+                                selectedIndex = {
+                                    TABS.indexOfFirst {
+                                        it::class == tabNavigator.current::class
+                                    }
+                                },
+                                onTabSelected = { index ->
+                                    tabNavigator.current = TABS[index]
+                                },
+                                onTabClick = { tab ->
+                                    if (tabNavigator.current::class == tab::class) {
+                                        scope.launch { tab.onReselect(navigator) }
+                                    } else {
+                                        tabNavigator.current = tab
+                                    }
+                                },
+                                showLabels = showNavBarLabels,
+                                glassEnabled = glassEnabled,
+                                backdrop = backdrop,
+                                tabBadge = { tab -> tabBadge(tab) },
+                            )
                         }
                     }
                 }
@@ -278,99 +309,6 @@ object HomeScreen : Screen() {
             },
             badge = tabBadge(tab),
         )
-    }
-
-    @Composable
-    private fun FloatingNavItem(tab: eu.kanade.presentation.util.Tab, showLabels: Boolean) {
-        // Mirrors Miuix's FloatingNavigationBarItem, but takes a Painter so the
-        // tabs keep their existing icons (including the animated library icon).
-        // Miuix's own item only accepts an ImageVector. The label is shown
-        // only when the "show navigation bar labels" appearance setting is on.
-        val tabNavigator = LocalTabNavigator.current
-        val navigator = LocalNavigator.currentOrThrow
-        val scope = rememberCoroutineScope()
-        val selected = tabNavigator.current::class == tab::class
-        val interactionSource = remember { MutableInteractionSource() }
-        val isPressed by interactionSource.collectIsPressedAsState()
-        val tint = floatingNavItemTint(selected, isPressed)
-        val badge = tabBadge(tab)
-        Column(
-            modifier = Modifier
-                .selectable(
-                    selected = selected,
-                    onClick = {
-                        if (!selected) {
-                            tabNavigator.current = tab
-                        } else {
-                            scope.launch { tab.onReselect(navigator) }
-                        }
-                    },
-                    role = Role.Tab,
-                    interactionSource = interactionSource,
-                    indication = null,
-                ),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(2.dp),
-        ) {
-            BadgedBox(
-                badge = { badge?.invoke() },
-                modifier = Modifier.padding(
-                    // Balanced vertical padding when labels are on: the bar
-                    // grows to fit icon + label with 8.dp top and bottom,
-                    // so nothing touches the bar's edges.
-                    top = if (showLabels) {
-                        8.dp
-                    } else {
-                        FloatingNavigationBarDefaults.IconPadding
-                    },
-                    bottom = if (showLabels) {
-                        2.dp
-                    } else {
-                        FloatingNavigationBarDefaults.IconPadding
-                    },
-                    start = FloatingNavigationBarDefaults.IconPadding,
-                    end = FloatingNavigationBarDefaults.IconPadding,
-                ),
-            ) {
-                Icon(
-                    painter = tab.options.icon!!,
-                    contentDescription = tab.options.title,
-                    modifier = Modifier.size(FloatingNavigationBarDefaults.IconSize),
-                    tint = tint,
-                )
-            }
-            if (showLabels) {
-                Text(
-                    text = tab.options.title,
-                    fontSize = 11.sp,
-                    lineHeight = 14.sp,
-                    color = tint,
-                    maxLines = 1,
-                    modifier = Modifier.padding(bottom = 8.dp),
-                )
-            }
-        }
-    }
-
-    @Composable
-    private fun floatingNavItemTint(selected: Boolean, isPressed: Boolean): Color {
-        // Neko-style: the selected tab uses the app primary color
-        // (#FF124A light / #FCFC98 dark), unselected uses onSurfaceVariant.
-        // Opacity follows Miuix's NavigationBarItemColors.
-        val selectedColor = MaterialTheme.colorScheme.primary
-        val unselectedColor = MaterialTheme.colorScheme.onSurfaceVariant
-        return when {
-            isPressed && selected -> selectedColor.copy(
-                alpha = selectedColor.alpha * FloatingNavigationBarDefaults.SelectedPressedAlpha,
-            )
-            isPressed -> unselectedColor.copy(
-                alpha = unselectedColor.alpha * FloatingNavigationBarDefaults.UnselectedPressedAlpha,
-            )
-            selected -> selectedColor
-            else -> unselectedColor.copy(
-                alpha = unselectedColor.alpha * FloatingNavigationBarDefaults.UnselectedAlpha,
-            )
-        }
     }
 
     @Composable

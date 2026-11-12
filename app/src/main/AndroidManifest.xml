@@ -2,6 +2,12 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
+    <!-- miuix-blur declares minSdk 32, but the app supports 26. Blur is only
+         used on Android 12L (API 32)+, gated by isMiuixGlassSupported at
+         runtime (older devices fall back to a translucent bar), so allowing
+         the merge here is safe. -->
+    <uses-sdk tools:overrideLibrary="top.yukonga.miuix.kmp.blur" />
+
     <!-- Internet -->
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />

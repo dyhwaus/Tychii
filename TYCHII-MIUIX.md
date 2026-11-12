@@ -8,16 +8,59 @@ changed, and how to build.
 ## Miuix (v0.9.4)
 
 - Maven: `top.yukonga.miuix.kmp:miuix-ui-android:0.9.4`,
-  `miuix-preference-android:0.9.4`. Android-only artifacts (the `-android`
-  suffix); the shared KMP artifacts are the same names without it.
+  `miuix-preference-android:0.9.4`, `miuix-blur-android:0.9.4`. Android-only
+  artifacts (the `-android` suffix); the shared KMP artifacts are the same
+  names without it.
 - Shared minSdk is 24, so Tychii's minSdk 26 needed no change.
-  `miuix-blur` needs API 33 and is NOT used.
+  `miuix-blur` declares minSdk 32; it IS used for the liquid-glass bottom
+  bar (see below), with a manifest override + a runtime gate, so minSdk
+  stays 26.
 - Miuix does not depend on Material3 and is a full replacement design
   system, not a skin. It can coexist with Material3; each system needs its
   own theme wrapper.
 - No initialization call. Wrap content in `MiuixTheme` with a
   `ThemeController`. Source: https://github.com/compose-miuix-ui/miuix
   (tag v0.9.4).
+
+## Liquid glass (Wenku8Reader style)
+
+- The floating navigation bar is a liquid-glass bar ported from
+  [Wenku8Reader](https://github.com/TakaHoshino/Wenku8Reader) (which
+  adapted it from SukiSU-Ultra / the miuix official example /
+  Kyant0/AndroidLiquidGlass, Apache-2.0 — attribution headers are in
+  each ported file). Effect stack in
+  `eu.kanade.presentation.miuix` (`LiquidGlass.kt`, `LiquidInnerShadow.kt`,
+  `liquid/…`): backdrop blur + vibrancy + lens refraction (AGSL
+  RuntimeShader) + specular highlight + device-tilt light. Bar in
+  `MiuixLiquidBottomBar.kt`, Tychii adapter in `TychiiLiquidBar.kt`.
+- minSdk stays 26: the manifest uses
+  `<uses-sdk tools:overrideLibrary="top.yukonga.miuix.kmp.blur" />` and
+  all blur calls are gated behind `isMiuixGlassSupported` (API >= 32,
+  `eu.kanade.presentation.theme.MiuixGlass.kt`). API 26–31: translucent
+  solid bar (same look as before). API 32: blur + vibrancy + highlight.
+  API 33+: full liquid glass with lens refraction.
+- Accent is Miuix default blue (`MiuixTheme.colorScheme.primary`), not
+  the app's Neko pink — user chose Miuix default blue for the bar.
+- 5 tabs share the capsule by weight, 64.dp minimum per tab. Icon + 11.sp
+  label when the "show navigation bar labels" setting is on, icon-only
+  when off. Bar is 64.dp; content clearance is a single
+  `LiquidNavBarClearance = 96.dp`.
+- Backdrop wiring (two verified crash pitfalls, see Wenku8Reader's
+  MainScaffold): the backdrop is applied via `Modifier.layerBackdrop`
+  ONLY to the tab content, and the bar is a sibling in an outer Box
+  OUTSIDE the recorded layer. Never combine
+  `rememberLayerBackdrop { … drawContent() … }` with a wrapping
+  `layerBackdrop`, and never put the bar inside the recorded layer —
+  either makes hwui recurse infinitely in `RenderNode::prepareTreeImpl`
+  and crash on launch.
+- Toggle: `UiPreferences.bottomBarGlass` (`pref_bottom_bar_glass`,
+  default true), SwitchPreference in Settings → Appearance. On API < 32
+  it has no visible effect.
+- `lens()` only works on `CornerBasedShape`, so the bar uses
+  `RoundedCornerShape(32.dp)` (64.dp bar → capsule), not `CircleShape`.
+- Deliberately NOT ported: Wenku8Reader's main-screen Miuix components
+  (MiuixPage / MiuixSection grouped cards), its reader, and its settings
+  pages. Settings / More stay Material3 per the user's instruction.
 
 ## What changed
 

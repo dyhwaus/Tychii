@@ -170,6 +170,11 @@ object SettingsAppearanceScreen : SearchableSettings {
                     preference = uiPreferences.showNavBarLabels,
                     title = stringResource(MR.strings.pref_show_navbar_labels),
                 ),
+                Preference.PreferenceItem.SwitchPreference(
+                    preference = uiPreferences.bottomBarGlass,
+                    title = stringResource(MR.strings.pref_bottom_bar_glass),
+                    subtitle = stringResource(MR.strings.pref_bottom_bar_glass_summary),
+                ),
             ),
         )
     }

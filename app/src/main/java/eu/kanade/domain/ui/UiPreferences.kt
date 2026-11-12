@@ -51,6 +51,8 @@ class UiPreferences(
 
     val showNavBarLabels: Preference<Boolean> = preferenceStore.getBoolean("pref_show_navbar_labels", true)
 
+    val bottomBarGlass: Preference<Boolean> = preferenceStore.getBoolean("pref_bottom_bar_glass", true)
+
     companion object {
         fun dateFormat(format: String, locale: Locale): DateTimeFormatter = when (format) {
             "" -> DateTimeFormatter.ofLocalizedDate(FormatStyle.SHORT).withLocale(locale)
