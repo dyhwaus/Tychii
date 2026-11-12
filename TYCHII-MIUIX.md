@@ -235,6 +235,10 @@ uses MaterialExpressiveTheme.
 - **Font:** M PLUS Rounded 1c (OFL) for every text style, letter
   spacing -0.15.sp (`Typefaces.appTypography`, font files in
   `res/font/mplus_rounded1c_*`, uploaded to GitHub 2026-11-12).
+  The wiring (`Typefaces.kt` + `typography = Typefaces.appTypography`
+  in `TachiyomiTheme.kt`) was pushed 2026-11-12 after three earlier
+  attempts failed on approval timeout; the theme now actually uses
+  the font everywhere.
 - **Library grid:** cover radius 12.dp with a 0.75.dp `#9D9D9D`
   outline (`MangaCover`), grid gaps 16.dp horizontal / 4.dp vertical,
   comfortable title below the cover in bodyMedium Medium (max 3

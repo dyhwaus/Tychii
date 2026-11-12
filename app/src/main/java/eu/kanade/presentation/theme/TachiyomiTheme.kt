@@ -74,8 +74,8 @@ private fun BaseTachiyomiTheme(
                 isAmoled = isAmoled,
             )
         },
-        // Neko's typography (M PLUS Rounded 1c) is applied once the font
-        // files are added to res/font; see TYCHII-MIUIX.md.
+        // Neko's typography: M PLUS Rounded 1c for every text style.
+        typography = Typefaces.appTypography,
     ) {
         // Neko's ripple: primary color at 0.6 alpha for all states.
         val rippleConfiguration = RippleConfiguration(
