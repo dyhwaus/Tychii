@@ -1,20 +1,18 @@
 package eu.kanade.presentation.more.settings.widget
 
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.tooling.preview.PreviewLightDark
+import eu.kanade.presentation.more.settings.LocalPreferenceHighlighted
 import eu.kanade.presentation.theme.TachiyomiPreviewTheme
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.rounded.Preview
-import tachiyomi.presentation.core.util.secondaryItemAlpha
+import top.yukonga.miuix.kmp.preference.ArrowPreference
 
 @Composable
 fun TextPreferenceWidget(
@@ -27,36 +25,13 @@ fun TextPreferenceWidget(
     enabled: Boolean = true,
     onPreferenceClick: (() -> Unit)? = null,
 ) {
-    BasePreferenceWidget(
-        modifier = modifier,
-        title = title,
-        subcomponent = if (!subtitle.isNullOrBlank()) {
-            {
-                Text(
-                    text = subtitle,
-                    modifier = Modifier
-                        .padding(horizontal = PrefsHorizontalPadding)
-                        .secondaryItemAlpha(),
-                    style = MaterialTheme.typography.bodySmall,
-                    maxLines = 10,
-                )
-            }
-        } else {
-            null
-        },
-        icon = if (icon != null) {
-            {
-                Icon(
-                    imageVector = icon,
-                    tint = iconTint,
-                    contentDescription = null,
-                )
-            }
-        } else {
-            null
-        },
+    ArrowPreference(
+        title = title.orEmpty(),
+        summary = subtitle,
+        modifier = modifier.highlightBackground(LocalPreferenceHighlighted.current),
+        startAction = icon?.let { { PreferenceIcon(it, iconTint) } },
+        endActions = widget?.let { { it() } } ?: {},
         onClick = onPreferenceClick,
-        widget = widget,
         enabled = enabled,
     )
 }

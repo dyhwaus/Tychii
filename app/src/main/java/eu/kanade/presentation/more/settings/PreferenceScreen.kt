@@ -1,10 +1,10 @@
 package eu.kanade.presentation.more.settings
 
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -15,6 +15,7 @@ import eu.kanade.presentation.more.settings.screen.SearchableSettings
 import eu.kanade.presentation.more.settings.widget.PreferenceGroupHeader
 import kotlinx.coroutines.delay
 import tachiyomi.presentation.core.components.ScrollbarLazyColumn
+import top.yukonga.miuix.kmp.basic.Card
 import kotlin.time.Duration.Companion.seconds
 
 /**
@@ -53,18 +54,24 @@ fun PreferenceScreen(
                     if (!preference.visible) return@fastForEachIndexed
 
                     item {
-                        Column {
-                            PreferenceGroupHeader(
-                                title = preference.title,
-                                highlighted = preference.title == highlightKey,
-                            )
-                        }
-                    }
-                    items(preference.preferenceItems) { item ->
-                        PreferenceItem(
-                            item = item,
-                            highlightKey = highlightKey,
+                        PreferenceGroupHeader(
+                            title = preference.title,
+                            highlighted = preference.title == highlightKey,
                         )
+                    }
+                    item {
+                        Card(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 12.dp),
+                        ) {
+                            preference.preferenceItems.forEach { item ->
+                                PreferenceItem(
+                                    item = item,
+                                    highlightKey = highlightKey,
+                                )
+                            }
+                        }
                     }
                     item {
                         if (i < items.lastIndex) {
@@ -75,26 +82,39 @@ fun PreferenceScreen(
 
                 // Create Preference Item
                 is Preference.PreferenceItem<*, *> -> item {
-                    PreferenceItem(
-                        item = preference,
-                        highlightKey = highlightKey,
-                    )
+                    Card(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 12.dp),
+                    ) {
+                        PreferenceItem(
+                            item = preference,
+                            highlightKey = highlightKey,
+                        )
+                    }
                 }
             }
         }
     }
 }
 
+// Each visible group contributes three lazy items (header, card, spacer;
+// the last group has no spacer, but nothing follows it), a top-level item one.
 private fun List<Preference>.findHighlightedIndex(highlightKey: String): Int {
-    return flatMap {
-        if (it is Preference.PreferenceGroup) {
-            buildList<String?> {
-                add(it.title) // Header
-                addAll(it.preferenceItems.map { groupItem -> groupItem.title })
-                add(null) // Spacer
+    var index = 0
+    for (preference in this) {
+        when (preference) {
+            is Preference.PreferenceGroup -> {
+                if (!preference.visible) continue
+                if (preference.title == highlightKey) return index
+                if (preference.preferenceItems.any { it.title == highlightKey }) return index + 1
+                index += 3
             }
-        } else {
-            listOf(it.title)
+            is Preference.PreferenceItem<*, *> -> {
+                if (preference.title == highlightKey) return index
+                index += 1
+            }
         }
-    }.indexOfFirst { it == highlightKey }
+    }
+    return -1
 }
