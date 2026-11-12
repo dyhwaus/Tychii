@@ -177,26 +177,33 @@ private fun UpdatesAppBar(
         // the toolbar (HomeScreen); tablets keep the title here (no capsule).
         title = if (isTabletUi()) stringResource(MR.strings.label_recent_updates) else null,
         actions = {
-            AppBarActions(
-                listOf(
-                    AppBar.Action(
-                        title = stringResource(MR.strings.action_filter),
-                        icon = MaterialSymbols.Rounded.FilterList,
-                        iconTint = if (hasFilters) MaterialTheme.colorScheme.active else LocalContentColor.current,
-                        onClick = onFilterClicked,
+            // Phones: the centered title capsule floats in this same
+            // 64.dp band, and the action icons sat under it. Hidden on
+            // phones so the band holds only the capsule and the search
+            // icon; tablets keep them (no capsule there). Action-mode
+            // actions below are untouched — the capsule hides then.
+            if (isTabletUi()) {
+                AppBarActions(
+                    listOf(
+                        AppBar.Action(
+                            title = stringResource(MR.strings.action_filter),
+                            icon = MaterialSymbols.Rounded.FilterList,
+                            iconTint = if (hasFilters) MaterialTheme.colorScheme.active else LocalContentColor.current,
+                            onClick = onFilterClicked,
+                        ),
+                        AppBar.Action(
+                            title = stringResource(MR.strings.action_view_upcoming),
+                            icon = MaterialSymbols.Rounded.CalendarMonth,
+                            onClick = onCalendarClicked,
+                        ),
+                        AppBar.Action(
+                            title = stringResource(MR.strings.action_update_library),
+                            icon = MaterialSymbols.Rounded.Refresh,
+                            onClick = onUpdateLibrary,
+                        ),
                     ),
-                    AppBar.Action(
-                        title = stringResource(MR.strings.action_view_upcoming),
-                        icon = MaterialSymbols.Rounded.CalendarMonth,
-                        onClick = onCalendarClicked,
-                    ),
-                    AppBar.Action(
-                        title = stringResource(MR.strings.action_update_library),
-                        icon = MaterialSymbols.Rounded.Refresh,
-                        onClick = onUpdateLibrary,
-                    ),
-                ),
-            )
+                )
+            }
         },
         actionModeCounter = actionModeCounter,
         onCancelActionMode = onCancelActionMode,

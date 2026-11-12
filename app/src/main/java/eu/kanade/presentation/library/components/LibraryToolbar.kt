@@ -96,29 +96,35 @@ private fun LibraryRegularToolbar(
         searchQuery = searchQuery,
         onChangeSearchQuery = onSearchQueryChange,
         actions = {
-            val filterTint = if (hasFilters) MaterialTheme.colorScheme.active else LocalContentColor.current
-            AppBarActions(
-                listOf(
-                    AppBar.Action(
-                        title = stringResource(MR.strings.action_filter),
-                        icon = MaterialSymbols.Rounded.FilterList,
-                        iconTint = filterTint,
-                        onClick = onClickFilter,
+            // Phones: the centered title capsule floats in this same
+            // 64.dp band, and the action icons sat under it. The icons
+            // are hidden on phones so the band holds only the capsule
+            // and the search icon; tablets keep them (no capsule there).
+            if (isTabletUi()) {
+                val filterTint = if (hasFilters) MaterialTheme.colorScheme.active else LocalContentColor.current
+                AppBarActions(
+                    listOf(
+                        AppBar.Action(
+                            title = stringResource(MR.strings.action_filter),
+                            icon = MaterialSymbols.Rounded.FilterList,
+                            iconTint = filterTint,
+                            onClick = onClickFilter,
+                        ),
+                        AppBar.OverflowAction(
+                            title = stringResource(MR.strings.action_update_library),
+                            onClick = onClickGlobalUpdate,
+                        ),
+                        AppBar.OverflowAction(
+                            title = stringResource(MR.strings.action_update_category),
+                            onClick = onClickRefresh,
+                        ),
+                        AppBar.OverflowAction(
+                            title = stringResource(MR.strings.action_open_random_manga),
+                            onClick = onClickOpenRandomManga,
+                        ),
                     ),
-                    AppBar.OverflowAction(
-                        title = stringResource(MR.strings.action_update_library),
-                        onClick = onClickGlobalUpdate,
-                    ),
-                    AppBar.OverflowAction(
-                        title = stringResource(MR.strings.action_update_category),
-                        onClick = onClickRefresh,
-                    ),
-                    AppBar.OverflowAction(
-                        title = stringResource(MR.strings.action_open_random_manga),
-                        onClick = onClickOpenRandomManga,
-                    ),
-                ),
-            )
+                )
+            }
         },
     )
 }

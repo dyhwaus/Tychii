@@ -109,6 +109,21 @@ changed, and how to build.
 - Library's category name + manga-count pill are hidden with its title on
   phones (the capsule only shows "Library"); the category is still visible
   in the category tabs row.
+- Top-bar action icons removed on phones (2026-11-12): the capsule
+  shares its 64.dp band with each tab's toolbar, and the action icons
+  sat under it (Library filter, Updates filter/calendar/refresh,
+  History clear-all, Browse overflow/help). On phones those actions
+  are now hidden — the band holds only the capsule and the search
+  icon (which does not overlap it, and the capsule hides while
+  searching). Tablets keep all actions (no capsule there), and
+  selection/action-mode icons are untouched (the capsule hides
+  then). Consequence: on phones Library filtering, Updates filtering
+  / upcoming / refresh, History clear-all, and the Browse overflow
+  and migration help are no longer reachable from the top bar. The
+  More page's LogoHeader Taiji icon was removed for the same reason
+  (it sat directly under the capsule); About keeps its own
+  LogoHeader, since it is a sub-screen with its own AppBar and no
+  capsule.
 - Library page must be one continuous background — only the title capsule
   and the bottom bar may read as separate elements. Three things used to
   split it: (1) the toolbar's pinned scroll behavior tinted it
@@ -223,20 +238,14 @@ uses MaterialExpressiveTheme.
 - **Library grid:** cover radius 12.dp with a 0.75.dp `#9D9D9D`
   outline (`MangaCover`), grid gaps 16.dp horizontal / 4.dp vertical,
   comfortable title below the cover in bodyMedium Medium (max 3
-  lines), compact title on a black gradient scrim. Bookshelf covers
-  also get a static glass gloss (`glassEffect = true`, only in
-  `CommonMangaItem`): a diagonal linear gradient, white 0.18 alpha
-  top-left fading to transparent with a faint black 0.08 edge at the
-  bottom-right, like laminated glass. Static on purpose — covers are
-  opaque, so there is no backdrop blur, and a tilt-following
-  highlight would recompose the whole grid on every sensor update.
-  The gloss is now on every manga cover in the app (not just the
-  bookshelf): the `glassEffect` flag on `MangaCover` is enabled at
-  all 12 call sites — bookshelf grid/list (`CommonMangaItem`),
-  source browsing (same components), History, Updates, Upcoming,
-  manga detail header (`MangaInfoHeader`, both layouts), tracker
-  search, migration list, duplicate-manga dialog, and the shared
-  `BaseMangaListItem`.
+  lines), compact title on a black gradient scrim. Covers have a
+  0.75.dp outline whose color is `MaterialTheme.colorScheme.outline`,
+  so it follows the active Material theme (light/dark, any AppTheme)
+  instead of a hardcoded grey. The static glass gloss that used to
+  sit on every cover (a diagonal white gradient, `glassEffect = true`
+  at all 12 call sites) was removed 2026-11-12 at the user's request
+  and replaced by this outline; `MangaCover` no longer has a
+  `glassEffect` parameter.
 - **Floating bar:** selected tab now uses the app primary color
   (Neko pink/yellow) instead of onSurfaceContainer; unselected uses
   onSurfaceVariant. The bar itself is unchanged (Miuix pill, labels

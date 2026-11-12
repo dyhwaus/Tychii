@@ -200,7 +200,6 @@ private fun DuplicateMangaListItem(
                     .crossfade(true)
                     .build(),
                 modifier = Modifier.fillMaxWidth(),
-                glassEffect = true,
             )
             BadgeGroup(
                 modifier = Modifier

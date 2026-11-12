@@ -1,10 +1,8 @@
 package eu.kanade.presentation.more
 
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.unit.dp
 import eu.kanade.presentation.more.settings.widget.SwitchPreferenceWidget
 import eu.kanade.presentation.more.settings.widget.TextPreferenceWidget
 import eu.kanade.tachiyomi.ui.more.DownloadQueueState
@@ -42,11 +40,11 @@ fun MoreScreen(
         contentWindowInsets = WindowInsets(0, 0, 0, 0),
     ) { contentPadding ->
         ScrollbarLazyColumn(contentPadding = contentPadding) {
-            item {
-                LogoHeader(
-                    iconPadding = PaddingValues(vertical = 32.dp),
-                )
-            }
+            // No LogoHeader here: the Taiji icon sat directly under the
+            // centered title capsule floating over this page, so the two
+            // overlapped. The capsule is now the page's only top element.
+            // (About keeps its own LogoHeader — it is a sub-screen with
+            // its own AppBar and no capsule.)
             item {
                 SwitchPreferenceWidget(
                     title = stringResource(MR.strings.label_downloaded_only),

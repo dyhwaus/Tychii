@@ -65,17 +65,23 @@ fun HistoryScreen(
                 searchQuery = state.searchQuery,
                 onChangeSearchQuery = onSearchQueryChange,
                 actions = {
-                    AppBarActions(
-                        listOf(
-                            AppBar.Action(
-                                title = stringResource(MR.strings.pref_clear_history),
-                                icon = MaterialSymbols.Rounded.DeleteSweep,
-                                onClick = {
-                                    onDialogChange(HistoryViewModel.Dialog.DeleteAll)
-                                },
+                    // Phones: the centered title capsule floats in this
+                    // same 64.dp band, and the action icon sat under it.
+                    // Hidden on phones so the band holds only the capsule
+                    // and the search icon; tablets keep it (no capsule).
+                    if (isTabletUi()) {
+                        AppBarActions(
+                            listOf(
+                                AppBar.Action(
+                                    title = stringResource(MR.strings.pref_clear_history),
+                                    icon = MaterialSymbols.Rounded.DeleteSweep,
+                                    onClick = {
+                                        onDialogChange(HistoryViewModel.Dialog.DeleteAll)
+                                    },
+                                ),
                             ),
-                        ),
-                    )
+                        )
+                    }
                 },
             )
         },

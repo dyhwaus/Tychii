@@ -177,7 +177,6 @@ private fun UpdatesUiItem(
                 .fillMaxHeight(),
             data = update.coverData,
             onClick = onClickCover,
-            glassEffect = true,
         )
 
         Column(

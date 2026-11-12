@@ -58,7 +58,12 @@ fun TabbedScreen(
                 searchEnabled = searchEnabled,
                 searchQuery = if (searchEnabled) searchQuery else null,
                 onChangeSearchQuery = onChangeSearchQuery,
-                actions = { AppBarActions(tab.actions) },
+                // Phones: the centered title capsule floats in this same
+                // 64.dp band, and the tab's action icons (overflow menu,
+                // help) sat under it. Hidden on phones so the band holds
+                // only the capsule and the search icon; tablets keep them
+                // (no capsule there).
+                actions = { if (isTabletUi()) AppBarActions(tab.actions) },
             )
         },
         snackbarHost = { SnackbarHost(hostState = snackbarHostState) },

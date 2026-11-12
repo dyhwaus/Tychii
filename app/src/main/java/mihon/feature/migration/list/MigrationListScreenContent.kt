@@ -201,7 +201,6 @@ fun MigrationListItem(
             MangaCover.Book(
                 modifier = Modifier.fillMaxWidth(),
                 data = manga,
-                glassEffect = true,
             )
             Box(
                 modifier = Modifier
