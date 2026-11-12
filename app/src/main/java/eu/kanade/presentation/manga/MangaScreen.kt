@@ -20,7 +20,7 @@ import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -78,10 +78,10 @@ import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.components.TwoPanelBox
 import tachiyomi.presentation.core.components.VerticalFastScroller
 import tachiyomi.presentation.core.components.material.PullRefresh
-import tachiyomi.presentation.core.components.material.Scaffold
 import tachiyomi.presentation.core.i18n.stringResource
 import tachiyomi.presentation.core.util.shouldExpandFAB
 import tachiyomi.source.local.isLocal
+import top.yukonga.miuix.kmp.basic.Scaffold
 import kotlin.time.Instant
 
 @Composable
@@ -295,6 +295,11 @@ private fun MangaScreenSmallImpl(
         onAllChapterSelected(false)
     }
 
+    // The Miuix Scaffold does not add FAB clearance to the content padding
+    // the way the Material Scaffold wrapper did, so the FAB height is
+    // measured and added to the list bottom padding below.
+    var fabHeight by remember { mutableIntStateOf(0) }
+
     Scaffold(
         topBar = {
             val isFirstItemVisible by remember {
@@ -344,25 +349,34 @@ private fun MangaScreenSmallImpl(
         snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
         floatingActionButton = {
             val isFABVisible = state.hasUnreadChapters && !isAnySelected
-            SmallExtendedFloatingActionButton(
-                text = {
-                    Text(
-                        text = stringResource(
-                            if (state.hasReadChapters) MR.strings.action_resume else MR.strings.action_start,
-                        ),
-                    )
-                },
-                icon = { Icon(imageVector = MaterialSymbols.RoundedFilled.PlayArrow, contentDescription = null) },
-                onClick = onContinueReading,
-                expanded = chapterListState.shouldExpandFAB(),
-                modifier = Modifier.animateFloatingActionButton(
-                    visible = isFABVisible,
-                    alignment = Alignment.BottomEnd,
-                ),
-            )
+            Box(Modifier.onSizeChanged { fabHeight = it.height }) {
+                SmallExtendedFloatingActionButton(
+                    text = {
+                        Text(
+                            text = stringResource(
+                                if (state.hasReadChapters) MR.strings.action_resume else MR.strings.action_start,
+                            ),
+                        )
+                    },
+                    icon = { Icon(imageVector = MaterialSymbols.RoundedFilled.PlayArrow, contentDescription = null) },
+                    onClick = onContinueReading,
+                    expanded = chapterListState.shouldExpandFAB(),
+                    modifier = Modifier.animateFloatingActionButton(
+                        visible = isFABVisible,
+                        alignment = Alignment.BottomEnd,
+                    ),
+                )
+            }
         },
+        // Same insets as the Material Scaffold wrapper this replaces.
+        contentWindowInsets = WindowInsets.systemBars,
     ) { contentPadding ->
         val topPadding = contentPadding.calculateTopPadding()
+        val fabClearance = if (fabHeight == 0) {
+            0.dp
+        } else {
+            with(LocalDensity.current) { fabHeight.toDp() } + 16.dp
+        }
 
         PullRefresh(
             refreshing = state.isRefreshingData,
@@ -382,7 +396,7 @@ private fun MangaScreenSmallImpl(
                     contentPadding = PaddingValues(
                         start = contentPadding.calculateStartPadding(layoutDirection),
                         end = contentPadding.calculateEndPadding(layoutDirection),
-                        bottom = contentPadding.calculateBottomPadding(),
+                        bottom = contentPadding.calculateBottomPadding() + fabClearance,
                     ),
                 ) {
                     item(
@@ -541,6 +555,10 @@ fun MangaScreenLargeImpl(
         onAllChapterSelected(false)
     }
 
+    // See the small implementation: the FAB height is measured so the list
+    // bottom padding can clear it.
+    var fabHeight by remember { mutableIntStateOf(0) }
+
     Scaffold(
         topBar = {
             MangaToolbar(
@@ -582,24 +600,33 @@ fun MangaScreenLargeImpl(
         snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
         floatingActionButton = {
             val isFABVisible = state.hasUnreadChapters && !isAnySelected
-            SmallExtendedFloatingActionButton(
-                text = {
-                    Text(
-                        text = stringResource(
-                            if (state.hasReadChapters) MR.strings.action_resume else MR.strings.action_start,
-                        ),
-                    )
-                },
-                icon = { Icon(imageVector = MaterialSymbols.RoundedFilled.PlayArrow, contentDescription = null) },
-                onClick = onContinueReading,
-                expanded = chapterListState.shouldExpandFAB(),
-                modifier = Modifier.animateFloatingActionButton(
-                    visible = isFABVisible,
-                    alignment = Alignment.BottomEnd,
-                ),
-            )
+            Box(Modifier.onSizeChanged { fabHeight = it.height }) {
+                SmallExtendedFloatingActionButton(
+                    text = {
+                        Text(
+                            text = stringResource(
+                                if (state.hasReadChapters) MR.strings.action_resume else MR.strings.action_start,
+                            ),
+                        )
+                    },
+                    icon = { Icon(imageVector = MaterialSymbols.RoundedFilled.PlayArrow, contentDescription = null) },
+                    onClick = onContinueReading,
+                    expanded = chapterListState.shouldExpandFAB(),
+                    modifier = Modifier.animateFloatingActionButton(
+                        visible = isFABVisible,
+                        alignment = Alignment.BottomEnd,
+                    ),
+                )
+            }
         },
+        // Same insets as the Material Scaffold wrapper this replaces.
+        contentWindowInsets = WindowInsets.systemBars,
     ) { contentPadding ->
+        val fabClearance = if (fabHeight == 0) {
+            0.dp
+        } else {
+            with(LocalDensity.current) { fabHeight.toDp() } + 16.dp
+        }
         PullRefresh(
             refreshing = state.isRefreshingData,
             onRefresh = onRefresh,
@@ -619,7 +646,7 @@ fun MangaScreenLargeImpl(
                     Column(
                         modifier = Modifier
                             .verticalScroll(rememberScrollState())
-                            .padding(bottom = contentPadding.calculateBottomPadding()),
+                            .padding(bottom = contentPadding.calculateBottomPadding() + fabClearance),
                     ) {
                         MangaInfoBox(
                             isTabletUi = true,
@@ -667,7 +694,7 @@ fun MangaScreenLargeImpl(
                             state = chapterListState,
                             contentPadding = PaddingValues(
                                 top = contentPadding.calculateTopPadding(),
-                                bottom = contentPadding.calculateBottomPadding(),
+                                bottom = contentPadding.calculateBottomPadding() + fabClearance,
                             ),
                         ) {
                             item(
@@ -756,16 +783,16 @@ private fun LazyListScope.sharedChapterItems(
     onChapterSelected: (ChapterList.Item, Boolean, Boolean) -> Unit,
     onChapterSwipe: (ChapterList.Item, LibraryPreferences.ChapterSwipeAction) -> Unit,
 ) {
-    items(
+    itemsIndexed(
         items = chapters,
-        key = { item ->
+        key = { _, item ->
             when (item) {
                 is ChapterList.MissingCount -> "missing-count-${item.id}"
                 is ChapterList.Item -> "chapter-${item.id}"
             }
         },
-        contentType = { MangaScreenItem.CHAPTER },
-    ) { item ->
+        contentType = { _, _ -> MangaScreenItem.CHAPTER },
+    ) { index, item ->
         val haptic = LocalHapticFeedback.current
 
         when (item) {
@@ -820,6 +847,10 @@ private fun LazyListScope.sharedChapterItems(
                     onChapterSwipe = {
                         onChapterSwipe(item, it)
                     },
+                    // Divider under every chapter row except the last item,
+                    // and not before a missing-count row.
+                    showDivider = index < chapters.lastIndex &&
+                        chapters[index + 1] is ChapterList.Item,
                 )
             }
         }

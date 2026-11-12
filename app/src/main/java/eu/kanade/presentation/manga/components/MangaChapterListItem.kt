@@ -44,6 +44,7 @@ import tachiyomi.presentation.core.components.material.DISABLED_ALPHA
 import tachiyomi.presentation.core.components.material.SECONDARY_ALPHA
 import tachiyomi.presentation.core.i18n.stringResource
 import tachiyomi.presentation.core.util.selectedBackground
+import top.yukonga.miuix.kmp.basic.HorizontalDivider
 
 @Composable
 fun MangaChapterListItem(
@@ -64,6 +65,9 @@ fun MangaChapterListItem(
     onDownloadClick: ((ChapterDownloadAction) -> Unit)?,
     onChapterSwipe: (LibraryPreferences.ChapterSwipeAction) -> Unit,
     modifier: Modifier = Modifier,
+    // Inset divider under the row, Miuix list style. The caller hides it
+    // after the last chapter.
+    showDivider: Boolean = false,
 ) {
     val start = getSwipeAction(
         action = chapterSwipeStartAction,
@@ -82,22 +86,25 @@ fun MangaChapterListItem(
         onSwipe = { onChapterSwipe(chapterSwipeEndAction) },
     )
 
-    SwipeableActionsBox(
-        modifier = Modifier.clipToBounds(),
-        startActions = listOfNotNull(start),
-        endActions = listOfNotNull(end),
-        swipeThreshold = swipeActionThreshold,
-        backgroundUntilSwipeThreshold = MaterialTheme.colorScheme.surfaceContainerLowest,
-    ) {
-        Row(
-            modifier = modifier
-                .selectedBackground(selected)
-                .combinedClickable(
-                    onClick = onClick,
-                    onLongClick = onLongClick,
-                )
-                .padding(start = 16.dp, top = 12.dp, end = 8.dp, bottom = 12.dp),
+    // No Miuix equivalent for swipe actions: the swipe box stays as-is,
+    // only the row inside is Miuix-styled (inset divider below).
+    Column {
+        SwipeableActionsBox(
+            modifier = Modifier.clipToBounds(),
+            startActions = listOfNotNull(start),
+            endActions = listOfNotNull(end),
+            swipeThreshold = swipeActionThreshold,
+            backgroundUntilSwipeThreshold = MaterialTheme.colorScheme.surfaceContainerLowest,
         ) {
+            Row(
+                modifier = modifier
+                    .selectedBackground(selected)
+                    .combinedClickable(
+                        onClick = onClick,
+                        onLongClick = onLongClick,
+                    )
+                    .padding(start = 16.dp, top = 12.dp, end = 8.dp, bottom = 12.dp),
+            ) {
             Column(
                 modifier = Modifier.weight(1f),
                 verticalArrangement = Arrangement.spacedBy(6.dp),
@@ -178,6 +185,10 @@ fun MangaChapterListItem(
                 downloadProgressProvider = downloadProgressProvider,
                 onClick = { onDownloadClick?.invoke(it) },
             )
+        }
+        }
+        if (showDivider) {
+            HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp))
         }
     }
 }

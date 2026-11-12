@@ -6,10 +6,8 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.CircularWavyProgressIndicator
-import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.material3.WavyProgressIndicatorDefaults
 import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
@@ -28,7 +26,6 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
-import eu.kanade.presentation.components.DropdownMenu
 import eu.kanade.tachiyomi.data.download.model.Download
 import mihon.icons.custommaterialsymbols.CustomMaterialSymbols
 import mihon.icons.custommaterialsymbols.rounded.DownloadArrow
@@ -40,6 +37,10 @@ import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.components.material.IconButtonTokens
 import tachiyomi.presentation.core.i18n.stringResource
 import tachiyomi.presentation.core.util.secondaryItemAlpha
+import top.yukonga.miuix.kmp.basic.DropdownDefaults
+import top.yukonga.miuix.kmp.basic.DropdownEntry
+import top.yukonga.miuix.kmp.basic.DropdownItem
+import top.yukonga.miuix.kmp.popup.OverlayDropdownPopup
 
 enum class ChapterDownloadAction {
     START,
@@ -163,22 +164,29 @@ private fun DownloadingIndicator(
                 wavelength = IndicatorWavelength,
             )
         }
-        DropdownMenu(expanded = isMenuExpanded, onDismissRequest = { isMenuExpanded = false }) {
-            DropdownMenuItem(
-                text = { Text(text = stringResource(MR.strings.action_start_downloading_now)) },
-                onClick = {
-                    onClick(ChapterDownloadAction.START_NOW)
-                    isMenuExpanded = false
-                },
-            )
-            DropdownMenuItem(
-                text = { Text(text = stringResource(MR.strings.action_cancel)) },
-                onClick = {
-                    onClick(ChapterDownloadAction.CANCEL)
-                    isMenuExpanded = false
-                },
-            )
-        }
+        OverlayDropdownPopup(
+            entries = listOf(
+                DropdownEntry(
+                    items = listOf(
+                        DropdownItem(
+                            text = stringResource(MR.strings.action_start_downloading_now),
+                            onClick = { onClick(ChapterDownloadAction.START_NOW) },
+                        ),
+                        DropdownItem(
+                            text = stringResource(MR.strings.action_cancel),
+                            onClick = { onClick(ChapterDownloadAction.CANCEL) },
+                        ),
+                    ),
+                ),
+            ),
+            show = isMenuExpanded,
+            onDismiss = { isMenuExpanded = false },
+            onDismissFinished = {},
+            maxHeight = null,
+            dropdownColors = DropdownDefaults.dropdownColors(),
+            renderInRootScaffold = true,
+            collapseOnSelection = true,
+        )
         Icon(
             imageVector = CustomMaterialSymbols.Rounded.DownloadArrow,
             contentDescription = null,
@@ -212,15 +220,25 @@ private fun DownloadedIndicator(
             modifier = Modifier.size(IndicatorSize),
             tint = MaterialTheme.colorScheme.onSurfaceVariant,
         )
-        DropdownMenu(expanded = isMenuExpanded, onDismissRequest = { isMenuExpanded = false }) {
-            DropdownMenuItem(
-                text = { Text(text = stringResource(MR.strings.action_delete)) },
-                onClick = {
-                    onClick(ChapterDownloadAction.DELETE)
-                    isMenuExpanded = false
-                },
-            )
-        }
+        OverlayDropdownPopup(
+            entries = listOf(
+                DropdownEntry(
+                    items = listOf(
+                        DropdownItem(
+                            text = stringResource(MR.strings.action_delete),
+                            onClick = { onClick(ChapterDownloadAction.DELETE) },
+                        ),
+                    ),
+                ),
+            ),
+            show = isMenuExpanded,
+            onDismiss = { isMenuExpanded = false },
+            onDismissFinished = {},
+            maxHeight = null,
+            dropdownColors = DropdownDefaults.dropdownColors(),
+            renderInRootScaffold = true,
+            collapseOnSelection = true,
+        )
     }
 }
 

@@ -26,14 +26,11 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.text.appendInlineContent
 import androidx.compose.foundation.text.selection.SelectionContainer
-import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LocalContentColor
-import androidx.compose.material3.LocalMinimumInteractiveComponentSize
 import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ProvideTextStyle
-import androidx.compose.material3.SuggestionChip
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
@@ -73,7 +70,6 @@ import coil3.request.crossfade
 import com.mikepenz.markdown.model.markdownAnnotator
 import com.mikepenz.markdown.model.markdownAnnotatorConfig
 import com.mikepenz.markdown.utils.getUnescapedTextInNode
-import eu.kanade.presentation.components.DropdownMenu
 import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.source.Source
 import eu.kanade.tachiyomi.source.model.SManga
@@ -109,6 +105,14 @@ import tachiyomi.presentation.core.i18n.pluralStringResource
 import tachiyomi.presentation.core.i18n.stringResource
 import tachiyomi.presentation.core.util.clickableNoIndication
 import tachiyomi.presentation.core.util.secondaryItemAlpha
+import top.yukonga.miuix.kmp.basic.Button
+import top.yukonga.miuix.kmp.basic.ButtonDefaults
+import top.yukonga.miuix.kmp.basic.Card
+import top.yukonga.miuix.kmp.basic.DropdownDefaults
+import top.yukonga.miuix.kmp.basic.DropdownEntry
+import top.yukonga.miuix.kmp.basic.DropdownItem
+import top.yukonga.miuix.kmp.popup.OverlayDropdownPopup
+import top.yukonga.miuix.kmp.theme.MiuixTheme
 import kotlin.math.roundToInt
 import kotlin.time.Clock
 import kotlin.time.Instant
@@ -227,50 +231,60 @@ fun MangaActionRow(
         }
     }
 
-    Row(modifier = modifier.padding(start = 16.dp, top = 8.dp, end = 16.dp)) {
-        MangaActionButton(
-            title = if (favorite) {
-                stringResource(MR.strings.in_library)
-            } else {
-                stringResource(MR.strings.add_to_library)
-            },
-            icon = if (favorite) MaterialSymbols.RoundedFilled.Favorite else MaterialSymbols.Rounded.Favorite,
-            color = if (favorite) accentColor else defaultActionButtonColor,
-            onClick = onAddToLibraryClicked,
-            onLongClick = onEditCategory,
-        )
-        MangaActionButton(
-            title = when (nextUpdateDays) {
-                null -> stringResource(MR.strings.not_applicable)
-                0 -> stringResource(MR.strings.manga_interval_expected_update_soon)
-                else -> pluralStringResource(
-                    MR.plurals.day,
-                    count = nextUpdateDays,
-                    nextUpdateDays,
-                )
-            },
-            icon = MaterialSymbols.Rounded.HourglassEmpty,
-            color = if (isUserIntervalMode) accentColor else defaultActionButtonColor,
-            onClick = { onEditIntervalClicked?.invoke() },
-        )
-        MangaActionButton(
-            title = if (trackingCount == 0) {
-                stringResource(MR.strings.manga_tracking_tab)
-            } else {
-                pluralStringResource(MR.plurals.num_trackers, count = trackingCount, trackingCount)
-            },
-            icon = if (trackingCount == 0) MaterialSymbols.Rounded.Sync else MaterialSymbols.Rounded.Check,
-            color = if (trackingCount == 0) defaultActionButtonColor else accentColor,
-            onClick = onTrackingClicked,
-        )
-        if (onWebViewClicked != null) {
+    // Grouped card around the action buttons. The buttons themselves stay
+    // Material3 TextButtons: Miuix Button has no long-click, and two of
+    // these buttons use long-press (edit category, web view options).
+    Card(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(start = 12.dp, top = 8.dp, end = 12.dp),
+        insideMargin = PaddingValues(vertical = 4.dp),
+    ) {
+        Row(modifier = Modifier.padding(horizontal = 8.dp)) {
             MangaActionButton(
-                title = stringResource(MR.strings.action_web_view),
-                icon = MaterialSymbols.Rounded.Public,
-                color = defaultActionButtonColor,
-                onClick = onWebViewClicked,
-                onLongClick = onWebViewLongClicked,
+                title = if (favorite) {
+                    stringResource(MR.strings.in_library)
+                } else {
+                    stringResource(MR.strings.add_to_library)
+                },
+                icon = if (favorite) MaterialSymbols.RoundedFilled.Favorite else MaterialSymbols.Rounded.Favorite,
+                color = if (favorite) accentColor else defaultActionButtonColor,
+                onClick = onAddToLibraryClicked,
+                onLongClick = onEditCategory,
             )
+            MangaActionButton(
+                title = when (nextUpdateDays) {
+                    null -> stringResource(MR.strings.not_applicable)
+                    0 -> stringResource(MR.strings.manga_interval_expected_update_soon)
+                    else -> pluralStringResource(
+                        MR.plurals.day,
+                        count = nextUpdateDays,
+                        nextUpdateDays,
+                    )
+                },
+                icon = MaterialSymbols.Rounded.HourglassEmpty,
+                color = if (isUserIntervalMode) accentColor else defaultActionButtonColor,
+                onClick = { onEditIntervalClicked?.invoke() },
+            )
+            MangaActionButton(
+                title = if (trackingCount == 0) {
+                    stringResource(MR.strings.manga_tracking_tab)
+                } else {
+                    pluralStringResource(MR.plurals.num_trackers, count = trackingCount, trackingCount)
+                },
+                icon = if (trackingCount == 0) MaterialSymbols.Rounded.Sync else MaterialSymbols.Rounded.Check,
+                color = if (trackingCount == 0) defaultActionButtonColor else accentColor,
+                onClick = onTrackingClicked,
+            )
+            if (onWebViewClicked != null) {
+                MangaActionButton(
+                    title = stringResource(MR.strings.action_web_view),
+                    icon = MaterialSymbols.Rounded.Public,
+                    color = defaultActionButtonColor,
+                    onClick = onWebViewClicked,
+                    onLongClick = onWebViewLongClicked,
+                )
+            }
         }
     }
 }
@@ -286,83 +300,96 @@ fun ExpandableMangaDescription(
     onEditNotes: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    Column(modifier = modifier) {
-        val (expanded, onExpanded) = rememberSaveable {
-            mutableStateOf(defaultExpandState)
-        }
-        val desc =
-            description.takeIf { !it.isNullOrBlank() } ?: stringResource(MR.strings.description_placeholder)
+    // Description and tags in one grouped card. The summary's fade scrim
+    // blends into the card color (see MangaSummary), not the page background.
+    Card(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(start = 12.dp, top = 8.dp, end = 12.dp),
+        insideMargin = PaddingValues(vertical = 4.dp),
+    ) {
+        Column {
+            val (expanded, onExpanded) = rememberSaveable {
+                mutableStateOf(defaultExpandState)
+            }
+            val desc =
+                description.takeIf { !it.isNullOrBlank() } ?: stringResource(MR.strings.description_placeholder)
 
-        MangaSummary(
-            description = desc,
-            expanded = expanded,
-            notes = notes,
-            onEditNotesClicked = onEditNotes,
-            modifier = Modifier
-                .padding(top = 8.dp)
-                .padding(horizontal = 16.dp)
-                .clickableNoIndication { onExpanded(!expanded) },
-        )
-        val tags = tagsProvider()
-        if (!tags.isNullOrEmpty()) {
-            Box(
+            MangaSummary(
+                description = desc,
+                expanded = expanded,
+                notes = notes,
+                onEditNotesClicked = onEditNotes,
                 modifier = Modifier
                     .padding(top = 8.dp)
-                    .padding(vertical = 12.dp)
-                    .animateContentSize(animationSpec = spring())
-                    .fillMaxWidth(),
-            ) {
-                var showMenu by remember { mutableStateOf(false) }
-                var tagSelected by remember { mutableStateOf("") }
-                DropdownMenu(
-                    expanded = showMenu,
-                    onDismissRequest = { showMenu = false },
+                    .padding(horizontal = 12.dp)
+                    .clickableNoIndication { onExpanded(!expanded) },
+            )
+            val tags = tagsProvider()
+            if (!tags.isNullOrEmpty()) {
+                Box(
+                    modifier = Modifier
+                        .padding(top = 8.dp)
+                        .padding(vertical = 12.dp)
+                        .animateContentSize(animationSpec = spring())
+                        .fillMaxWidth(),
                 ) {
-                    DropdownMenuItem(
-                        text = { Text(text = stringResource(MR.strings.action_search)) },
-                        onClick = {
-                            onTagSearch(tagSelected)
-                            showMenu = false
-                        },
+                    var showMenu by remember { mutableStateOf(false) }
+                    var tagSelected by remember { mutableStateOf("") }
+                    OverlayDropdownPopup(
+                        entries = listOf(
+                            DropdownEntry(
+                                items = listOf(
+                                    DropdownItem(
+                                        text = stringResource(MR.strings.action_search),
+                                        onClick = { onTagSearch(tagSelected) },
+                                    ),
+                                    DropdownItem(
+                                        text = stringResource(MR.strings.action_copy_to_clipboard),
+                                        onClick = { onCopyTagToClipboard(tagSelected) },
+                                    ),
+                                ),
+                            ),
+                        ),
+                        show = showMenu,
+                        onDismiss = { showMenu = false },
+                        onDismissFinished = {},
+                        maxHeight = null,
+                        dropdownColors = DropdownDefaults.dropdownColors(),
+                        renderInRootScaffold = true,
+                        collapseOnSelection = true,
                     )
-                    DropdownMenuItem(
-                        text = { Text(text = stringResource(MR.strings.action_copy_to_clipboard)) },
-                        onClick = {
-                            onCopyTagToClipboard(tagSelected)
-                            showMenu = false
-                        },
-                    )
-                }
-                if (expanded) {
-                    FlowRow(
-                        modifier = Modifier.padding(horizontal = 16.dp),
-                        horizontalArrangement = Arrangement.spacedBy(MaterialTheme.padding.extraSmall),
-                    ) {
-                        tags.forEach {
-                            TagsChip(
-                                modifier = DefaultTagChipModifier,
-                                text = it,
-                                onClick = {
-                                    tagSelected = it
-                                    showMenu = true
-                                },
-                            )
+                    if (expanded) {
+                        FlowRow(
+                            modifier = Modifier.padding(horizontal = 12.dp),
+                            horizontalArrangement = Arrangement.spacedBy(MaterialTheme.padding.extraSmall),
+                        ) {
+                            tags.forEach {
+                                TagsChip(
+                                    modifier = DefaultTagChipModifier,
+                                    text = it,
+                                    onClick = {
+                                        tagSelected = it
+                                        showMenu = true
+                                    },
+                                )
+                            }
                         }
-                    }
-                } else {
-                    LazyRow(
-                        contentPadding = PaddingValues(horizontal = MaterialTheme.padding.medium),
-                        horizontalArrangement = Arrangement.spacedBy(MaterialTheme.padding.extraSmall),
-                    ) {
-                        items(items = tags) {
-                            TagsChip(
-                                modifier = DefaultTagChipModifier,
-                                text = it,
-                                onClick = {
-                                    tagSelected = it
-                                    showMenu = true
-                                },
-                            )
+                    } else {
+                        LazyRow(
+                            contentPadding = PaddingValues(horizontal = 12.dp),
+                            horizontalArrangement = Arrangement.spacedBy(MaterialTheme.padding.extraSmall),
+                        ) {
+                            items(items = tags) {
+                                TagsChip(
+                                    modifier = DefaultTagChipModifier,
+                                    text = it,
+                                    onClick = {
+                                        tagSelected = it
+                                        showMenu = true
+                                    },
+                                )
+                            }
                         }
                     }
                 }
@@ -696,7 +723,9 @@ private fun MangaSummary(
                 }
             },
             {
-                val colors = listOf(Color.Transparent, MaterialTheme.colorScheme.background)
+                // Fades into the card color: the summary sits inside a Miuix
+                // Card, not on the page background.
+                val colors = listOf(Color.Transparent, MiuixTheme.colorScheme.surfaceContainer)
                 Box(
                     modifier = Modifier.background(Brush.verticalGradient(colors = colors)),
                     contentAlignment = Alignment.Center,
@@ -743,11 +772,21 @@ private fun TagsChip(
     modifier: Modifier = Modifier,
     onClick: () -> Unit,
 ) {
-    CompositionLocalProvider(LocalMinimumInteractiveComponentSize provides 0.dp) {
-        SuggestionChip(
-            modifier = modifier,
-            onClick = onClick,
-            label = { Text(text = text, style = MaterialTheme.typography.bodySmall) },
+    // Miuix has no chip: a small filled button in the secondary container
+    // color reads as one.
+    Button(
+        onClick = onClick,
+        modifier = modifier,
+        minWidth = 0.dp,
+        minHeight = 28.dp,
+        cornerRadius = 12.dp,
+        insideMargin = PaddingValues(horizontal = 10.dp, vertical = 4.dp),
+        colors = ButtonDefaults.buttonColors(),
+    ) {
+        Text(
+            text = text,
+            style = MaterialTheme.typography.bodySmall,
+            color = MiuixTheme.colorScheme.onSecondaryVariant,
         )
     }
 }

@@ -16,6 +16,8 @@ import tachiyomi.presentation.core.components.material.SECONDARY_ALPHA
 import tachiyomi.presentation.core.components.material.padding
 import tachiyomi.presentation.core.i18n.pluralStringResource
 import tachiyomi.presentation.core.i18n.stringResource
+import top.yukonga.miuix.kmp.basic.Text as MiuixText
+import top.yukonga.miuix.kmp.theme.MiuixTheme
 
 @Composable
 fun ChapterHeader(
@@ -35,14 +37,16 @@ fun ChapterHeader(
             .padding(horizontal = 16.dp, vertical = 4.dp),
         verticalArrangement = Arrangement.spacedBy(MaterialTheme.padding.extraSmall),
     ) {
-        Text(
+        // Miuix section title: small subtitle style, like the group headers
+        // on the settings pages.
+        MiuixText(
             text = if (chapterCount == null) {
                 stringResource(MR.strings.chapters)
             } else {
                 pluralStringResource(MR.plurals.manga_num_chapters, count = chapterCount, chapterCount)
             },
-            style = MaterialTheme.typography.titleMedium,
-            color = MaterialTheme.colorScheme.onBackground,
+            style = MiuixTheme.textStyles.subtitle,
+            color = MiuixTheme.colorScheme.onBackgroundVariant,
         )
 
         MissingChaptersWarning(missingChapterCount)
