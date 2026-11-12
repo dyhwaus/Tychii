@@ -2,27 +2,21 @@ package eu.kanade.presentation.browse
 
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -30,7 +24,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.style.TextOverflow
@@ -69,9 +62,13 @@ import tachiyomi.presentation.core.components.material.padding
 import tachiyomi.presentation.core.components.material.topSmallPaddingValues
 import tachiyomi.presentation.core.i18n.stringResource
 import eu.kanade.presentation.components.QuietEmptyScreen
+import top.yukonga.miuix.kmp.basic.Button
+import top.yukonga.miuix.kmp.basic.IconButton
+import top.yukonga.miuix.kmp.basic.SmallTitle
+import top.yukonga.miuix.kmp.basic.TextButton
+import top.yukonga.miuix.kmp.overlay.OverlayDialog
 import tachiyomi.presentation.core.screens.EmptyScreenAction
 import tachiyomi.presentation.core.screens.LoadingScreen
-import tachiyomi.presentation.core.theme.header
 import tachiyomi.presentation.core.util.plus
 
 @Composable
@@ -179,12 +176,7 @@ private fun ExtensionContent(
                             if (header.textRes == MR.strings.ext_updates_pending) {
                                 {
                                     Button(onClick = { onClickUpdateAll() }) {
-                                        Text(
-                                            text = stringResource(MR.strings.ext_update_all),
-                                            style = LocalTextStyle.current.copy(
-                                                color = MaterialTheme.colorScheme.onPrimary,
-                                            ),
-                                        )
+                                        Text(text = stringResource(MR.strings.ext_update_all))
                                     }
                                 }
                             } else {
@@ -529,15 +521,13 @@ private fun ExtensionHeader(
     action: @Composable RowScope.() -> Unit = {},
 ) {
     Row(
-        modifier = modifier.padding(horizontal = MaterialTheme.padding.medium),
+        modifier = modifier,
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Text(
+        SmallTitle(
             text = text,
-            modifier = Modifier
-                .padding(vertical = 8.dp)
-                .weight(1f),
-            style = MaterialTheme.typography.header,
+            modifier = Modifier.weight(1f),
+            insideMargin = PaddingValues(start = 16.dp, top = 8.dp, bottom = 8.dp),
         )
         action()
     }
@@ -575,49 +565,49 @@ private fun ExtensionNotLoadedDialog(
     onClickUninstall: () -> Unit,
     onDismissRequest: () -> Unit,
 ) {
-    AlertDialog(
-        title = {
-            Text(text = stringResource(MR.strings.ext_not_loaded_dialog))
-        },
-        text = {
-            Column(verticalArrangement = Arrangement.spacedBy(MaterialTheme.padding.small)) {
-                Text(text = stringResource(reason.descriptionRes))
-
-                if (reason is Extension.NotLoaded.Reason.Failed) {
-                    Text(
-                        text = reason.message,
-                        style = MaterialTheme.typography.bodySmall,
-                        fontFamily = FontFamily.Monospace,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-
-                    val context = LocalContext.current
-                    TextButton(
-                        onClick = {
-                            context.copyToClipboard(
-                                label = context.stringResource(MR.strings.ext_copy_stacktrace),
-                                content = reason.stackTrace,
-                            )
-                        },
-                        contentPadding = PaddingValues(0.dp),
-                    ) {
-                        Text(text = stringResource(MR.strings.ext_copy_stacktrace))
-                    }
-                }
-            }
-        },
-        confirmButton = {
-            TextButton(onClick = onDismissRequest) {
-                Text(text = stringResource(MR.strings.action_ok))
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onClickUninstall) {
-                Text(text = stringResource(MR.strings.ext_uninstall))
-            }
-        },
+    OverlayDialog(
+        show = true,
+        title = stringResource(MR.strings.ext_not_loaded_dialog),
         onDismissRequest = onDismissRequest,
-    )
+    ) {
+        Column(verticalArrangement = Arrangement.spacedBy(MaterialTheme.padding.small)) {
+            Text(text = stringResource(reason.descriptionRes))
+
+            if (reason is Extension.NotLoaded.Reason.Failed) {
+                Text(
+                    text = reason.message,
+                    style = MaterialTheme.typography.bodySmall,
+                    fontFamily = FontFamily.Monospace,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+
+                val context = LocalContext.current
+                TextButton(
+                    text = stringResource(MR.strings.ext_copy_stacktrace),
+                    onClick = {
+                        context.copyToClipboard(
+                            label = context.stringResource(MR.strings.ext_copy_stacktrace),
+                            content = reason.stackTrace,
+                        )
+                    },
+                    insideMargin = PaddingValues(0.dp),
+                )
+            }
+        }
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.End,
+        ) {
+            TextButton(
+                text = stringResource(MR.strings.ext_uninstall),
+                onClick = onClickUninstall,
+            )
+            TextButton(
+                text = stringResource(MR.strings.action_ok),
+                onClick = onDismissRequest,
+            )
+        }
+    }
 }
 
 @Composable
@@ -626,23 +616,24 @@ private fun ExtensionTrustDialog(
     onClickDismiss: () -> Unit,
     onDismissRequest: () -> Unit,
 ) {
-    AlertDialog(
-        title = {
-            Text(text = stringResource(MR.strings.untrusted_extension))
-        },
-        text = {
-            Text(text = stringResource(MR.strings.untrusted_extension_message))
-        },
-        confirmButton = {
-            TextButton(onClick = onClickConfirm) {
-                Text(text = stringResource(MR.strings.ext_trust))
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onClickDismiss) {
-                Text(text = stringResource(MR.strings.ext_uninstall))
-            }
-        },
+    OverlayDialog(
+        show = true,
+        title = stringResource(MR.strings.untrusted_extension),
+        summary = stringResource(MR.strings.untrusted_extension_message),
         onDismissRequest = onDismissRequest,
-    )
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.End,
+        ) {
+            TextButton(
+                text = stringResource(MR.strings.ext_uninstall),
+                onClick = onClickDismiss,
+            )
+            TextButton(
+                text = stringResource(MR.strings.ext_trust),
+                onClick = onClickConfirm,
+            )
+        }
+    }
 }

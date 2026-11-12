@@ -30,7 +30,7 @@ import tachiyomi.domain.source.model.StubSource
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.components.material.Scaffold
 import tachiyomi.presentation.core.i18n.stringResource
-import tachiyomi.presentation.core.screens.EmptyScreen
+import eu.kanade.presentation.components.QuietEmptyScreen
 import tachiyomi.presentation.core.screens.EmptyScreenAction
 import tachiyomi.presentation.core.screens.LoadingScreen
 import tachiyomi.source.local.LocalSource
@@ -78,7 +78,7 @@ fun BrowseSourceContent(
     }
 
     if (mangaList.itemCount == 0) {
-        EmptyScreen(
+        QuietEmptyScreen(
             modifier = Modifier.padding(contentPadding),
             message = when (errorState) {
                 is LoadState.Error -> getErrorMessage(errorState)
@@ -160,7 +160,7 @@ internal fun MissingSourceScreen(
             )
         },
     ) { paddingValues ->
-        EmptyScreen(
+        QuietEmptyScreen(
             message = stringResource(MR.strings.source_not_installed, source.toString()),
             modifier = Modifier.padding(paddingValues),
         )

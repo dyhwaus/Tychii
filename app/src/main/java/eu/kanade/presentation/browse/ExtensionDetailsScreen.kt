@@ -14,17 +14,9 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.material3.VerticalDivider
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -47,6 +39,14 @@ import eu.kanade.presentation.browse.components.label
 import eu.kanade.presentation.components.AppBar
 import eu.kanade.presentation.components.AppBarActions
 import eu.kanade.presentation.components.WarningBanner
+import top.yukonga.miuix.kmp.basic.Button
+import top.yukonga.miuix.kmp.basic.ButtonDefaults
+import top.yukonga.miuix.kmp.basic.HorizontalDivider
+import top.yukonga.miuix.kmp.basic.IconButton
+import top.yukonga.miuix.kmp.basic.Switch
+import top.yukonga.miuix.kmp.basic.TextButton
+import top.yukonga.miuix.kmp.basic.VerticalDivider
+import top.yukonga.miuix.kmp.overlay.OverlayDialog
 import eu.kanade.presentation.more.settings.widget.TextPreferenceWidget
 import eu.kanade.presentation.more.settings.widget.TrailingWidgetBuffer
 import eu.kanade.tachiyomi.extension.model.Extension
@@ -328,17 +328,17 @@ private fun DetailsHeader(
                 .padding(top = MaterialTheme.padding.small),
             horizontalArrangement = Arrangement.spacedBy(MaterialTheme.padding.medium),
         ) {
-            OutlinedButton(
+            TextButton(
+                text = stringResource(MR.strings.ext_uninstall),
                 modifier = Modifier.weight(1f),
                 onClick = onClickUninstall,
-            ) {
-                Text(stringResource(MR.strings.ext_uninstall))
-            }
+            )
 
             if (onClickAppInfo != null) {
                 Button(
                     modifier = Modifier.weight(1f),
                     onClick = onClickAppInfo,
+                    colors = ButtonDefaults.buttonColorsPrimary(),
                 ) {
                     Text(stringResource(MR.strings.ext_app_info))
                 }
@@ -460,21 +460,20 @@ private fun ContentWarningDialog(
     description: StringResource,
     onClickConfirm: () -> Unit,
 ) {
-    AlertDialog(
-        title = {
-            Text(
-                text = stringResource(label),
-                style = MaterialTheme.typography.titleMedium,
-            )
-        },
-        text = {
-            Text(text = stringResource(description))
-        },
-        confirmButton = {
-            TextButton(onClick = onClickConfirm) {
-                Text(text = stringResource(MR.strings.action_ok))
-            }
-        },
+    OverlayDialog(
+        show = true,
+        title = stringResource(label),
+        summary = stringResource(description),
         onDismissRequest = onClickConfirm,
-    )
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.End,
+        ) {
+            TextButton(
+                text = stringResource(MR.strings.action_ok),
+                onClick = onClickConfirm,
+            )
+        }
+    }
 }

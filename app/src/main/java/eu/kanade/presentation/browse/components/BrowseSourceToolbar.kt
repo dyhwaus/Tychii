@@ -1,6 +1,6 @@
 package eu.kanade.presentation.browse.components
 
-import androidx.compose.material3.Text
+import androidx.compose.foundation.layout.Box
 import androidx.compose.material3.TopAppBarScrollBehavior
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -10,8 +10,6 @@ import androidx.compose.runtime.setValue
 import eu.kanade.presentation.components.AppBar
 import eu.kanade.presentation.components.AppBarActions
 import eu.kanade.presentation.components.AppBarTitle
-import eu.kanade.presentation.components.DropdownMenu
-import eu.kanade.presentation.components.RadioMenuItem
 import eu.kanade.presentation.components.SearchToolbar
 import eu.kanade.tachiyomi.source.ConfigurableSource
 import eu.kanade.tachiyomi.source.Source
@@ -22,6 +20,10 @@ import mihon.icons.materialsymbols.roundedfilled.ViewModule
 import tachiyomi.domain.library.model.LibraryDisplayMode
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.i18n.stringResource
+import top.yukonga.miuix.kmp.basic.DropdownDefaults
+import top.yukonga.miuix.kmp.basic.DropdownEntry
+import top.yukonga.miuix.kmp.basic.DropdownItem
+import top.yukonga.miuix.kmp.popup.OverlayDropdownPopup
 import tachiyomi.source.local.LocalSource
 
 @Composable
@@ -94,31 +96,46 @@ fun BrowseSourceToolbar(
                 },
             )
 
-            DropdownMenu(
-                expanded = selectingDisplayMode,
-                onDismissRequest = { selectingDisplayMode = false },
-            ) {
-                RadioMenuItem(
-                    text = { Text(text = stringResource(MR.strings.action_display_comfortable_grid)) },
-                    isChecked = displayMode == LibraryDisplayMode.ComfortableGrid,
-                ) {
-                    selectingDisplayMode = false
-                    onDisplayModeChange(LibraryDisplayMode.ComfortableGrid)
-                }
-                RadioMenuItem(
-                    text = { Text(text = stringResource(MR.strings.action_display_grid)) },
-                    isChecked = displayMode == LibraryDisplayMode.CompactGrid,
-                ) {
-                    selectingDisplayMode = false
-                    onDisplayModeChange(LibraryDisplayMode.CompactGrid)
-                }
-                RadioMenuItem(
-                    text = { Text(text = stringResource(MR.strings.action_display_list)) },
-                    isChecked = displayMode == LibraryDisplayMode.List,
-                ) {
-                    selectingDisplayMode = false
-                    onDisplayModeChange(LibraryDisplayMode.List)
-                }
+            Box {
+                OverlayDropdownPopup(
+                    entries = listOf(
+                        DropdownEntry(
+                            items = listOf(
+                                DropdownItem(
+                                    text = stringResource(MR.strings.action_display_comfortable_grid),
+                                    selected = displayMode == LibraryDisplayMode.ComfortableGrid,
+                                    onClick = {
+                                        selectingDisplayMode = false
+                                        onDisplayModeChange(LibraryDisplayMode.ComfortableGrid)
+                                    },
+                                ),
+                                DropdownItem(
+                                    text = stringResource(MR.strings.action_display_grid),
+                                    selected = displayMode == LibraryDisplayMode.CompactGrid,
+                                    onClick = {
+                                        selectingDisplayMode = false
+                                        onDisplayModeChange(LibraryDisplayMode.CompactGrid)
+                                    },
+                                ),
+                                DropdownItem(
+                                    text = stringResource(MR.strings.action_display_list),
+                                    selected = displayMode == LibraryDisplayMode.List,
+                                    onClick = {
+                                        selectingDisplayMode = false
+                                        onDisplayModeChange(LibraryDisplayMode.List)
+                                    },
+                                ),
+                            ),
+                        ),
+                    ),
+                    show = selectingDisplayMode,
+                    onDismiss = { selectingDisplayMode = false },
+                    onDismissFinished = {},
+                    maxHeight = null,
+                    dropdownColors = DropdownDefaults.dropdownColors(),
+                    renderInRootScaffold = true,
+                    collapseOnSelection = true,
+                )
             }
         },
         scrollBehavior = scrollBehavior,

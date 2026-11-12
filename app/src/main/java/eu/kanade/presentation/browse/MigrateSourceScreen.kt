@@ -9,7 +9,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -38,8 +37,9 @@ import tachiyomi.presentation.core.components.material.padding
 import tachiyomi.presentation.core.components.material.topSmallPaddingValues
 import tachiyomi.presentation.core.i18n.stringResource
 import eu.kanade.presentation.components.QuietEmptyScreen
+import top.yukonga.miuix.kmp.basic.IconButton
+import top.yukonga.miuix.kmp.basic.SmallTitle
 import tachiyomi.presentation.core.screens.LoadingScreen
-import tachiyomi.presentation.core.theme.header
 import tachiyomi.presentation.core.util.plus
 import tachiyomi.presentation.core.util.secondaryItemAlpha
 
@@ -96,10 +96,10 @@ private fun MigrateSourceList(
                     .padding(start = MaterialTheme.padding.medium),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                Text(
+                SmallTitle(
                     text = stringResource(MR.strings.migration_selection_prompt),
                     modifier = Modifier.weight(1f),
-                    style = MaterialTheme.typography.header,
+                    insideMargin = PaddingValues(0.dp),
                 )
 
                 IconButton(onClick = onToggleSortingMode) {

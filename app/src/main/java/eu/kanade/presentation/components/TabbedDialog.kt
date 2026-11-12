@@ -5,15 +5,13 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.PrimaryTabRow
-import androidx.compose.material3.Tab
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -23,13 +21,13 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.util.fastForEachIndexed
 import kotlinx.coroutines.launch
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.rounded.MoreVert
 import tachiyomi.i18n.MR
-import tachiyomi.presentation.core.components.material.TabText
 import tachiyomi.presentation.core.i18n.stringResource
+import top.yukonga.miuix.kmp.basic.IconButton
+import top.yukonga.miuix.kmp.basic.TabRow
 
 object TabbedDialogPaddings {
     val Horizontal = 24.dp
@@ -52,21 +50,16 @@ fun TabbedDialog(
         val scope = rememberCoroutineScope()
 
         Column {
-            Row {
-                PrimaryTabRow(
-                    modifier = Modifier.weight(1f),
+            Row(
+                modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                TabRow(
+                    tabs = tabTitles,
                     selectedTabIndex = pagerState.currentPage,
-                    containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
-                ) {
-                    tabTitles.fastForEachIndexed { index, tab ->
-                        Tab(
-                            selected = pagerState.currentPage == index,
-                            onClick = { scope.launch { pagerState.animateScrollToPage(index) } },
-                            text = { TabText(text = tab) },
-                            unselectedContentColor = MaterialTheme.colorScheme.onSurface,
-                        )
-                    }
-                }
+                    onTabSelected = { scope.launch { pagerState.animateScrollToPage(it) } },
+                    modifier = Modifier.weight(1f),
+                )
 
                 tabOverflowMenuContent?.let { MoreMenu(it) }
             }
@@ -91,6 +84,7 @@ private fun MoreMenu(
             Icon(
                 imageVector = MaterialSymbols.Rounded.MoreVert,
                 contentDescription = stringResource(MR.strings.label_more),
+                tint = MaterialTheme.colorScheme.onSurface,
             )
         }
         DropdownMenu(

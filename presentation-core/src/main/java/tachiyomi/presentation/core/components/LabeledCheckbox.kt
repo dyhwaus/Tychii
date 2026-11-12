@@ -5,16 +5,17 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
-import androidx.compose.material3.Checkbox
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.state.ToggleableState
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
 import tachiyomi.presentation.core.components.material.padding
+import top.yukonga.miuix.kmp.basic.Checkbox
 
 @Composable
 fun LabeledCheckbox(
@@ -41,8 +42,8 @@ fun LabeledCheckbox(
         horizontalArrangement = Arrangement.spacedBy(MaterialTheme.padding.small),
     ) {
         Checkbox(
-            checked = checked,
-            onCheckedChange = null,
+            state = if (checked) ToggleableState.On else ToggleableState.Off,
+            onClick = null,
             enabled = enabled,
         )
 

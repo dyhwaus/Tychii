@@ -1,19 +1,23 @@
 package eu.kanade.presentation.components
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.basicMarquee
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.text.input.TextFieldLineLimits
 import androidx.compose.foundation.text.input.clearText
 import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
-import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.PlainTooltip
@@ -22,11 +26,8 @@ import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material3.TooltipAnchorPosition
 import androidx.compose.material3.TooltipBox
 import androidx.compose.material3.TooltipDefaults.rememberTooltipPositionProvider
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.TopAppBarScrollBehavior
 import androidx.compose.material3.rememberTooltipState
-import androidx.compose.material3.surfaceColorAtElevation
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
@@ -37,6 +38,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusDirection
 import androidx.compose.ui.focus.FocusRequester
@@ -63,6 +65,12 @@ import tachiyomi.presentation.core.util.clearFocusOnSoftKeyboardHide
 import tachiyomi.presentation.core.util.runOnEnterKeyPressed
 import tachiyomi.presentation.core.util.secondaryItemAlpha
 import tachiyomi.presentation.core.util.showSoftKeyboard
+import top.yukonga.miuix.kmp.basic.DropdownDefaults
+import top.yukonga.miuix.kmp.basic.DropdownEntry
+import top.yukonga.miuix.kmp.basic.DropdownItem
+import top.yukonga.miuix.kmp.basic.IconButton
+import top.yukonga.miuix.kmp.popup.OverlayDropdownPopup
+import top.yukonga.miuix.kmp.theme.MiuixTheme
 
 @Composable
 fun AppBar(
@@ -131,35 +139,55 @@ fun AppBar(
 
     scrollBehavior: TopAppBarScrollBehavior? = null,
 ) {
-    Column(
-        modifier = modifier,
+    // Miuix's SmallTopAppBar only takes a plain String title, while callers
+    // pass composable titles here (search field, count pill, marquee
+    // subtitle). The bar below mirrors its look with Miuix colors and
+    // Miuix icon buttons instead. scrollBehavior is kept for call-site
+    // compatibility; the Miuix bar stays pinned, so the scroll tint it
+    // used to drive is gone.
+    @Suppress("UNUSED_PARAMETER")
+    scrollBehavior
+
+    val containerColor = backgroundColor
+        ?: if (isActionMode) MiuixTheme.colorScheme.surfaceContainerHigh else MiuixTheme.colorScheme.surface
+    Box(
+        modifier = modifier
+            .background(containerColor)
+            .statusBarsPadding(),
     ) {
-        TopAppBar(
-            navigationIcon = {
-                if (isActionMode) {
-                    IconButton(onClick = onCancelActionMode) {
-                        Icon(
-                            imageVector = MaterialSymbols.Rounded.Close,
-                            contentDescription = stringResource(MR.strings.action_cancel),
-                        )
-                    }
-                } else {
-                    navigateUp?.let {
-                        IconButton(onClick = it) {
-                            UpIcon(navigationIcon = navigationIcon)
-                        }
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(64.dp)
+                .padding(horizontal = 4.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            if (isActionMode) {
+                IconButton(onClick = onCancelActionMode) {
+                    Icon(
+                        imageVector = MaterialSymbols.Rounded.Close,
+                        contentDescription = stringResource(MR.strings.action_cancel),
+                        tint = MiuixTheme.colorScheme.onSurface,
+                    )
+                }
+            } else {
+                navigateUp?.let {
+                    IconButton(onClick = it) {
+                        UpIcon(navigationIcon = navigationIcon)
                     }
                 }
-            },
-            title = titleContent,
-            actions = actions,
-            colors = TopAppBarDefaults.topAppBarColors(
-                containerColor = backgroundColor ?: MaterialTheme.colorScheme.surfaceColorAtElevation(
-                    elevation = if (isActionMode) 3.dp else 0.dp,
-                ),
-            ),
-            scrollBehavior = scrollBehavior,
-        )
+            }
+            Box(
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(horizontal = 8.dp),
+            ) {
+                titleContent()
+            }
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                actions()
+            }
+        }
     }
 }
 
@@ -223,39 +251,49 @@ fun AppBarActions(
 
     val overflowActions = actions.filterIsInstance<AppBar.OverflowAction>()
     if (overflowActions.isNotEmpty()) {
-        TooltipBox(
-            positionProvider = rememberTooltipPositionProvider(TooltipAnchorPosition.Above),
-            tooltip = {
-                PlainTooltip {
-                    Text(stringResource(MR.strings.action_menu_overflow_description))
-                }
-            },
-            state = rememberTooltipState(),
-            focusable = false,
-        ) {
-            IconButton(
-                onClick = { showMenu = !showMenu },
+        Box {
+            TooltipBox(
+                positionProvider = rememberTooltipPositionProvider(TooltipAnchorPosition.Above),
+                tooltip = {
+                    PlainTooltip {
+                        Text(stringResource(MR.strings.action_menu_overflow_description))
+                    }
+                },
+                state = rememberTooltipState(),
+                focusable = false,
             ) {
-                Icon(
-                    MaterialSymbols.Rounded.MoreVert,
-                    contentDescription = stringResource(MR.strings.action_menu_overflow_description),
-                )
+                IconButton(
+                    onClick = { showMenu = true },
+                ) {
+                    Icon(
+                        MaterialSymbols.Rounded.MoreVert,
+                        contentDescription = stringResource(MR.strings.action_menu_overflow_description),
+                    )
+                }
             }
-        }
 
-        DropdownMenu(
-            expanded = showMenu,
-            onDismissRequest = { showMenu = false },
-        ) {
-            overflowActions.map {
-                DropdownMenuItem(
-                    onClick = {
-                        it.onClick()
-                        showMenu = false
-                    },
-                    text = { Text(it.title, fontWeight = FontWeight.Normal) },
-                )
-            }
+            OverlayDropdownPopup(
+                entries = listOf(
+                    DropdownEntry(
+                        items = overflowActions.map {
+                            DropdownItem(
+                                text = it.title,
+                                onClick = {
+                                    it.onClick()
+                                    showMenu = false
+                                },
+                            )
+                        },
+                    ),
+                ),
+                show = showMenu,
+                onDismiss = { showMenu = false },
+                onDismissFinished = {},
+                maxHeight = null,
+                dropdownColors = DropdownDefaults.dropdownColors(),
+                renderInRootScaffold = true,
+                collapseOnSelection = true,
+            )
         }
     }
 }

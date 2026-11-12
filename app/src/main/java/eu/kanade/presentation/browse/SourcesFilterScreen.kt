@@ -3,9 +3,9 @@ package eu.kanade.presentation.browse
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.Checkbox
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.state.ToggleableState
 import androidx.compose.ui.platform.LocalContext
 import eu.kanade.presentation.browse.components.BaseSourceItem
 import eu.kanade.presentation.components.AppBar
@@ -17,7 +17,8 @@ import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.components.FastScrollLazyColumn
 import tachiyomi.presentation.core.components.material.Scaffold
 import tachiyomi.presentation.core.i18n.stringResource
-import tachiyomi.presentation.core.screens.EmptyScreen
+import eu.kanade.presentation.components.QuietEmptyScreen
+import top.yukonga.miuix.kmp.basic.Checkbox
 
 @Composable
 fun SourcesFilterScreen(
@@ -36,7 +37,7 @@ fun SourcesFilterScreen(
         },
     ) { contentPadding ->
         if (state.isEmpty) {
-            EmptyScreen(
+            QuietEmptyScreen(
                 stringRes = MR.strings.source_filter_empty_screen,
                 modifier = Modifier.padding(contentPadding),
             )
@@ -120,7 +121,10 @@ private fun SourcesFilterItem(
         showLanguageInContent = false,
         onClickItem = { onClickItem(source) },
         action = {
-            Checkbox(checked = enabled, onCheckedChange = null)
+            Checkbox(
+                state = if (enabled) ToggleableState.On else ToggleableState.Off,
+                onClick = null,
+            )
         },
     )
 }

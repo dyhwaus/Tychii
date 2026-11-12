@@ -540,6 +540,82 @@ are untouched, and the tablet two-pane layout keeps its structure.
   Material3), the fast scroller, the markdown renderer and the
   rich-text editor / notes display.
 
+## Browse pages, migration and shared components (2026-11-12)
+
+Browse sub-pages, migration flows and the shared top bar / dialogs are
+Miuix now. Only the presentation layer changed: ViewModels, data layer,
+navigation and all click / drag behaviour are untouched.
+
+- **Shared top bar** (`presentation/components/AppBar.kt`): the `AppBar`
+  and `SearchToolbar` keep their exact signatures (40 call sites, so
+  every remaining page gets the new bar for free), but render a Miuix
+  bar — Miuix surface background, Miuix `IconButton`s, and the overflow
+  menu is an `OverlayDropdownPopup`. Miuix's `SmallTopAppBar` only
+  takes a plain String title, while callers pass composable titles
+  (search field, count pill, marquee subtitle), so the bar is a small
+  custom layout in Miuix colors rather than `SmallTopAppBar` itself.
+  `scrollBehavior` is kept for call-site compatibility but ignored:
+  the Miuix bar stays pinned, so the scroll tint it used to drive is
+  gone. Tooltips stay Material3 (Miuix has none).
+- **Tabbed dialogs** (`TabbedDialog.kt`): the tab row is Miuix `TabRow`
+  and the overflow icon is a Miuix `IconButton`; the sheet container
+  is still `AdaptiveSheet`. No caller uses `tabOverflowMenuContent`,
+  so its menu content stays the Material3 dropdown wrapper.
+- **Adaptive sheet** (`presentation-core/.../AdaptiveSheet.kt`): the
+  sheet surface color is now Miuix `surfaceContainerHigh` (both the
+  tablet-centered and phone bottom-anchored branches). The custom
+  AnchoredDraggable behaviour, swipe-to-dismiss and 460.dp max width
+  are unchanged — Miuix's `OverlayBottomSheet` is always
+  bottom-anchored and cannot reproduce the tablet-centered dialog,
+  and the sheet has no visible drag handle (none before either).
+- **Browse rows** (`BaseBrowseItem`, `BaseSourceItem`): rows keep
+  their slots and 48.dp source/extension icons, with Miuix row
+  spacing (16.dp horizontal, 12.dp vertical). Section headers in
+  Sources / Extensions / Migration config are Miuix `SmallTitle`s.
+- **Manga list item** (`CommonMangaItem.MangaListItem`, used by the
+  library list view, browse-source list and global search): the row
+  keeps its layout and selection background, gains a Miuix
+  `HorizontalDivider` with a 16.dp start inset, and the
+  continue-reading button is a Miuix `IconButton` with the same
+  primary-container fill. The Neko grid items are untouched.
+  `BaseMangaListItem` (migration only) gets the same divider.
+- **Dialogs**: `SourceOptionsDialog`, `RemoveMangaDialog`, the two
+  extension dialogs, the migration dialog, the extension-details
+  content-warning dialog and the browse-source display-mode menu are
+  `OverlayDialog` / `OverlayDropdownPopup` with Miuix `TextButton`s.
+  `LabeledCheckbox` (shared core component, used by the migration,
+  history, delete-library-manga and track dialogs) now draws a Miuix
+  `Checkbox`. The source-preferences edit-text dialog deliberately
+  stays Material3 `AlertDialog`: it must be a platform dialog window
+  so extensions can find `android.R.id.button1` in its view hierarchy
+  and so the keyboard can be forced visible through the dialog
+  window; a comment in the file says so.
+- **Extensions**: update-all is a Miuix `Button`; the three action
+  icons are Miuix `IconButton`s; the incognito and per-source switches
+  are Miuix `Switch`es; dividers are Miuix. The permission warning
+  banner, the install progress ring and the extension pills stay as
+  they were (Miuix has no banner or small pill).
+- **Global search**: the filter chips are small Miuix `Button`s
+  (Miuix has no chip; selected uses the primary button colors, like
+  the tags on the manga detail page), the progress bar and dividers
+  are Miuix, the result rows use a Miuix `IconButton` and the loading
+  spinner is Miuix. The card row itself is the unchanged Neko grid.
+- **Migration**: the config screen keeps its reorderable list and
+  drag handles; the grouped rows are flat Miuix `surfaceContainer`
+  with the same first/last corner shape (Miuix `Card` takes one
+  uniform corner radius, so it cannot do top-only / bottom-only
+  rounding), the per-source rows are plain Miuix-spaced rows, the
+  flag chips are Miuix `Button`s, the switch rows are Miuix
+  `SwitchPreference`s, and the sheet's start button is a Miuix
+  primary `Button`. The extended FABs on the migration screens stay
+  Material3 (Miuix has no extended FAB, same as the detail page).
+  The sheet's extra-search-query field stays `OutlinedTextField`:
+  Miuix `TextField` has no `supportingText`, and the hint text under
+  the field is part of the UI.
+- **Empty states**: browse-source, missing-source, extension-filter,
+  sources-filter and migrate-manga empty/error states now use the
+  quiet `QuietEmptyScreen` instead of the shared `EmptyScreen`.
+
 ## Deliberately NOT migrated
 
 - The app shell's other screens, top bars, dialogs and lists still use
