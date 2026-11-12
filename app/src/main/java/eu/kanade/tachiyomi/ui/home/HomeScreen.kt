@@ -89,11 +89,11 @@ object HomeScreen : Screen() {
     private const val TabNavigatorKey = "HomeTabs"
 
     // Bottom padding for tab content so nothing hides behind the floating bar:
-    // bar height (52.dp without labels, ~60.dp with labels) + 26.dp bottom
+    // bar height (52.dp without labels, 62.dp with labels) + 32.dp bottom
     // offset (+ shadow). The navigation-bar inset is already in the
     // Scaffold's PaddingValues.
     private val FloatingNavBarClearance = 84.dp
-    private val FloatingNavBarClearanceWithLabels = 96.dp
+    private val FloatingNavBarClearanceWithLabels = 94.dp
 
     private val TABS = listOf(
         LibraryTab,
@@ -309,7 +309,14 @@ object HomeScreen : Screen() {
             BadgedBox(
                 badge = { badge?.invoke() },
                 modifier = Modifier.padding(
-                    top = FloatingNavigationBarDefaults.IconPadding,
+                    // Balanced vertical padding when labels are on: the bar
+                    // grows to fit icon + label with 8.dp top and bottom,
+                    // so nothing touches the bar's edges.
+                    top = if (showLabels) {
+                        8.dp
+                    } else {
+                        FloatingNavigationBarDefaults.IconPadding
+                    },
                     bottom = if (showLabels) {
                         2.dp
                     } else {
@@ -333,6 +340,7 @@ object HomeScreen : Screen() {
                     lineHeight = 14.sp,
                     color = tint,
                     maxLines = 1,
+                    modifier = Modifier.padding(bottom = 8.dp),
                 )
             }
         }

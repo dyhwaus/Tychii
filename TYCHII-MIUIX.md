@@ -207,6 +207,17 @@ white in the day, black at night, via night-qualified resources.
   background) instead of the launcher foreground.
 - The More/About page header (`LogoHeader`) uses the launcher
   foreground, so it now shows the Taiji too (and adapts day/night).
+  It uses no tint, so the Taiji keeps its own black/white colors
+  exactly like the launcher icon.
+
+## Navigation bar labels (2026-11-12)
+
+With labels on, the floating bar item is icon (28.dp) + 11.sp label.
+It now has balanced vertical padding (8.dp top, 8.dp below the
+label) so the icon and text no longer touch the bar's top and bottom
+edges. Bar height with labels is 62.dp; content clearance is 94.dp.
+The night Taiji outline is thicker (8 vs 6) so the symbol stays
+readable on the black night background.
 
 ## Build
 
