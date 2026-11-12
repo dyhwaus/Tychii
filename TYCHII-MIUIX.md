@@ -127,19 +127,16 @@ changed, and how to build.
   categories are plain text in `onSurfaceVariant`. The count `Pill`
   badge is unchanged. (`TabText` gained a defaulted `fontWeight`
   parameter for this; its other two call sites are unaffected.) The
-  capsule itself now follows the active category (2026-11-12):
-  the Library tab reports its capsule text through a
-  `HomeScreen.setCapsuleTitle` channel (same pattern as
-  `showTitleCapsule`) — the default category shows just "书架", any
-  other category shows "书架 · 分类名". HomeScreen only applies the
-  reported text while the Library tab is current, so other tabs keep
-  their own titles and nothing needs resetting on tab switch. The
-  capsule still hides while searching or selecting. Note: since the
-  pill search box below, the capsule is hidden on phones on the
-  Library, History and Browse tabs — the category then shows in the
-  search pill's hint ("搜索书架" / "搜索分类名") and in the category
-  tabs row instead; the capsule text above still applies wherever
-  the capsule is shown.
+  capsule itself used to follow the active category (2026-11-12):
+  the Library tab reported "书架 · 分类名" through a
+  `HomeScreen.setCapsuleTitle` channel. That channel was removed
+  after the user chose to keep the pill search box and let the
+  capsule yield (2026-11-12): on phones the capsule is hidden on
+  the Library, History and Browse tabs, so the reported text never
+  rendered anywhere (tablets have no capsule at all). The category
+  now shows in the search pill's hint ("搜索书架" / "搜索分类名")
+  and in the category tabs row instead. The capsule still hides
+  while searching or selecting.
 - Detail page cover palette (2026-11-12, Neko-style, kept quiet): the
   manga detail page now takes one color from its cover and uses it in
   only two places — a faint 0.25-alpha wash over the backdrop image

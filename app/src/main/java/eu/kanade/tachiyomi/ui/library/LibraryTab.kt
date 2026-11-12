@@ -93,24 +93,9 @@ data object LibraryTab : Tab {
         val settingsViewModel = metroViewModel<LibrarySettingsViewModel>()
         val state by viewModel.state.collectAsStateWithLifecycle()
 
-        // The title capsule follows the active category: the default
-        // category shows just "书架", any other category shows
-        // "书架 · 分类名". Reported through the same channel pattern
-        // as showTitleCapsule; HomeScreen only applies it while this
-        // tab is current.
-        val capsuleTitle = run {
-            val category = state.activeCategory
-            val library = stringResource(MR.strings.label_library)
-            if (category == null || category.isSystemCategory) {
-                library
-            } else {
-                "$library · ${category.name}"
-            }
-        }
-        LaunchedEffect(capsuleTitle) {
-            HomeScreen.setCapsuleTitle(capsuleTitle)
-        }
-
+        // The active category name lives in the pill search box hint
+        // ("搜索" + category), not in the title capsule: on phones the
+        // capsule yields to the pill box, which owns the top band.
         val snackbarHostState = remember { SnackbarHostState() }
 
         val onClickRefresh: suspend (Category?) -> Boolean = { category ->
