@@ -140,6 +140,17 @@ changed, and how to build.
   search pill's hint ("搜索书架" / "搜索分类名") and in the category
   tabs row instead; the capsule text above still applies wherever
   the capsule is shown.
+- More page grouped cards (2026-11-12): the More page now uses Miuix
+  grouped cards — one `Card` per group (`SwitchPreference` for the
+  two switches, `ArrowPreference` for the five navigation rows), no
+  dividers between rows, 12.dp between groups, 12.dp side margins.
+  Entries and click behaviour are unchanged, and Support us / About /
+  Help stay removed. Settings pages stay Material3; only the More
+  page uses Miuix preferences. The page also starts with a 64.dp
+  blank band at the top: the other main tabs have a 64.dp toolbar
+  occupying the band under the title capsule, but this page has no
+  top bar, so without the spacer its first row slid under the
+  capsule and overlapped it.
 - Search pill (2026-11-12, Neko-style): on phones the main tabs'
   bare search icon is replaced by a rounded search box —
   48.dp high, full pill radius, `surfaceContainerHigh` background,

@@ -1,10 +1,13 @@
 package eu.kanade.presentation.more
 
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.material3.HorizontalDivider
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
-import eu.kanade.presentation.more.settings.widget.SwitchPreferenceWidget
-import eu.kanade.presentation.more.settings.widget.TextPreferenceWidget
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import eu.kanade.tachiyomi.ui.more.DownloadQueueState
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.automirroredrounded.Label
@@ -19,6 +22,9 @@ import tachiyomi.presentation.core.components.ScrollbarLazyColumn
 import tachiyomi.presentation.core.components.material.Scaffold
 import tachiyomi.presentation.core.i18n.pluralStringResource
 import tachiyomi.presentation.core.i18n.stringResource
+import top.yukonga.miuix.kmp.basic.Card
+import top.yukonga.miuix.kmp.preference.ArrowPreference
+import top.yukonga.miuix.kmp.preference.SwitchPreference
 
 @Composable
 fun MoreScreen(
@@ -40,91 +46,135 @@ fun MoreScreen(
         contentWindowInsets = WindowInsets(0, 0, 0, 0),
     ) { contentPadding ->
         ScrollbarLazyColumn(contentPadding = contentPadding) {
-            // No LogoHeader here: the Taiji icon sat directly under the
-            // centered title capsule floating over this page, so the two
-            // overlapped. The capsule is now the page's only top element.
-            // (About keeps its own LogoHeader — it is a sub-screen with
-            // its own AppBar and no capsule.)
+            // Top blank band: the other main tabs have a 64.dp toolbar
+            // occupying the top band under the title capsule, so their
+            // content starts below it. This page has no top bar — without
+            // this spacer the first row would slide under the capsule
+            // and its text would overlap it.
             item {
-                SwitchPreferenceWidget(
-                    title = stringResource(MR.strings.label_downloaded_only),
-                    subtitle = stringResource(MR.strings.downloaded_only_summary),
-                    icon = MaterialSymbols.Rounded.CloudOff,
-                    checked = downloadedOnly,
-                    onCheckedChanged = onDownloadedOnlyChange,
-                )
+                Spacer(modifier = Modifier.height(64.dp))
+            }
+            // Grouped Miuix cards, one card per group (same grouping the
+            // old dividers marked). No dividers between rows — that is
+            // the Miuix convention. Entries and click behaviour are
+            // unchanged.
+            item {
+                Card(modifier = Modifier.padding(horizontal = 12.dp)) {
+                    SwitchPreference(
+                        checked = downloadedOnly,
+                        onCheckedChange = onDownloadedOnlyChange,
+                        title = stringResource(MR.strings.label_downloaded_only),
+                        summary = stringResource(MR.strings.downloaded_only_summary),
+                        startAction = {
+                            Icon(
+                                imageVector = MaterialSymbols.Rounded.CloudOff,
+                                contentDescription = null,
+                            )
+                        },
+                    )
+                    SwitchPreference(
+                        checked = incognitoMode,
+                        onCheckedChange = onIncognitoModeChange,
+                        title = stringResource(MR.strings.pref_incognito_mode),
+                        summary = stringResource(MR.strings.pref_incognito_mode_summary),
+                        startAction = {
+                            Icon(
+                                imageVector = MaterialSymbols.Rounded.Eyeglasses2,
+                                contentDescription = null,
+                            )
+                        },
+                    )
+                }
             }
             item {
-                SwitchPreferenceWidget(
-                    title = stringResource(MR.strings.pref_incognito_mode),
-                    subtitle = stringResource(MR.strings.pref_incognito_mode_summary),
-                    icon = MaterialSymbols.Rounded.Eyeglasses2,
-                    checked = incognitoMode,
-                    onCheckedChanged = onIncognitoModeChange,
-                )
+                Spacer(modifier = Modifier.height(12.dp))
             }
-
-            item { HorizontalDivider() }
-
             item {
-                val downloadQueueState = downloadQueueStateProvider()
-                TextPreferenceWidget(
-                    title = stringResource(MR.strings.label_download_queue),
-                    subtitle = when (downloadQueueState) {
-                        DownloadQueueState.Stopped -> null
-                        is DownloadQueueState.Paused -> {
-                            val pending = downloadQueueState.pending
-                            if (pending == 0) {
-                                stringResource(MR.strings.paused)
-                            } else {
-                                "${stringResource(MR.strings.paused)} • ${
-                                    pluralStringResource(
-                                        MR.plurals.download_queue_summary,
-                                        count = pending,
-                                        pending,
-                                    )
-                                }"
+                Card(modifier = Modifier.padding(horizontal = 12.dp)) {
+                    val downloadQueueState = downloadQueueStateProvider()
+                    ArrowPreference(
+                        title = stringResource(MR.strings.label_download_queue),
+                        summary = when (downloadQueueState) {
+                            DownloadQueueState.Stopped -> null
+                            is DownloadQueueState.Paused -> {
+                                val pending = downloadQueueState.pending
+                                if (pending == 0) {
+                                    stringResource(MR.strings.paused)
+                                } else {
+                                    "${stringResource(MR.strings.paused)} • ${
+                                        pluralStringResource(
+                                            MR.plurals.download_queue_summary,
+                                            count = pending,
+                                            pending,
+                                        )
+                                    }"
+                                }
                             }
-                        }
-                        is DownloadQueueState.Downloading -> {
-                            val pending = downloadQueueState.pending
-                            pluralStringResource(MR.plurals.download_queue_summary, count = pending, pending)
-                        }
-                    },
-                    icon = MaterialSymbols.Rounded.Download,
-                    onPreferenceClick = onClickDownloadQueue,
-                )
+                            is DownloadQueueState.Downloading -> {
+                                val pending = downloadQueueState.pending
+                                pluralStringResource(
+                                    MR.plurals.download_queue_summary,
+                                    count = pending,
+                                    pending,
+                                )
+                            }
+                        },
+                        startAction = {
+                            Icon(
+                                imageVector = MaterialSymbols.Rounded.Download,
+                                contentDescription = null,
+                            )
+                        },
+                        onClick = onClickDownloadQueue,
+                    )
+                    ArrowPreference(
+                        title = stringResource(MR.strings.categories),
+                        startAction = {
+                            Icon(
+                                imageVector = MaterialSymbols.AutoMirroredRounded.Label,
+                                contentDescription = null,
+                            )
+                        },
+                        onClick = onClickCategories,
+                    )
+                    ArrowPreference(
+                        title = stringResource(MR.strings.label_stats),
+                        startAction = {
+                            Icon(
+                                imageVector = MaterialSymbols.Rounded.QueryStats,
+                                contentDescription = null,
+                            )
+                        },
+                        onClick = onClickStats,
+                    )
+                    ArrowPreference(
+                        title = stringResource(MR.strings.label_data_storage),
+                        startAction = {
+                            Icon(
+                                imageVector = MaterialSymbols.Rounded.Storage,
+                                contentDescription = null,
+                            )
+                        },
+                        onClick = onClickDataAndStorage,
+                    )
+                }
             }
             item {
-                TextPreferenceWidget(
-                    title = stringResource(MR.strings.categories),
-                    icon = MaterialSymbols.AutoMirroredRounded.Label,
-                    onPreferenceClick = onClickCategories,
-                )
+                Spacer(modifier = Modifier.height(12.dp))
             }
             item {
-                TextPreferenceWidget(
-                    title = stringResource(MR.strings.label_stats),
-                    icon = MaterialSymbols.Rounded.QueryStats,
-                    onPreferenceClick = onClickStats,
-                )
-            }
-            item {
-                TextPreferenceWidget(
-                    title = stringResource(MR.strings.label_data_storage),
-                    icon = MaterialSymbols.Rounded.Storage,
-                    onPreferenceClick = onClickDataAndStorage,
-                )
-            }
-
-            item { HorizontalDivider() }
-
-            item {
-                TextPreferenceWidget(
-                    title = stringResource(MR.strings.label_settings),
-                    icon = MaterialSymbols.Rounded.Settings,
-                    onPreferenceClick = onClickSettings,
-                )
+                Card(modifier = Modifier.padding(horizontal = 12.dp)) {
+                    ArrowPreference(
+                        title = stringResource(MR.strings.label_settings),
+                        startAction = {
+                            Icon(
+                                imageVector = MaterialSymbols.Rounded.Settings,
+                                contentDescription = null,
+                            )
+                        },
+                        onClick = onClickSettings,
+                    )
+                }
             }
         }
     }
