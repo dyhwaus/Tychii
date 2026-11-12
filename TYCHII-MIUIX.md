@@ -5,7 +5,14 @@ Tychii is a fork of Mihon, restyled with the Miuix component library
 from Mihon. This note records what changed, what was deliberately not
 changed, and how to build.
 
-Current version: **v0.1.2** (versionCode 41). The 0.1.2 release is the
+Current version: **v0.1.2** (versionCode 41). Build fix 2026-11-12: the
+0.1.2 migration left `SettingsItems.CheckboxItem` calling Miuix
+`Checkbox` with Material3's `checked`/`onCheckedChange` — Miuix
+`Checkbox` takes `state: ToggleableState` + `onClick`, so the local
+build failed with "No value passed for parameter 'state'". Fixed by
+passing `ToggleableState.On/Off` with `onClick = null` (the row
+handles the click); every other Miuix `Checkbox` call site in the
+app already used `state`. The 0.1.2 release is the
 full-page Miuix restyle (2026-11-12): every user-visible page except
 the reader now follows the Miuix style — settings, manga detail,
 browse/source/extensions/migration, updates/history list items,

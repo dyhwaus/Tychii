@@ -133,9 +133,11 @@ fun CheckboxItem(label: String, checked: Boolean, onClick: () -> Unit) {
     BaseSettingsItem(
         label = label,
         widget = {
+            // Miuix Checkbox takes a ToggleableState, not Material3's
+            // checked/onCheckedChange — the row itself handles the click.
             Checkbox(
-                checked = checked,
-                onCheckedChange = null,
+                state = if (checked) ToggleableState.On else ToggleableState.Off,
+                onClick = null,
             )
         },
         onClick = onClick,
