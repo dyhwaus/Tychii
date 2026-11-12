@@ -12,7 +12,6 @@ import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -47,8 +46,6 @@ import coil3.request.CachePolicy
 import coil3.request.ImageRequest
 import coil3.request.SuccessResult
 import coil3.size.Size
-import eu.kanade.presentation.components.AppBar
-import eu.kanade.presentation.components.AppBarActions
 import eu.kanade.presentation.components.DropdownMenu
 import eu.kanade.presentation.manga.EditCoverAction
 import eu.kanade.tachiyomi.data.coil.ImageDecoder
@@ -68,6 +65,8 @@ import tachiyomi.presentation.core.components.material.Scaffold
 import tachiyomi.presentation.core.i18n.stringResource
 import tachiyomi.presentation.core.util.clickableNoIndication
 import tachiyomi.source.local.isLocal
+import top.yukonga.miuix.kmp.basic.IconButton
+import top.yukonga.miuix.kmp.theme.MiuixTheme
 
 @Composable
 fun MangaCoverDialog(
@@ -104,25 +103,26 @@ fun MangaCoverDialog(
                             Icon(
                                 imageVector = MaterialSymbols.Rounded.Close,
                                 contentDescription = stringResource(MR.strings.action_close),
+                                tint = MiuixTheme.colorScheme.onSurfaceContainer,
                             )
                         }
                     }
                     Spacer(modifier = Modifier.weight(1f))
                     ActionsPill {
-                        AppBarActions(
-                            actions = listOf(
-                                AppBar.Action(
-                                    title = stringResource(MR.strings.action_share),
-                                    icon = MaterialSymbols.Rounded.Share,
-                                    onClick = onShareClick,
-                                ),
-                                AppBar.Action(
-                                    title = stringResource(MR.strings.action_save),
-                                    icon = MaterialSymbols.Rounded.Save,
-                                    onClick = onSaveClick,
-                                ),
-                            ),
-                        )
+                        IconButton(onClick = onShareClick) {
+                            Icon(
+                                imageVector = MaterialSymbols.Rounded.Share,
+                                contentDescription = stringResource(MR.strings.action_share),
+                                tint = MiuixTheme.colorScheme.onSurfaceContainer,
+                            )
+                        }
+                        IconButton(onClick = onSaveClick) {
+                            Icon(
+                                imageVector = MaterialSymbols.Rounded.Save,
+                                contentDescription = stringResource(MR.strings.action_save),
+                                tint = MiuixTheme.colorScheme.onSurfaceContainer,
+                            )
+                        }
                         if (onEditClick != null) {
                             Box {
                                 var expanded by remember { mutableStateOf(false) }
@@ -140,6 +140,7 @@ fun MangaCoverDialog(
                                     Icon(
                                         imageVector = MaterialSymbols.Rounded.Edit,
                                         contentDescription = stringResource(MR.strings.action_edit_cover),
+                                        tint = MiuixTheme.colorScheme.onSurfaceContainer,
                                     )
                                 }
                                 DropdownMenu(
@@ -270,7 +271,7 @@ private fun ActionsPill(content: @Composable () -> Unit) {
     Row(
         modifier = Modifier
             .clip(MaterialTheme.shapes.extraLarge)
-            .background(MaterialTheme.colorScheme.background.copy(alpha = 0.95f)),
+            .background(MiuixTheme.colorScheme.surfaceContainer.copy(alpha = 0.95f)),
     ) {
         content()
     }

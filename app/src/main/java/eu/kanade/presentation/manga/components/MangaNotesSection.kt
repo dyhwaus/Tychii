@@ -6,11 +6,8 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -20,10 +17,12 @@ import androidx.compose.ui.unit.dp
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.rounded.EditNote
 import tachiyomi.i18n.MR
-import tachiyomi.presentation.core.components.material.Button
-import tachiyomi.presentation.core.components.material.ButtonDefaults
 import tachiyomi.presentation.core.components.material.padding
 import tachiyomi.presentation.core.i18n.stringResource
+import top.yukonga.miuix.kmp.basic.Button
+import top.yukonga.miuix.kmp.basic.ButtonDefaults
+import top.yukonga.miuix.kmp.basic.HorizontalDivider
+import top.yukonga.miuix.kmp.basic.Text as MiuixText
 
 @Composable
 fun MangaNotesSection(
@@ -45,10 +44,9 @@ fun MangaNotesSection(
             Button(
                 onClick = onEditNotes,
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = Color.Transparent,
+                    color = Color.Transparent,
                     contentColor = MaterialTheme.colorScheme.primary,
                 ),
-                shape = RoundedCornerShape(8.dp),
                 modifier = Modifier
                     .padding(horizontal = 16.dp, vertical = 4.dp),
             ) {
@@ -61,9 +59,11 @@ fun MangaNotesSection(
                         contentDescription = null,
                         modifier = Modifier
                             .size(16.dp),
+                        tint = MaterialTheme.colorScheme.primary,
                     )
-                    Text(
-                        stringResource(MR.strings.action_edit_notes),
+                    MiuixText(
+                        text = stringResource(MR.strings.action_edit_notes),
+                        color = MaterialTheme.colorScheme.primary,
                     )
                 }
             }

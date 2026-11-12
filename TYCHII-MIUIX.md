@@ -336,8 +336,10 @@ uses MaterialExpressiveTheme.
 - **Ripple:** primary color at 0.6 alpha for all states.
 - **Not done (and why):** Neko's Feed merge (Updates+History into
   one tab) and its edge-attached NavigationBar are not copied —
-  Tychii keeps its 5 tabs and floating bar. The per-manga palette
-  detail screen and the search top bar are also not done. The
+  Tychii keeps its 5 tabs and floating bar. The search top bar is
+  also not done. The detail page itself is Miuix now (see "Manga
+  detail page" below); only its cover-palette chain was kept as
+  designed. The
   settings restyle, listed here as not done on 2026-11-12, was
   done the same day after the user reversed "不变动其他页面" —
   see "Settings pages" below. The reader is untouched.
@@ -471,11 +473,80 @@ switch and bar-style list are preserved.
   and the M3 `ScrollbarLazyColumn` / `LazyColumnWithAction` containers.
   Nothing else on the settings pages is Material3.
 
+## Manga detail page (2026-11-12)
+
+The manga detail page is Miuix now. Only the presentation layer
+changed: ViewModels, data layer, navigation and all click behaviour
+are untouched, and the tablet two-pane layout keeps its structure.
+
+- **Toolbar** (`MangaToolbar`): Miuix `SmallTopAppBar` with Miuix
+  `IconButton`s. The scroll fade is kept — the bar background and the
+  title fade in through the `color` / `titleColor` alpha (the small
+  top bar takes plain colors, so there is no title-alpha modifier).
+  Action mode shows the counter as the title with a close icon. The
+  download and overflow menus are `OverlayDropdownPopup`s with the
+  same six download actions / overflow entries as before.
+- **Info header** (`MangaInfoHeader`): the action row and the
+  description + tags sit in Miuix `Card`s (12.dp side margins); tags
+  are small Miuix `Button`s (Miuix has no chip) and the tag
+  search/copy menu is an `OverlayDropdownPopup`. The description
+  collapse scrim now fades into the card color instead of the page
+  background. The cover palette chain is untouched: backdrop
+  `allowHardware(false)`, 0.25-alpha wash, action-row accent,
+  `rememberThemeColor` / `quietVibrant`, silent fallback.
+- **Chapter list**: rows keep `SwipeableActionsBox` (Miuix has no
+  swipe actions) and their theme colors; rows are separated by Miuix
+  `HorizontalDivider`s with 16.dp side insets (no divider after the
+  last chapter). The chapter header is a Miuix subtitle-style section
+  title; the missing-chapters row uses a Miuix divider. The download
+  indicator's menus are `OverlayDropdownPopup`s.
+- **Assembly** (`MangaScreen`): Miuix `Scaffold` with the M3
+  `SnackbarHost`, the M3 extended start/resume FAB and the M3
+  `PullRefresh` inside it. The page background stays the app theme
+  background, so the backdrop gradient and palette wash still match.
+  The FAB height is measured and added to the list bottom padding,
+  as the Material Scaffold wrapper did before.
+- **Bottom action menu** (`MangaBottomActionMenu`): container color
+  is now Miuix `surfaceContainerHigh`. The buttons stay custom
+  (long-press reveals the label; Miuix `IconButton` has no
+  long-click). `LibraryBottomActionMenu` in the same file is
+  untouched — it belongs to the library page.
+- **Dialogs**: delete-chapters and set-interval are `OverlayDialog`s;
+  the interval wheel is a Miuix `NumberPicker` (0 = default label).
+  The chapter settings dialog rebuilds the tabbed sheet locally with
+  Miuix `TabRow` + `OverlayBottomSheet` (the shared `TabbedDialog`
+  stays Material3 — the library, reader and updates dialogs use it);
+  its rows are `BasicComponent` + `Checkbox` (tri-state),
+  `RadioButtonPreference` (display mode) and a `BasicComponent` with
+  an up/down arrow (sort). The scanlator filter dialog is an
+  `OverlayDialog` with Miuix `Checkbox` rows. The duplicate-manga
+  sheet is an `OverlayBottomSheet` with Miuix `Card` items and a
+  Miuix `TextButton` for cancel. Dialog OK buttons use the primary
+  `TextButton` colors, cancel the default ones.
+- **Cover dialog** (`MangaCoverDialog`): action-pill buttons are
+  Miuix `IconButton`s and the pill is Miuix `surfaceContainer`; the
+  edit menu stays a Material3 `DropdownMenu` (the dialog is a
+  platform window with no Miuix popup host) and the image viewer is
+  untouched.
+- **Notes**: the notes page is a Miuix `Scaffold` +
+  `SmallTopAppBar` (title + manga subtitle); the notes section's edit
+  button is a Miuix `Button` and its divider is Miuix. The rich-text
+  editor itself is untouched (no Miuix equivalent).
+- **Kept Material3**: the action-row buttons (they need long-press —
+  Miuix `Button` has none), the bottom-menu buttons (same reason),
+  the swipe box, `PullRefresh` (Miuix's has no `enabled` flag, and
+  pull-to-refresh must stay off while selecting), the extended FAB
+  (Miuix has no extended FAB), the `SnackbarHost` (the host state is
+  Material3), the fast scroller, the markdown renderer and the
+  rich-text editor / notes display.
+
 ## Deliberately NOT migrated
 
 - The app shell's other screens, top bars, dialogs and lists still use
   Material3. Only the home navigation shell moved to Miuix. (Settings
-  pages are the exception since 2026-11-12 — see "Settings pages".)
+  pages are the exception since 2026-11-12 — see "Settings pages" —
+  and the manga detail page since 2026-11-12 — see "Manga detail
+  page".)
 - No `miuix-blur`: the floating bar has no blurred backdrop (solid
   `surfaceContainer`). Blur would need minSdk 33.
 - `miuix-nav` was not adopted; Mihon's existing navigation stays.

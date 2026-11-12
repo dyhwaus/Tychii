@@ -64,6 +64,7 @@ import mihon.icons.materialsymbols.rounded.RemoveDone
 import mihon.icons.materialsymbols.rounded.SwapCalls
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.i18n.stringResource
+import top.yukonga.miuix.kmp.theme.MiuixTheme
 import kotlin.time.Duration.Companion.seconds
 
 @Composable
@@ -84,10 +85,13 @@ fun MangaBottomActionMenu(
         exit = shrinkVertically(shrinkTowards = Alignment.Bottom),
     ) {
         val scope = rememberCoroutineScope()
+        // Miuix container color. The buttons stay custom: they need
+        // long-press to reveal their labels, and Miuix IconButton has no
+        // long-click, so the Material ripple box is kept.
         Surface(
             modifier = modifier,
             shape = MaterialTheme.shapes.large.copy(bottomEnd = ZeroCornerSize, bottomStart = ZeroCornerSize),
-            color = MaterialTheme.colorScheme.surfaceContainerHigh,
+            color = MiuixTheme.colorScheme.surfaceContainerHigh,
         ) {
             val haptic = LocalHapticFeedback.current
             val confirm = remember { mutableStateListOf(false, false, false, false, false, false, false) }

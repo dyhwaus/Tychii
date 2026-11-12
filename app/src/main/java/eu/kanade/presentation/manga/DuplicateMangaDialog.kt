@@ -1,7 +1,5 @@
 package eu.kanade.presentation.manga
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -10,7 +8,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -19,10 +16,8 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.Typography
 import androidx.compose.runtime.Composable
@@ -46,10 +41,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastMaxOfOrNull
 import coil3.request.ImageRequest
 import coil3.request.crossfade
-import eu.kanade.presentation.components.AdaptiveSheet
 import eu.kanade.presentation.components.TabbedDialogPaddings
 import eu.kanade.presentation.manga.components.MangaCover
-import eu.kanade.presentation.more.settings.LocalPreferenceMinHeight
 import eu.kanade.presentation.more.settings.widget.TextPreferenceWidget
 import eu.kanade.tachiyomi.source.Source
 import eu.kanade.tachiyomi.source.model.SManga
@@ -76,6 +69,11 @@ import tachiyomi.presentation.core.components.material.padding
 import tachiyomi.presentation.core.i18n.pluralStringResource
 import tachiyomi.presentation.core.i18n.stringResource
 import tachiyomi.presentation.core.util.secondaryItemAlpha
+import top.yukonga.miuix.kmp.basic.Card
+import top.yukonga.miuix.kmp.basic.HorizontalDivider
+import top.yukonga.miuix.kmp.basic.TextButton
+import top.yukonga.miuix.kmp.overlay.OverlayBottomSheet
+import top.yukonga.miuix.kmp.utils.PressFeedbackType
 
 @Composable
 fun DuplicateMangaDialog(
@@ -88,11 +86,11 @@ fun DuplicateMangaDialog(
 ) {
     val context = LocalContext.current
     val sourceManager = remember { context.appGraph.sourceManager }
-    val minHeight = LocalPreferenceMinHeight.current
     val horizontalPadding = PaddingValues(horizontal = TabbedDialogPaddings.Horizontal)
     val horizontalPaddingModifier = Modifier.padding(horizontalPadding)
 
-    AdaptiveSheet(
+    OverlayBottomSheet(
+        show = true,
         modifier = modifier,
         onDismissRequest = onDismissRequest,
     ) {
@@ -150,21 +148,14 @@ fun DuplicateMangaDialog(
                 )
             }
 
-            OutlinedButton(
+            TextButton(
+                text = stringResource(MR.strings.action_cancel),
                 onClick = onDismissRequest,
                 modifier = Modifier
                     .then(horizontalPaddingModifier)
                     .padding(bottom = MaterialTheme.padding.medium)
-                    .heightIn(min = minHeight)
                     .fillMaxWidth(),
-            ) {
-                Text(
-                    modifier = Modifier.padding(vertical = MaterialTheme.padding.extraSmall),
-                    text = stringResource(MR.strings.action_cancel),
-                    color = MaterialTheme.colorScheme.primary,
-                    style = MaterialTheme.typography.bodyLarge,
-                )
-            }
+            )
         }
     }
 }
@@ -179,19 +170,15 @@ private fun DuplicateMangaListItem(
 ) {
     val source by produceState<Source?>(initialValue = null) { value = getSource() }
     val manga = duplicate.manga
-    Column(
-        modifier = Modifier
-            .width(MangaCardWidth)
-            .clip(MaterialTheme.shapes.medium)
-            .background(MaterialTheme.colorScheme.surface)
-            .combinedClickable(
-                onLongClick = { onOpenManga() },
-                onClick = {
-                    onDismissRequest()
-                    onMigrate()
-                },
-            )
-            .padding(MaterialTheme.padding.small),
+    Card(
+        modifier = Modifier.width(MangaCardWidth),
+        insideMargin = PaddingValues(MaterialTheme.padding.small),
+        pressFeedbackType = PressFeedbackType.Sink,
+        onClick = {
+            onDismissRequest()
+            onMigrate()
+        },
+        onLongPress = onOpenManga,
     ) {
         Box {
             MangaCover.Book(

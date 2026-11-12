@@ -369,6 +369,10 @@ private fun MangaScreenSmallImpl(
             }
         },
         // Same insets as the Material Scaffold wrapper this replaces.
+        // The page stays on the app theme background, not the Miuix
+        // surface: the backdrop gradient and the cover-color wash
+        // are built on it.
+        containerColor = MaterialTheme.colorScheme.background,
         contentWindowInsets = WindowInsets.systemBars,
     ) { contentPadding ->
         val topPadding = contentPadding.calculateTopPadding()
@@ -620,6 +624,10 @@ fun MangaScreenLargeImpl(
             }
         },
         // Same insets as the Material Scaffold wrapper this replaces.
+        // The page stays on the app theme background, not the Miuix
+        // surface: the backdrop gradient and the cover-color wash
+        // are built on it.
+        containerColor = MaterialTheme.colorScheme.background,
         contentWindowInsets = WindowInsets.systemBars,
     ) { contentPadding ->
         val fabClearance = if (fabHeight == 0) {
