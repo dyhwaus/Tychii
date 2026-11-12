@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Splash background matches the launcher icon background: black at night -->
-    <color name="splash">#000000</color>
+    <!-- Splash background matches the launcher icon background: white,
+         same as day mode (the icon no longer switches at night) -->
+    <color name="splash">#FFFFFF</color>
 </resources>

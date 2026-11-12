@@ -3,8 +3,8 @@
     android:height="108dp"
     android:viewportWidth="432"
     android:viewportHeight="432">
-    <!-- Night background: black -->
+    <!-- Day background: white -->
     <path
-        android:fillColor="#000000"
+        android:fillColor="#FFFFFF"
         android:pathData="M0,0h432v432H0z" />
 </vector>

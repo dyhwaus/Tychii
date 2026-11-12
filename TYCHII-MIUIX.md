@@ -263,26 +263,30 @@ A rendered preview is in `~/workspace/imagine_media/` as
 ## Icon: Taiji (2026-11-12)
 
 The launcher icon is now a Taiji (yin-yang) symbol, replacing the
-black-and-white "T". The background follows the system day/night mode:
-white in the day, black at night, via night-qualified resources.
+black-and-white "T". Since 2026-11-12 the icon is the SAME in day and
+night mode (user choice: keep it consistent) — the night-qualified
+resources are byte-identical copies of the day ones, so dark mode
+shows the white background and black-outlined Taiji, exactly like
+day mode. The splash background (`@color/splash`) is white in both
+modes too, and the More/About header (`LogoHeader`) shows the same
+day Taiji in dark mode.
 
 - Foreground (`ic_launcher_foreground.xml`, day / `drawable-night/`,
-  night): a Taiji — black half + white half with an S-curve, a white
-  dot in the black half and a black dot in the white half. The only
-  difference between day and night is the outline color (black for
-  the white day background, white for the black night background),
-  so the symbol stays readable on both.
+  night — identical): a Taiji — black half + white half with an
+  S-curve, a white dot in the black half and a black dot in the white
+  half, black outline (stroke 6).
 - Background (`ic_launcher_background.xml` white /
-  `drawable-night/` black).
+  `drawable-night/` white — identical).
 - Monochrome (`ic_launcher_monochrome.xml`): the Taiji half as a
   solid shape, for themed app icons.
 - The debug source set mirrors main (foreground + background, day +
   night) so Android Studio's debug build shows the Taiji too.
-- Splash (`ic_mihon_splash.xml`): now uses a dedicated
-  `ic_taiji_splash.xml` (white outline, for the black splash
-  background) instead of the launcher foreground.
+- Splash (`ic_mihon_splash.xml`): uses the launcher foreground
+  directly, with `@color/splash` as the background (white in both
+  modes), so the splash looks exactly like the launcher icon.
 - The More/About page header (`LogoHeader`) uses the launcher
-  foreground, so it now shows the Taiji too (and adapts day/night).
+  foreground, so it now shows the Taiji too (same day design in
+  dark mode).
   It uses no tint, so the Taiji keeps its own black/white colors
   exactly like the launcher icon.
 
