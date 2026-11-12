@@ -3,15 +3,8 @@
     android:height="108dp"
     android:viewportWidth="432"
     android:viewportHeight="432">
-  <group>
-    <clip-path android:pathData="M0,0h432v432h-432z"/>
+    <!-- Day background: white -->
     <path
-        android:pathData="M0,0h432v432h-432z"
-        android:fillColor="#000000"/>
-    <!-- Soft dark-grey glow behind the mark for depth -->
-    <path
-        android:pathData="M216,76 C293,76 356,139 356,216 C356,293 293,356 216,356 C139,356 76,293 76,216 C76,139 139,76 216,76 Z"
-        android:fillColor="#262626"
-        android:fillAlpha="0.8"/>
-  </group>
+        android:fillColor="#FFFFFF"
+        android:pathData="M0,0h432v432H0z" />
 </vector>

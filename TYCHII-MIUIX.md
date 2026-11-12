@@ -103,13 +103,9 @@ uses MaterialExpressiveTheme.
   `AppTheme.NEKO` entry). Primary `#FF124A` light / `#FCFC98` dark,
   background `#FBFBFF` / `#1A1C1E`. The old default blue is still
   available by picking another theme.
-- **Font (pending):** M PLUS Rounded 1c (OFL) is Neko's signature
-  rounded font, but the `.ttf` files are binary and cannot be pushed
-  with the text-only push tool. The font files are staged locally in
-  `res/font/mplus_rounded1c_*`; they still need to be uploaded to
-  GitHub (web upload) and `Typefaces.appTypography` wired into
-  `TachiyomiTheme.kt` before the rounded font takes effect. Until
-  then the app uses the default font.
+- **Font:** M PLUS Rounded 1c (OFL) for every text style, letter
+  spacing -0.15.sp (`Typefaces.appTypography`, font files in
+  `res/font/mplus_rounded1c_*`, uploaded to GitHub 2026-11-12).
 - **Library grid:** cover radius 12.dp with a 0.75.dp `#9D9D9D`
   outline (`MangaCover`), grid gaps 16.dp horizontal / 4.dp vertical,
   comfortable title below the cover in bodyMedium Medium (max 3
@@ -187,6 +183,30 @@ A rendered preview is in `~/workspace/imagine_media/` as
 - No `miuix-blur`: the floating bar has no blurred backdrop (solid
   `surfaceContainer`). Blur would need minSdk 33.
 - `miuix-nav` was not adopted; Mihon's existing navigation stays.
+
+## Icon: Taiji (2026-11-12)
+
+The launcher icon is now a Taiji (yin-yang) symbol, replacing the
+black-and-white "T". The background follows the system day/night mode:
+white in the day, black at night, via night-qualified resources.
+
+- Foreground (`ic_launcher_foreground.xml`, day / `drawable-night/`,
+  night): a Taiji — black half + white half with an S-curve, a white
+  dot in the black half and a black dot in the white half. The only
+  difference between day and night is the outline color (black for
+  the white day background, white for the black night background),
+  so the symbol stays readable on both.
+- Background (`ic_launcher_background.xml` white /
+  `drawable-night/` black).
+- Monochrome (`ic_launcher_monochrome.xml`): the Taiji half as a
+  solid shape, for themed app icons.
+- The debug source set mirrors main (foreground + background, day +
+  night) so Android Studio's debug build shows the Taiji too.
+- Splash (`ic_mihon_splash.xml`): now uses a dedicated
+  `ic_taiji_splash.xml` (white outline, for the black splash
+  background) instead of the launcher foreground.
+- The More/About page header (`LogoHeader`) uses the launcher
+  foreground, so it now shows the Taiji too (and adapts day/night).
 
 ## Build
 
