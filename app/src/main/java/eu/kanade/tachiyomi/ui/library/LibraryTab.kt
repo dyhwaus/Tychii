@@ -5,6 +5,7 @@ import androidx.activity.compose.ReportDrawnWhen
 import androidx.compose.animation.graphics.res.animatedVectorResource
 import androidx.compose.animation.graphics.res.rememberAnimatedVectorPainter
 import androidx.compose.animation.graphics.vector.AnimatedImageVector
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -107,7 +108,18 @@ data object LibraryTab : Tab {
         }
 
         Scaffold(
-            topBar = { scrollBehavior ->
+            // The system-bar insets are already applied by HomeScreen's
+            // outer Scaffold. Re-applying them here would inset the
+            // content twice: an empty strip below the toolbar and a dead
+            // band above the bottom bar, so the page would look split
+            // into sections instead of one continuous background.
+            contentWindowInsets = WindowInsets(0, 0, 0, 0),
+            topBar = { _ ->
+                // No scroll behavior on purpose: a pinned scroll behavior
+                // would tint the toolbar (surfaceTint overlay) as soon as
+                // the grid scrolls, painting a band across the top. The
+                // toolbar stays on the page background, so only the
+                // floating title capsule is visible up there.
                 val title = state.getToolbarTitle(
                     defaultTitle = stringResource(MR.strings.label_library),
                     defaultCategoryTitle = stringResource(MR.strings.label_default),
@@ -137,8 +149,6 @@ data object LibraryTab : Tab {
                     },
                     searchQuery = state.searchQuery,
                     onSearchQueryChange = viewModel::search,
-                    // For scroll overlay when no tab
-                    scrollBehavior = scrollBehavior.takeIf { !state.showCategoryTabs },
                 )
             },
             bottomBar = {

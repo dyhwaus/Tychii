@@ -5,7 +5,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBarScrollBehavior
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
 import androidx.compose.ui.Alignment
@@ -39,7 +38,6 @@ fun LibraryToolbar(
     onClickOpenRandomManga: () -> Unit,
     searchQuery: String?,
     onSearchQueryChange: (String?) -> Unit,
-    scrollBehavior: TopAppBarScrollBehavior?,
 ) = when {
     selectedCount > 0 -> LibrarySelectionToolbar(
         selectedCount = selectedCount,
@@ -56,7 +54,6 @@ fun LibraryToolbar(
         onClickRefresh = onClickRefresh,
         onClickGlobalUpdate = onClickGlobalUpdate,
         onClickOpenRandomManga = onClickOpenRandomManga,
-        scrollBehavior = scrollBehavior,
     )
 }
 
@@ -70,7 +67,6 @@ private fun LibraryRegularToolbar(
     onClickRefresh: () -> Unit,
     onClickGlobalUpdate: () -> Unit,
     onClickOpenRandomManga: () -> Unit,
-    scrollBehavior: TopAppBarScrollBehavior?,
 ) {
     val pillAlpha = if (isSystemInDarkTheme()) 0.12f else 0.08f
     SearchToolbar(
@@ -124,7 +120,6 @@ private fun LibraryRegularToolbar(
                 ),
             )
         },
-        scrollBehavior = scrollBehavior,
     )
 }
 

@@ -5,6 +5,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.PrimaryScrollableTabRow
 import androidx.compose.material3.Tab
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import eu.kanade.presentation.category.visualName
 import tachiyomi.domain.category.model.Category
@@ -18,9 +19,14 @@ internal fun LibraryTabs(
     onTabItemClick: (Int) -> Unit,
 ) {
     val currentPageIndex = pagerState.currentPage.coerceAtMost(categories.lastIndex)
+    // No divider and no container color: the tab row must not draw a
+    // line or a band across the page — the page is one continuous
+    // background with only the floating title capsule above it.
     PrimaryScrollableTabRow(
         selectedTabIndex = currentPageIndex,
         edgePadding = 0.dp,
+        containerColor = Color.Transparent,
+        divider = {},
     ) {
         categories.forEachIndexed { index, category ->
             Tab(

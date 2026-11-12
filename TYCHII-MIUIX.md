@@ -94,6 +94,19 @@ changed, and how to build.
 - Library's category name + manga-count pill are hidden with its title on
   phones (the capsule only shows "Library"); the category is still visible
   in the category tabs row.
+- Library page must be one continuous background — only the title capsule
+  and the bottom bar may read as separate elements. Three things used to
+  split it: (1) the toolbar's pinned scroll behavior tinted it
+  (surfaceTint overlay) as soon as the grid scrolled, (2) the category
+  tab row drew a divider line, (3) the inner Library Scaffold re-applied
+  the system-bar insets HomeScreen's outer Scaffold already applied, so
+  the content started a status-bar height below the toolbar and ended a
+  nav-bar height above the bottom bar. Fixed in LibraryTab (no scroll
+  behavior on the toolbar; inner Scaffold takes
+  `contentWindowInsets = WindowInsets(0, 0, 0, 0)`) and LibraryTabs
+  (`divider = {}`, transparent container). The toolbar stays on the page
+  background (surface == background in the Neko scheme), so it is
+  invisible; only its action icons show.
 
 ## What changed
 
