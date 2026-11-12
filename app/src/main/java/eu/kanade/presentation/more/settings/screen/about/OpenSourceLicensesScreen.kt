@@ -9,12 +9,17 @@ import cafe.adriel.voyager.navigator.currentOrThrow
 import com.mikepenz.aboutlibraries.ui.compose.android.produceLibraries
 import com.mikepenz.aboutlibraries.ui.compose.m3.LibrariesContainer
 import com.mikepenz.aboutlibraries.ui.compose.variant.LibraryDetailMode
-import eu.kanade.presentation.components.AppBar
 import eu.kanade.presentation.util.Screen
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import eu.kanade.tachiyomi.R
+import mihon.icons.materialsymbols.MaterialSymbols
+import mihon.icons.materialsymbols.automirroredrounded.ArrowBack
 import tachiyomi.i18n.MR
-import tachiyomi.presentation.core.components.material.Scaffold
 import tachiyomi.presentation.core.i18n.stringResource
+import top.yukonga.miuix.kmp.basic.IconButton
+import top.yukonga.miuix.kmp.basic.Scaffold
+import top.yukonga.miuix.kmp.basic.SmallTopAppBar
 
 class OpenSourceLicensesScreen : Screen() {
 
@@ -22,11 +27,18 @@ class OpenSourceLicensesScreen : Screen() {
     override fun Content() {
         val navigator = LocalNavigator.currentOrThrow
         Scaffold(
-            topBar = { scrollBehavior ->
-                AppBar(
+            topBar = {
+                SmallTopAppBar(
                     title = stringResource(MR.strings.licenses),
-                    navigateUp = navigator::pop,
-                    scrollBehavior = scrollBehavior,
+                    navigationIcon = {
+                        IconButton(onClick = navigator::pop) {
+                            Icon(
+                                imageVector = MaterialSymbols.AutoMirroredRounded.ArrowBack,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.onSurface,
+                            )
+                        }
+                    },
                 )
             },
         ) { contentPadding ->

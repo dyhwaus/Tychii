@@ -453,15 +453,23 @@ switch and bar-style list are preserved.
   The tracking login dialog keeps M3 text fields (username + secure
   password with visibility toggle) inside the Miuix dialog shell; the
   logout button keeps its red color via `ButtonDefaults.buttonColors`.
-- **Sub-pages (next batch, not yet done)**: language, licences,
-  clear-database, extension stores, backup create/restore, and the
-  debug screens are still Material3 and are the next batch.
+- **Sub-pages**: language, licences, clear-database, extension
+  stores, backup create/restore, and the debug screens are unified
+  too — Miuix top bars throughout; the language list uses
+  `RadioButtonPreference` rows; backup option lists use Miuix
+  `CheckboxPreference` rows in cards; extension-store cards are Miuix
+  `Card`s and their dialogs are `OverlayDialog`s with Miuix text
+  fields. Left as Material3: the licences list (third-party M3
+  `LibrariesContainer`), the clear-database item list and
+  `LazyColumnWithAction` bottom actions, backup warning banners,
+  `StorageInfo`'s progress display, and the debug screens' monospace
+  text dumps — all content, not preference rows.
 - **Kept Material3**: M3 text fields where Miuix has no equivalent
-  input (tracking login — Miuix `TextField` has no
-  `supportingText`/`isError`, so messages are plain text lines under
-  the field), M3 `CircularProgressIndicator`s, and the M3
-  `ScrollbarLazyColumn` / `LazyColumnWithAction` containers. The
-  not-yet-migrated sub-pages are still fully Material3.
+  input (tracking login, extension-store URL fields — Miuix
+  `TextField` has no `supportingText`/`isError`, so the message is a
+  plain text line under the field), M3 `CircularProgressIndicator`s,
+  and the M3 `ScrollbarLazyColumn` / `LazyColumnWithAction` containers.
+  Nothing else on the settings pages is Material3.
 
 ## Deliberately NOT migrated
 

@@ -21,24 +21,34 @@ import dev.zacsweers.metro.Inject
 import dev.zacsweers.metro.binding
 import dev.zacsweers.metrox.viewmodel.ViewModelKey
 import dev.zacsweers.metrox.viewmodel.metroViewModel
-import eu.kanade.presentation.components.AppBar
 import eu.kanade.presentation.components.WarningBanner
 import eu.kanade.presentation.util.Screen
 import eu.kanade.tachiyomi.data.backup.create.BackupCreateWorker
 import eu.kanade.tachiyomi.data.backup.create.BackupCreator
 import eu.kanade.tachiyomi.data.backup.create.BackupOptions
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import eu.kanade.tachiyomi.util.system.DeviceUtil
 import eu.kanade.tachiyomi.util.system.toast
+import mihon.icons.materialsymbols.MaterialSymbols
+import mihon.icons.materialsymbols.automirroredrounded.ArrowBack
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import tachiyomi.i18n.MR
-import tachiyomi.presentation.core.components.LabeledCheckbox
 import tachiyomi.presentation.core.components.LazyColumnWithAction
-import tachiyomi.presentation.core.components.SectionCard
-import tachiyomi.presentation.core.components.material.Scaffold
 import tachiyomi.presentation.core.i18n.stringResource
+import top.yukonga.miuix.kmp.basic.Card
+import top.yukonga.miuix.kmp.basic.IconButton
+import top.yukonga.miuix.kmp.basic.Scaffold
+import top.yukonga.miuix.kmp.basic.SmallTitle
+import top.yukonga.miuix.kmp.basic.SmallTopAppBar
+import top.yukonga.miuix.kmp.preference.CheckboxPreference
 
 class CreateBackupScreen : Screen() {
 
@@ -66,10 +76,17 @@ class CreateBackupScreen : Screen() {
 
         Scaffold(
             topBar = {
-                AppBar(
+                SmallTopAppBar(
                     title = stringResource(MR.strings.pref_create_backup),
-                    navigateUp = navigator::pop,
-                    scrollBehavior = it,
+                    navigationIcon = {
+                        IconButton(onClick = navigator::pop) {
+                            Icon(
+                                imageVector = MaterialSymbols.AutoMirroredRounded.ArrowBack,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.onSurface,
+                            )
+                        }
+                    },
                 )
             },
         ) { contentPadding ->
@@ -98,13 +115,23 @@ class CreateBackupScreen : Screen() {
                 }
 
                 item {
-                    SectionCard(MR.strings.label_library) {
+                    SmallTitle(text = stringResource(MR.strings.label_library))
+                    Card(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 12.dp),
+                    ) {
                         Options(BackupOptions.libraryOptions, state, viewModel)
                     }
                 }
 
                 item {
-                    SectionCard(MR.strings.label_settings) {
+                    SmallTitle(text = stringResource(MR.strings.label_settings))
+                    Card(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 12.dp),
+                    ) {
                         Options(BackupOptions.settingsOptions, state, viewModel)
                     }
                 }
@@ -119,8 +146,8 @@ class CreateBackupScreen : Screen() {
         model: CreateBackupViewModel,
     ) {
         options.forEach { option ->
-            LabeledCheckbox(
-                label = stringResource(option.label),
+            CheckboxPreference(
+                title = stringResource(option.label),
                 checked = option.getter(state.options),
                 onCheckedChange = {
                     model.toggle(option.setter, it)

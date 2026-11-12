@@ -2,14 +2,11 @@ package eu.kanade.presentation.more.settings.screen.appearance
 
 import android.content.Context
 import androidx.appcompat.app.AppCompatDelegate
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Icon
-import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -21,17 +18,19 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.core.os.LocaleListCompat
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
-import eu.kanade.presentation.components.AppBar
 import eu.kanade.presentation.util.Screen
 import eu.kanade.tachiyomi.util.system.LocaleHelper
 import mihon.icons.materialsymbols.MaterialSymbols
-import mihon.icons.materialsymbols.rounded.Check
+import mihon.icons.materialsymbols.automirroredrounded.ArrowBack
 import org.xmlpull.v1.XmlPullParser
 import tachiyomi.core.common.i18n.stringResource
 import tachiyomi.i18n.MR
 import tachiyomi.i18n.R
-import tachiyomi.presentation.core.components.material.Scaffold
 import tachiyomi.presentation.core.i18n.stringResource
+import top.yukonga.miuix.kmp.basic.IconButton
+import top.yukonga.miuix.kmp.basic.Scaffold
+import top.yukonga.miuix.kmp.basic.SmallTopAppBar
+import top.yukonga.miuix.kmp.preference.RadioButtonPreference
 
 class AppLanguageScreen : Screen() {
 
@@ -55,11 +54,18 @@ class AppLanguageScreen : Screen() {
         }
 
         Scaffold(
-            topBar = { scrollBehavior ->
-                AppBar(
+            topBar = {
+                SmallTopAppBar(
                     title = stringResource(MR.strings.pref_app_language),
-                    navigateUp = navigator::pop,
-                    scrollBehavior = scrollBehavior,
+                    navigationIcon = {
+                        IconButton(onClick = navigator::pop) {
+                            Icon(
+                                imageVector = MaterialSymbols.AutoMirroredRounded.ArrowBack,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.onSurface,
+                            )
+                        }
+                    },
                 )
             },
         ) { contentPadding ->
@@ -67,25 +73,11 @@ class AppLanguageScreen : Screen() {
                 modifier = Modifier.padding(contentPadding),
             ) {
                 items(langs) {
-                    ListItem(
-                        modifier = Modifier.clickable {
-                            currentLanguage = it.langTag
-                        },
-                        trailingContent = {
-                            if (currentLanguage == it.langTag) {
-                                Icon(
-                                    imageVector = MaterialSymbols.Rounded.Check,
-                                    contentDescription = null,
-                                    tint = MaterialTheme.colorScheme.primary,
-                                )
-                            }
-                        },
-                        supportingContent = {
-                            it.localizedDisplayName?.let {
-                                Text(it)
-                            }
-                        },
-                        content = { Text(it.displayName) },
+                    RadioButtonPreference(
+                        title = it.displayName,
+                        summary = it.localizedDisplayName,
+                        selected = currentLanguage == it.langTag,
+                        onClick = { currentLanguage = it.langTag },
                     )
                 }
             }

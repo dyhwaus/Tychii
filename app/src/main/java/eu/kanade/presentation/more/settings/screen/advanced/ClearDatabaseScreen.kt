@@ -8,12 +8,11 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Checkbox
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.height
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.collectAsState
@@ -38,8 +37,6 @@ import dev.zacsweers.metro.binding
 import dev.zacsweers.metrox.viewmodel.ViewModelKey
 import dev.zacsweers.metrox.viewmodel.metroViewModel
 import eu.kanade.presentation.browse.components.SourceIcon
-import eu.kanade.presentation.components.AppBar
-import eu.kanade.presentation.components.AppBarActions
 import eu.kanade.presentation.util.Screen
 import eu.kanade.tachiyomi.util.system.toast
 import kotlinx.coroutines.CoroutineScope
@@ -50,7 +47,9 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import mihon.core.metro.AppCoroutineScope
+import androidx.compose.ui.state.ToggleableState
 import mihon.icons.materialsymbols.MaterialSymbols
+import mihon.icons.materialsymbols.automirroredrounded.ArrowBack
 import mihon.icons.materialsymbols.rounded.FlipToBack
 import mihon.icons.materialsymbols.rounded.SelectAll
 import tachiyomi.domain.history.repository.HistoryRepository
@@ -60,12 +59,19 @@ import tachiyomi.domain.source.model.Source
 import tachiyomi.domain.source.model.SourceWithCount
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.components.LazyColumnWithAction
-import tachiyomi.presentation.core.components.material.Scaffold
 import tachiyomi.presentation.core.components.material.padding
 import tachiyomi.presentation.core.i18n.stringResource
 import tachiyomi.presentation.core.screens.EmptyScreen
 import tachiyomi.presentation.core.screens.LoadingScreen
 import tachiyomi.presentation.core.util.selectedBackground
+import top.yukonga.miuix.kmp.basic.Button
+import top.yukonga.miuix.kmp.basic.Checkbox
+import top.yukonga.miuix.kmp.basic.IconButton
+import top.yukonga.miuix.kmp.basic.Scaffold
+import top.yukonga.miuix.kmp.basic.SmallTopAppBar
+import top.yukonga.miuix.kmp.basic.Switch
+import top.yukonga.miuix.kmp.basic.Text as MiuixText
+import top.yukonga.miuix.kmp.overlay.OverlayDialog
 
 class ClearDatabaseScreen : Screen() {
 
@@ -82,85 +88,91 @@ class ClearDatabaseScreen : Screen() {
             is ClearDatabaseViewModel.State.Ready -> {
                 if (s.showConfirmation) {
                     var keepReadManga by remember { mutableStateOf(true) }
-                    AlertDialog(
-                        title = {
-                            Text(text = stringResource(MR.strings.are_you_sure))
-                        },
-                        text = {
-                            Column(
-                                verticalArrangement = Arrangement.spacedBy(MaterialTheme.padding.small),
-                            ) {
-                                Text(text = stringResource(MR.strings.clear_database_text))
-                                Row(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    horizontalArrangement = Arrangement.spacedBy(MaterialTheme.padding.extraSmall),
-                                    verticalAlignment = Alignment.CenterVertically,
-                                ) {
-                                    Text(
-                                        text = stringResource(MR.strings.clear_db_exclude_read),
-                                        modifier = Modifier.weight(1f),
-                                    )
-                                    Switch(
-                                        checked = keepReadManga,
-                                        onCheckedChange = { keepReadManga = it },
-                                    )
-                                }
-                                if (!keepReadManga) {
-                                    Text(
-                                        text = stringResource(MR.strings.clear_database_history_warning),
-                                        style = MaterialTheme.typography.bodySmall,
-                                        color = MaterialTheme.colorScheme.error,
-                                    )
-                                }
-                            }
-                        },
+                    OverlayDialog(
+                        show = true,
+                        title = stringResource(MR.strings.are_you_sure),
                         onDismissRequest = viewModel::hideConfirmation,
-                        confirmButton = {
-                            TextButton(
-                                onClick = {
-                                    scope.launch(Dispatchers.Main) {
-                                        viewModel.removeMangaBySourceId(keepReadManga)
-                                        viewModel.clearSelection()
-                                        viewModel.hideConfirmation()
-                                        context.toast(MR.strings.clear_database_completed)
-                                    }
-                                },
+                    ) {
+                        Column(
+                            verticalArrangement = Arrangement.spacedBy(MaterialTheme.padding.small),
+                        ) {
+                            Text(text = stringResource(MR.strings.clear_database_text))
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(MaterialTheme.padding.extraSmall),
+                                verticalAlignment = Alignment.CenterVertically,
                             ) {
-                                Text(text = stringResource(MR.strings.action_ok))
+                                Text(
+                                    text = stringResource(MR.strings.clear_db_exclude_read),
+                                    modifier = Modifier.weight(1f),
+                                )
+                                Switch(
+                                    checked = keepReadManga,
+                                    onCheckedChange = { keepReadManga = it },
+                                )
                             }
-                        },
-                        dismissButton = {
-                            TextButton(onClick = viewModel::hideConfirmation) {
-                                Text(text = stringResource(MR.strings.action_cancel))
+                            if (!keepReadManga) {
+                                Text(
+                                    text = stringResource(MR.strings.clear_database_history_warning),
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.error,
+                                )
                             }
-                        },
-                    )
+                            Column(modifier = Modifier.padding(top = 12.dp)) {
+                                Button(
+                                    onClick = {
+                                        scope.launch(Dispatchers.Main) {
+                                            viewModel.removeMangaBySourceId(keepReadManga)
+                                            viewModel.clearSelection()
+                                            viewModel.hideConfirmation()
+                                            context.toast(MR.strings.clear_database_completed)
+                                        }
+                                    },
+                                    modifier = Modifier.fillMaxWidth(),
+                                ) {
+                                    MiuixText(text = stringResource(MR.strings.action_ok))
+                                }
+                                Spacer(modifier = Modifier.height(8.dp))
+                                Button(
+                                    onClick = viewModel::hideConfirmation,
+                                    modifier = Modifier.fillMaxWidth(),
+                                ) {
+                                    MiuixText(text = stringResource(MR.strings.action_cancel))
+                                }
+                            }
+                        }
+                    }
                 }
 
                 Scaffold(
-                    topBar = { scrollBehavior ->
-                        AppBar(
+                    topBar = {
+                        SmallTopAppBar(
                             title = stringResource(MR.strings.pref_clear_database),
-                            navigateUp = navigator::pop,
-                            actions = {
-                                if (s.items.isNotEmpty()) {
-                                    AppBarActions(
-                                        actions = listOf(
-                                            AppBar.Action(
-                                                title = stringResource(MR.strings.action_select_all),
-                                                icon = MaterialSymbols.Rounded.SelectAll,
-                                                onClick = viewModel::selectAll,
-                                            ),
-                                            AppBar.Action(
-                                                title = stringResource(MR.strings.action_select_inverse),
-                                                icon = MaterialSymbols.Rounded.FlipToBack,
-                                                onClick = viewModel::invertSelection,
-                                            ),
-                                        ),
+                            navigationIcon = {
+                                IconButton(onClick = navigator::pop) {
+                                    Icon(
+                                        imageVector = MaterialSymbols.AutoMirroredRounded.ArrowBack,
+                                        contentDescription = null,
+                                        tint = MaterialTheme.colorScheme.onSurface,
                                     )
                                 }
                             },
-                            scrollBehavior = scrollBehavior,
+                            actions = {
+                                if (s.items.isNotEmpty()) {
+                                    IconButton(onClick = viewModel::selectAll) {
+                                        Icon(
+                                            imageVector = MaterialSymbols.Rounded.SelectAll,
+                                            contentDescription = stringResource(MR.strings.action_select_all),
+                                        )
+                                    }
+                                    IconButton(onClick = viewModel::invertSelection) {
+                                        Icon(
+                                            imageVector = MaterialSymbols.Rounded.FlipToBack,
+                                            contentDescription = stringResource(MR.strings.action_select_inverse),
+                                        )
+                                    }
+                                }
+                            },
                         )
                     },
                 ) { contentPadding ->
@@ -219,8 +231,8 @@ class ClearDatabaseScreen : Screen() {
                 Text(text = stringResource(MR.strings.clear_database_source_item_count, count))
             }
             Checkbox(
-                checked = isSelected,
-                onCheckedChange = { onClickSelect() },
+                state = if (isSelected) ToggleableState.On else ToggleableState.Off,
+                onClick = { onClickSelect() },
             )
         }
     }
