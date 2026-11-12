@@ -107,8 +107,15 @@ changed, and how to build.
   unaffected — the capsule is under pushed screens in the navigation
   stack, and their own AppBars are untouched.
 - Library's category name + manga-count pill are hidden with its title on
-  phones (the capsule only shows "Library"); the category is still visible
-  in the category tabs row.
+  phones; the category is still visible in the category tabs row. The
+  capsule itself now follows the active category (2026-11-12):
+  the Library tab reports its capsule text through a
+  `HomeScreen.setCapsuleTitle` channel (same pattern as
+  `showTitleCapsule`) — the default category shows just "书架", any
+  other category shows "书架 · 分类名". HomeScreen only applies the
+  reported text while the Library tab is current, so other tabs keep
+  their own titles and nothing needs resetting on tab switch. The
+  capsule still hides while searching or selecting.
 - Top-bar action icons removed on phones (2026-11-12): the capsule
   shares its 64.dp band with each tab's toolbar, and the action icons
   sat under it (Library filter, Updates filter/calendar/refresh,
