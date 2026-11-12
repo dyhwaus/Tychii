@@ -68,7 +68,7 @@ import tachiyomi.presentation.core.components.material.PullRefresh
 import tachiyomi.presentation.core.components.material.padding
 import tachiyomi.presentation.core.components.material.topSmallPaddingValues
 import tachiyomi.presentation.core.i18n.stringResource
-import tachiyomi.presentation.core.screens.EmptyScreen
+import eu.kanade.presentation.components.QuietEmptyScreen
 import tachiyomi.presentation.core.screens.EmptyScreenAction
 import tachiyomi.presentation.core.screens.LoadingScreen
 import tachiyomi.presentation.core.theme.header
@@ -103,9 +103,9 @@ fun ExtensionScreen(
                 val msg = if (!searchQuery.isNullOrEmpty()) {
                     MR.strings.no_results_found
                 } else {
-                    MR.strings.empty_screen
+                    MR.strings.empty_extensions_quiet
                 }
-                EmptyScreen(
+                QuietEmptyScreen(
                     stringRes = msg,
                     modifier = Modifier.padding(contentPadding),
                     actions = listOf(

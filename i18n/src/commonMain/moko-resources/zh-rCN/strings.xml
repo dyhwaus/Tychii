@@ -574,6 +574,7 @@
     <string name="pref_reset_viewer_flags_success">已重置所有阅读器设置</string>
     <string name="pref_reset_viewer_flags_error">重置阅读器设置失败</string>
     <string name="empty_screen">呃…尴尬了</string>
+    <string name="empty_extensions_quiet">还没有插件</string>
     <string name="ext_info_version">版本</string>
     <string name="ext_info_language">语言</string>
     <string name="reading_list">在读</string>

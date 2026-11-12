@@ -35,7 +35,7 @@ import tachiyomi.presentation.core.components.FastScrollLazyColumn
 import tachiyomi.presentation.core.components.ListGroupHeader
 import tachiyomi.presentation.core.components.material.Scaffold
 import tachiyomi.presentation.core.i18n.stringResource
-import tachiyomi.presentation.core.screens.EmptyScreen
+import eu.kanade.presentation.components.QuietEmptyScreen
 import tachiyomi.presentation.core.screens.LoadingScreen
 import tachiyomi.presentation.core.util.collectAsState
 
@@ -96,7 +96,7 @@ fun HistoryScreen(
                 } else {
                     MR.strings.information_no_recent_manga
                 }
-                EmptyScreen(
+                QuietEmptyScreen(
                     stringRes = msg,
                     modifier = Modifier.padding(contentPadding),
                 )

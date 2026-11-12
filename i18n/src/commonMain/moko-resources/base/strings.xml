@@ -931,6 +931,7 @@
     <!-- Make a copy (noun) when migrating. Don't use for copying to clipboard. -->
     <string name="copy">Copy</string>
     <string name="empty_screen">Well, this is awkward</string>
+    <string name="empty_extensions_quiet">No extensions yet</string>
     <string name="not_installed">Not installed</string>
 
     <!-- Crash screen -->

@@ -1,0 +1,82 @@
+package eu.kanade.presentation.components
+
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.util.fastForEach
+import dev.icerock.moko.resources.StringResource
+import tachiyomi.presentation.core.components.ActionButton
+import tachiyomi.presentation.core.components.material.padding
+import tachiyomi.presentation.core.i18n.stringResource
+import tachiyomi.presentation.core.screens.EmptyScreenAction
+import tachiyomi.presentation.core.util.secondaryItemAlpha
+
+/**
+ * A quiet empty state for the main tabs: the same message and optional
+ * actions as [tachiyomi.presentation.core.screens.EmptyScreen], but
+ * without the random error face and with more breathing room. The
+ * shared EmptyScreen is left untouched so error and no-result states
+ * on sub-screens keep their existing look.
+ */
+@Composable
+fun QuietEmptyScreen(
+    stringRes: StringResource,
+    modifier: Modifier = Modifier,
+    actions: List<EmptyScreenAction>? = null,
+) {
+    QuietEmptyScreen(
+        message = stringResource(stringRes),
+        modifier = modifier,
+        actions = actions,
+    )
+}
+
+@Composable
+fun QuietEmptyScreen(
+    message: String,
+    modifier: Modifier = Modifier,
+    actions: List<EmptyScreenAction>? = null,
+) {
+    Column(
+        modifier = modifier
+            .fillMaxSize()
+            .verticalScroll(rememberScrollState())
+            .padding(horizontal = 32.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center,
+    ) {
+        Text(
+            text = message,
+            modifier = Modifier.secondaryItemAlpha(),
+            style = MaterialTheme.typography.bodyMedium,
+            textAlign = TextAlign.Center,
+        )
+
+        if (!actions.isNullOrEmpty()) {
+            Row(
+                modifier = Modifier.padding(top = 32.dp),
+                horizontalArrangement = Arrangement.spacedBy(MaterialTheme.padding.small),
+            ) {
+                actions.fastForEach {
+                    ActionButton(
+                        modifier = Modifier.weight(1f),
+                        title = stringResource(it.stringRes),
+                        icon = it.icon,
+                        onClick = it.onClick,
+                    )
+                }
+            }
+        }
+    }
+}

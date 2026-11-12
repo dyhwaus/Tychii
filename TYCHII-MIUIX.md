@@ -106,6 +106,18 @@ changed, and how to build.
   always shown). Sub-screens (manga detail, settings, reader) are
   unaffected — the capsule is under pushed screens in the navigation
   stack, and their own AppBars are untouched.
+- Empty states on the main tabs are quiet now (2026-11-12): a local
+  `QuietEmptyScreen` (`presentation/components/`) replaces the shared
+  `EmptyScreen` at the seven main-tab call sites (whole library,
+  per-category, Updates, History, Sources, Extensions, Migrate). It
+  drops the random error face and gives the message more room
+  (32.dp side padding, 32.dp above the action row); the buttons
+  (getting-started guide, extension stores) and all trigger logic
+  are unchanged. The shared `EmptyScreen` in presentation-core is
+  untouched, so error states on sub-screens keep their face. The
+  only copy change is Extensions: "Well, this is awkward" is now
+  "No extensions yet" (`empty_extensions_quiet`, base + zh-rCN);
+  other messages reuse their existing strings.
 - Library's category name + manga-count pill are hidden with its title on
   phones; the category is still visible in the category tabs row, which
   is now capsule-styled (2026-11-12): the tab row keeps its transparent

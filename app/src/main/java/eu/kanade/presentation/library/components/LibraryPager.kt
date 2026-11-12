@@ -24,7 +24,7 @@ import tachiyomi.domain.category.model.Category
 import tachiyomi.domain.library.model.LibraryDisplayMode
 import tachiyomi.domain.library.model.LibraryManga
 import tachiyomi.i18n.MR
-import tachiyomi.presentation.core.screens.EmptyScreen
+import eu.kanade.presentation.components.QuietEmptyScreen
 import tachiyomi.presentation.core.util.plus
 
 @Composable
@@ -151,7 +151,7 @@ private fun LibraryPagerEmptyScreen(
             )
         }
 
-        EmptyScreen(
+        QuietEmptyScreen(
             stringRes = msg,
             modifier = Modifier.weight(1f),
         )
