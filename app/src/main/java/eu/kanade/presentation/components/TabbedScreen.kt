@@ -1,5 +1,6 @@
 package eu.kanade.presentation.components
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.WindowInsets
@@ -10,6 +11,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.PrimaryTabRow
 import androidx.compose.material3.SnackbarHost
@@ -20,8 +22,11 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
 import dev.icerock.moko.resources.StringResource
 import eu.kanade.presentation.util.isTabletUi
@@ -29,6 +34,7 @@ import kotlinx.coroutines.launch
 import tachiyomi.presentation.core.components.material.Scaffold
 import tachiyomi.presentation.core.components.material.TabText
 import tachiyomi.presentation.core.i18n.stringResource
+import top.yukonga.miuix.kmp.theme.MiuixTheme
 
 @Composable
 fun TabbedScreen(
@@ -79,16 +85,38 @@ fun TabbedScreen(
                 selectedTabIndex = state.currentPage,
                 modifier = Modifier.zIndex(1f),
                 // No divider and no container color: the tab row must not
-                // draw a line or a band under the tabs.
+                // draw a line or a band under the tabs. No indicator
+                // either: like the Library category tabs, the selected
+                // tab is a filled capsule (Miuix surfaceContainer fill,
+                // full pill radius) instead of an underline.
                 containerColor = Color.Transparent,
                 divider = {},
+                indicator = {},
             ) {
                 tabs.forEachIndexed { index, tab ->
+                    val selected = state.currentPage == index
                     Tab(
-                        selected = state.currentPage == index,
+                        selected = selected,
                         onClick = { scope.launch { state.animateScrollToPage(index) } },
-                        text = { TabText(text = stringResource(tab.titleRes), badgeCount = tab.badgeNumber) },
-                        unselectedContentColor = MaterialTheme.colorScheme.onSurface,
+                        modifier = Modifier
+                            .padding(horizontal = 4.dp, vertical = 4.dp)
+                            .clip(RoundedCornerShape(50))
+                            .background(
+                                if (selected) {
+                                    MiuixTheme.colorScheme.surfaceContainer
+                                } else {
+                                    Color.Transparent
+                                },
+                            ),
+                        text = {
+                            TabText(
+                                text = stringResource(tab.titleRes),
+                                badgeCount = tab.badgeNumber,
+                                fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal,
+                            )
+                        },
+                        selectedContentColor = MiuixTheme.colorScheme.onSurface,
+                        unselectedContentColor = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
             }

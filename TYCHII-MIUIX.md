@@ -46,7 +46,13 @@ is kept by passing null while selecting). (2) the list-item
 `HorizontalDivider` under every row drew a grey ruled line, so it
 is gone on the three tab lists: Library (new `showDivider = false`
 on MangaListItem, other callers keep the divider), Updates, History.
-The More tab has no toolbar and no list dividers. The 0.1.2 release is the
+The More tab has no toolbar and no list dividers. Browse tabs as
+capsules 2026-11-12: the Browse tab's 来源 / 拓展套件 / 迁移 row
+uses the same capsule style as the Library category tabs (Miuix
+surfaceContainer fill on the selected tab, full pill radius, no
+underline indicator or divider). Miuix's own TabRow was not used:
+it takes only plain strings, so the extensions tab's update-count
+badge would have been lost. The 0.1.2 release is the
 full-page Miuix restyle (2026-11-12): every user-visible page except
 the reader now follows the Miuix style — settings, manga detail,
 browse/source/extensions/migration, updates/history list items,
