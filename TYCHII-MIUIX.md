@@ -5,7 +5,7 @@ Tychii is a fork of Mihon, restyled with the Miuix component library
 from Mihon. This note records what changed, what was deliberately not
 changed, and how to build.
 
-Current version: **v0.1.2** (versionCode 41) — every user-visible page
+Current version: **v0.2.0** (versionCode 42) — every user-visible page
 except the reader now follows the Miuix style. The reader is untouched
 (gesture-driven fullscreen viewer, highest risk).
 
@@ -736,6 +736,19 @@ applies to the Library compact grid and to the Browse source compact
 grid, which share `MangaCompactGridItem`; the comfortable grid was
 already title-below. The Miuix floating bar, title capsule and
 Neko theme are untouched — only the card layout follows PiliPlus.
+
+## Capsule clear of the status bar; version 0.2.0 (2026-11-14)
+
+The title capsule is one HomeScreen overlay, so this fixes every
+page at once. Centered in the bare 64.dp band it sat only ~12.dp
+below the status bar and read as touching it, especially on pages
+whose own toolbar is gone (the user saw it on Extensions). The
+capsule band now has 8.dp of extra top padding below the status
+bar, so the capsule sits ~20.dp below it. `TopCapsuleClearance`
+grew from 64.dp to 72.dp to match, and the Browse menu / More
+top blank band went from 64.dp to 72.dp too, so their content
+still clears the lowered capsule. Version bumped to v0.2.0
+(versionCode 42).
 
 ## Top gap on Library, Updates and History (2026-11-14)
 
