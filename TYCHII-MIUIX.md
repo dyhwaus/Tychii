@@ -737,14 +737,22 @@ grid, which share `MangaCompactGridItem`; the comfortable grid was
 already title-below. The Miuix floating bar, title capsule and
 Neko theme are untouched — only the card layout follows PiliPlus.
 
-## Top overlay removed on Library, Updates and Explore (2026-11-14)
+## Top bar container removed on Library, Updates and Explore (2026-11-14)
 
-The floating title capsule (the top overlay) is hidden on the
-Library, Updates and per-source Explore pages, so it no longer
-floats over the top of the covers and cuts them off. The toolbars
-stay (they hold the back button / search / selection actions). The
-History page keeps its capsule, and returning to the Browse menu
-restores it there.
+The title capsule stays (it is the Miuix addition, not the problem).
+The thing cutting off the covers is the original Mihon top-bar
+container — the toolbar band that sits above the content. It is
+gone at rest on all three pages:
+
+- Library: the toolbar only appears when searching or selecting,
+  when its field / action mode is actually needed. The title lives
+  in the floating capsule and search in the floating action capsule.
+- Updates: the toolbar only appears in selection mode, when its
+  action mode is needed.
+- Explore: the per-source toolbar is gone (back goes through the
+  system back gesture; the source title lives in the floating
+  capsule). Only the Popular / Latest / Filter chips stay at the
+  top.
 
 ## Build fixes
 
@@ -993,14 +1001,6 @@ Deliberately kept Material3 in this batch:
   bar.
 - `miuix-nav` was not adopted; Mihon's existing navigation stays.
 
-## Top overlay removed on Library, Updates and Explore (2026-11-14)
-
-The floating title capsule (the top overlay) is hidden on the
-Library, Updates and per-source Explore pages, so it no longer
-floats over the top of the covers and cuts them off. The toolbars
-stay (they hold the back button / search / selection actions). The
-History page keeps its capsule, and returning to the Browse menu
-restores it there.
 
 ## Build fixes
 
