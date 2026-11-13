@@ -11,7 +11,6 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import eu.kanade.presentation.miuix.LiquidNavBarClearance
-import eu.kanade.presentation.miuix.TopListGap
 import eu.kanade.tachiyomi.ui.home.HomeScreen
 import eu.kanade.tachiyomi.ui.more.DownloadQueueState
 import mihon.icons.materialsymbols.MaterialSymbols
@@ -60,10 +59,7 @@ fun MoreScreen(
         // and above the first item so it clears the title capsule band.
         // Plain list, no scrollbar thumb (see LazyLibraryGrid).
         LazyColumn(
-            contentPadding = contentPadding + PaddingValues(
-                top = TopListGap,
-                bottom = LiquidNavBarClearance,
-            ),
+            contentPadding = contentPadding + PaddingValues(bottom = LiquidNavBarClearance),
         ) {
             // Top blank band: the other main tabs have a 64.dp toolbar
             // occupying the top band under the title capsule, so their

@@ -19,7 +19,6 @@ import androidx.compose.ui.platform.LocalLayoutDirection
 import eu.kanade.core.preference.PreferenceMutableState
 import eu.kanade.presentation.miuix.CapsuleAction
 import eu.kanade.presentation.miuix.LiquidNavBarClearance
-import eu.kanade.presentation.miuix.TopListGap
 import eu.kanade.tachiyomi.ui.home.HomeScreen
 import eu.kanade.tachiyomi.ui.library.LibraryItem
 import kotlinx.coroutines.delay
@@ -183,19 +182,15 @@ fun LibraryContent(
         ) {
             LibraryPager(
                 state = pagerState,
-                // The grid needs this much empty space below its last row
-                // so the row clears the floating bar (HomeScreen no longer
-                // insets the whole content for it), and this much above
-                // its first row so the row clears the title capsule band
-                // instead of being cut off by it. The top is added to the
-                // Scaffold's own padding (the 64.dp toolbar band) rather
-                // than replacing it: building a fresh PaddingValues with
-                // only the bottom used to drop the band, so the first row
-                // slid under it.
-                contentPadding = contentPadding + PaddingValues(
-                    top = TopListGap,
-                    bottom = LiquidNavBarClearance,
-                ),
+                // Empty space below the last row so it clears the
+                // floating bar (HomeScreen no longer insets the whole
+                // content for it). Added to the Scaffold's own padding
+                // rather than replacing it: building a fresh PaddingValues
+                // with only the bottom used to drop the 64.dp toolbar
+                // band, so the first row slid under it. No extra top gap:
+                // the band alone leaves enough room, and an added gap only
+                // read as blank space above the first row.
+                contentPadding = contentPadding + PaddingValues(bottom = LiquidNavBarClearance),
                 hasActiveFilters = hasActiveFilters,
                 selection = selection,
                 searchQuery = searchQuery,

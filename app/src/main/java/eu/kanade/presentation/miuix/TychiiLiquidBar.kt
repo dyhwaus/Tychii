@@ -122,10 +122,3 @@ private val LiquidBarVerticalPadding = 8.dp
 // whole content for it, because that left a dead band behind the bar
 // that the covers scrolled under.
 val LiquidNavBarClearance = 96.dp
-
-// Extra top gap for the tab lists, on top of the 64.dp toolbar band
-// the Scaffold already provides: the first row sits this far below
-// the title capsule band, so its top is never cut off by the band —
-// mirroring the bottom clearance, which leaves a gap above the bar.
-// 64.dp band + 32.dp gap = 96.dp in total, the same as the bottom.
-val TopListGap = 32.dp

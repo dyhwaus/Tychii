@@ -661,15 +661,25 @@ menu, More. The last item now scrolls fully above the bar. (The
 bar is hidden while the Library selection menu is showing, so the
 extra bottom space there is harmless.)
 
-The top got the same treatment (2026-11-13): the first row was
-being cut off by the title capsule band. Each list now also adds a
-shared `TopListGap` (32.dp) above its first item — 64.dp toolbar
-band + 32.dp gap = 96.dp in total, mirroring the bottom. The
-Library had an extra bug here: it built a fresh `PaddingValues`
-with only the bottom, dropping the Scaffold's own top padding (the
-64.dp band), so its first row slid under the band; it now adds to
-the Scaffold's padding with the `plus` operator like the other
-lists.
+The top got the same treatment (2026-11-13) and then it was
+reverted the same day: the first row was being cut off by the title
+capsule band, so each list added a shared 32.dp gap above its first
+item — but the gap read as a strange blank space above the covers
+and did not fix the cut-off, so it was removed again. The 64.dp
+toolbar band the Scaffold already provides leaves enough room on
+its own. The Library had an extra bug here: it built a fresh
+`PaddingValues` with only the bottom, dropping the Scaffold's own
+top padding (the 64.dp band), so its first row slid under the band;
+it now adds to the Scaffold's padding with the `plus` operator like
+the other lists.
+
+The cut-off turned out to be the covers themselves, not the band:
+the grid cells came out square in the lazy grid even though the
+cover box asked for `aspectRatio(2/3)`, so portrait covers were
+cropped top and bottom by `ContentScale.Crop`. `MangaGridCover`
+now sizes its box from its measured width (`BoxWithConstraints`,
+height = width / 2/3), so the cells are true 2:3 and the covers
+show in full.
 
 ## Floating action capsule (2026-11-13)
 

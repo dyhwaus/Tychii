@@ -4,10 +4,10 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
-import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -243,29 +243,36 @@ private fun MangaGridCover(
     badgesEnd: (@Composable RowScope.() -> Unit)? = null,
     content: @Composable (BoxScope.() -> Unit)? = null,
 ) {
-    Box(
-        modifier = modifier
-            .fillMaxWidth()
-            .aspectRatio(MangaCover.Book.ratio),
+    // The cover box is sized from its measured width, not aspectRatio:
+    // aspectRatio on this Box came out square in the lazy grid, so the
+    // portrait covers were cropped top and bottom (ContentScale.Crop).
+    BoxWithConstraints(
+        modifier = modifier.fillMaxWidth(),
     ) {
-        cover()
-        content?.invoke(this)
-        if (badgesStart != null) {
-            BadgeGroup(
-                modifier = Modifier
-                    .padding(4.dp)
-                    .align(Alignment.TopStart),
-                content = badgesStart,
-            )
-        }
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(maxWidth / MangaCover.Book.ratio),
+        ) {
+            cover()
+            content?.invoke(this)
+            if (badgesStart != null) {
+                BadgeGroup(
+                    modifier = Modifier
+                        .padding(4.dp)
+                        .align(Alignment.TopStart),
+                    content = badgesStart,
+                )
+            }
 
-        if (badgesEnd != null) {
-            BadgeGroup(
-                modifier = Modifier
-                    .padding(4.dp)
-                    .align(Alignment.TopEnd),
-                content = badgesEnd,
-            )
+            if (badgesEnd != null) {
+                BadgeGroup(
+                    modifier = Modifier
+                        .padding(4.dp)
+                        .align(Alignment.TopEnd),
+                    content = badgesEnd,
+                )
+            }
         }
     }
 }

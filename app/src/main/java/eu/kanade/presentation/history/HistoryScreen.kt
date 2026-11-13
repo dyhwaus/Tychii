@@ -25,7 +25,6 @@ import eu.kanade.presentation.components.relativeDateText
 import eu.kanade.presentation.history.components.HistoryItem
 import eu.kanade.presentation.miuix.CapsuleAction
 import eu.kanade.presentation.miuix.LiquidNavBarClearance
-import eu.kanade.presentation.miuix.TopListGap
 import eu.kanade.presentation.theme.TachiyomiPreviewTheme
 import eu.kanade.presentation.util.isTabletUi
 import eu.kanade.presentation.util.rememberIs24HourSystem
@@ -173,12 +172,8 @@ private fun HistoryScreenContent(
 
     // Plain list, no fast-scroll thumb (see LazyLibraryGrid).
     LazyColumn(
-        // Empty space below the last item so it clears the floating bar,
-        // and above the first item so it clears the title capsule band.
-        contentPadding = contentPadding + PaddingValues(
-            top = TopListGap,
-            bottom = LiquidNavBarClearance,
-        ),
+        // Empty space below the last item so it clears the floating bar.
+        contentPadding = contentPadding + PaddingValues(bottom = LiquidNavBarClearance),
     ) {
         items(
             items = history,
