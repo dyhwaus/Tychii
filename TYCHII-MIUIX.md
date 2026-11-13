@@ -374,8 +374,11 @@ Appearance's nav-bar-labels switch and bar-style list are preserved.
   unchanged; the per-row scroll-to-selected is gone (one card, nothing
   to scroll to).
 - **About / search** (`AboutScreen`, `SettingsSearchScreen`): About
-  uses a Miuix top bar and one grouped card for its rows (LogoHeader
-  and the social links row are untouched); the search page keeps its
+  uses a Miuix top bar and one grouped card for its rows (version,
+  check for updates, what's new, licences, privacy policy). The
+  `LogoHeader` icon and the Mihon social links row (website, Discord,
+  X, Facebook, Reddit, GitHub) were removed 2026-11-13; `LogoHeader`
+  had no other caller and was deleted. The search page keeps its
   own text field in a plain Miuix top-bar row (Miuix `SearchBar` is a
   full search UI and did not fit) and its M3 result rows.
 - **Data / Advanced / Tracking**: top-bar help buttons are Miuix
