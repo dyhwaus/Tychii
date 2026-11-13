@@ -5,69 +5,9 @@ Tychii is a fork of Mihon, restyled with the Miuix component library
 from Mihon. This note records what changed, what was deliberately not
 changed, and how to build.
 
-Current version: **v0.1.2** (versionCode 41). Build fix 2026-11-12: the
-0.1.2 migration left `SettingsItems.CheckboxItem` calling Miuix
-`Checkbox` with Material3's `checked`/`onCheckedChange` — Miuix
-`Checkbox` takes `state: ToggleableState` + `onClick`, so the local
-build failed with "No value passed for parameter 'state'". Fixed by
-passing `ToggleableState.On/Off` with `onClick = null` (the row
-handles the click); every other Miuix `Checkbox` call site in the
-app already used `state`. Two more missing imports from the same
-0.1.2 migration, fixed 2026-11-12: `CategoryDialogs.kt` used
-`Arrangement.End` with no `layout.Arrangement` import, and the
-detail page `MangaScreen.kt` used `0.dp` / `16.dp` (FAB offset,
-two layouts) with no `unit.dp` import — upstream had no `.dp`
-usage there at all, so the migration added the usage without the
-import. A tree-wide scan for missing `dp` / `sp` /
-`ToggleableState` / `Arrangement` / `asStateFlow` imports then
-came back clean. Seven more errors from the same migration, all
-fixed 2026-11-12: `CategoryDialogs` closed the OverlayDialog
-content lambda right after the checkbox list, leaving the buttons
-row outside the dialog and a stray `)` behind it; `SettingsTrackingScreen`
-had a duplicated `}` in the login dialog that closed the enclosing
-object early and left its final `}` unmatched; `ChapterSettingsDialog`'s
-`cycle` lambda inferred `() -> Unit?` from a safe call and
-`MultiSelectListPreferenceWidget`'s `toggle` inferred `() -> Boolean`
-from Set.add/remove — both now carry an explicit `() -> Unit` type;
-`MangaDialogs` called `stringResource` inside NumberPicker's plain
-`(Int) -> String` label, so the string is now resolved before the
-picker; `TrackerSearch` used `onSurfaceVariant`, which Miuix's
-color scheme doesn't have — its Monet mapping sends Material
-`onSurfaceVariant` to `onSurfaceVariantActions`, so that's the tint
-now. Seam unification 2026-11-12 (user screenshot of the Library
-page, dark mode): two splits — (1) the top toolbar band was pure
-black while the page is the theme background, because the shared
-AppBar paints Miuix `surface` by default; the four tab toolbars
-(Library, Updates, History, Browse via TabbedScreen) now pass
-`MaterialTheme.colorScheme.background` (SearchToolbar gained a
-`backgroundColor` passthrough for this; the AppBar default is
-unchanged so pushed screens keep their look, and action-mode tint
-is kept by passing null while selecting). (2) the list-item
-`HorizontalDivider` under every row drew a grey ruled line, so it
-is gone on the three tab lists: Library (new `showDivider = false`
-on MangaListItem, other callers keep the divider), Updates, History.
-The More tab has no toolbar and no list dividers. Browse tabs as
-capsules 2026-11-12: the Browse tab's 来源 / 拓展套件 / 迁移 row
-uses the same capsule style as the Library category tabs (Miuix
-surfaceContainer fill on the selected tab, full pill radius, no
-underline indicator or divider). Miuix's own TabRow was not used:
-it takes only plain strings, so the extensions tab's update-count
-badge would have been lost. Settings groups merged 2026-11-13: top-level
-preferences that are not in a group used to each get their own
-Card, so a run of them showed a hairline gap between every two
-boxes while grouped items sat in one continuous card (seen on the
-Downloads page). PreferenceScreen now collects consecutive
-top-level items into one shared Card, like a group without a
-header; the 12.dp rhythm between cards is kept, and
-findHighlightedIndex was updated to the new lazy-item layout so
-search highlight still scrolls to the right card. The 0.1.2 release is the
-full-page Miuix restyle (2026-11-12): every user-visible page except
-the reader now follows the Miuix style — settings, manga detail,
-browse/source/extensions/migration, updates/history list items,
-download queue, categories, stats, upcoming, and the shared AppBar,
-TabbedDialog and AdaptiveSheet. The reader is untouched (gesture-driven
-fullscreen viewer, highest risk). The title capsule won over the pill
-search box the same day (the capsule stays, the pill is gone).
+Current version: **v0.1.2** (versionCode 41) — every user-visible page
+except the reader now follows the Miuix style. The reader is untouched
+(gesture-driven fullscreen viewer, highest risk).
 
 ## Miuix (v0.9.4)
 
@@ -86,29 +26,34 @@ search box the same day (the capsule stays, the pill is gone).
   `ThemeController`. Source: https://github.com/compose-miuix-ui/miuix
   (tag v0.9.4).
 
-## Liquid glass (Wenku8Reader style)
+## Liquid-glass bottom bar (Wenku8Reader style)
 
-- The floating navigation bar is a liquid-glass bar ported from
-  [Wenku8Reader](https://github.com/TakaHoshino/Wenku8Reader) (which
-  adapted it from SukiSU-Ultra / the miuix official example /
-  Kyant0/AndroidLiquidGlass, Apache-2.0 — attribution headers are in
-  each ported file). Effect stack in
-  `eu.kanade.presentation.miuix` (`LiquidGlass.kt`, `LiquidInnerShadow.kt`,
-  `liquid/…`): backdrop blur + vibrancy + lens refraction (AGSL
-  RuntimeShader) + specular highlight + device-tilt light. Bar in
-  `MiuixLiquidBottomBar.kt`, Tychii adapter in `TychiiLiquidBar.kt`.
+The floating navigation bar on phones is a liquid-glass bar ported from
+[Wenku8Reader](https://github.com/TakaHoshino/Wenku8Reader) (which
+adapted it from SukiSU-Ultra / the miuix official example /
+Kyant0/AndroidLiquidGlass, Apache-2.0 — attribution headers are in
+each ported file). Effect stack in
+`eu.kanade.presentation.miuix` (`LiquidGlass.kt`, `LiquidInnerShadow.kt`,
+`liquid/…`): backdrop blur + vibrancy + lens refraction (AGSL
+RuntimeShader) + specular highlight + device-tilt light. Bar in
+`MiuixLiquidBottomBar.kt`, Tychii adapter in `TychiiLiquidBar.kt`.
+
 - minSdk stays 26: the manifest uses
   `<uses-sdk tools:overrideLibrary="top.yukonga.miuix.kmp.blur" />` and
   all blur calls are gated behind `isMiuixGlassSupported` (API >= 32,
   `eu.kanade.presentation.theme.MiuixGlass.kt`). API 26–31: translucent
-  solid bar (same look as before). API 32: blur + vibrancy + highlight.
+  solid bar. API 32: blur + vibrancy + highlight.
   API 33+: full liquid glass with lens refraction.
 - Accent is Miuix default blue (`MiuixTheme.colorScheme.primary`), not
   the app's Neko pink — user chose Miuix default blue for the bar.
-- 5 tabs share the capsule by weight, 64.dp minimum per tab. Icon + 11.sp
-  label when the "show navigation bar labels" setting is on, icon-only
-  when off. Bar is 64.dp; content clearance is a single
+- 5 tabs share the capsule by weight, 64.dp minimum per tab. The bar is
+  64.dp tall with or without labels; content clearance is a single
   `LiquidNavBarClearance = 96.dp`.
+- Labels: a preference `UiPreferences.showNavBarLabels`
+  (`pref_show_navbar_labels`, default **on**, Settings → Appearance →
+  "显示导航栏文字" / "Show navigation bar labels") toggles icon + 11.sp
+  label vs icon only. The item has balanced vertical padding (8.dp top,
+  8.dp below the label) so icon and text never touch the bar's edges.
 - Backdrop wiring (two verified crash pitfalls, see Wenku8Reader's
   MainScaffold): the backdrop is applied via `Modifier.layerBackdrop`
   ONLY to the tab content, and the bar is a sibling in an outer Box
@@ -144,9 +89,10 @@ search box the same day (the capsule stays, the pill is gone).
   glass); if lag remains, the next lever is the lens refraction.
 - Deliberately NOT ported: Wenku8Reader's main-screen Miuix components
   (MiuixPage / MiuixSection grouped cards), its reader, and its settings
-  pages. Settings / More stay Material3 per the user's instruction.
+  pages.
+- Tablets keep the Material3 navigation rail, unchanged.
 
-## Centered title capsule (2026-11-12)
+## Centered title capsule
 
 - Each main tab's page name is shown in a centered Miuix capsule at the
   top (`MiuixCapsuleTitle` in `eu.kanade.presentation.miuix`), instead of
@@ -161,8 +107,8 @@ search box the same day (the capsule stays, the pill is gone).
   and updates on tab switch. Each tab's own toolbar title is hidden on
   phones only (gated on `!isTabletUi()` in LibraryToolbar, UpdatesAppBar,
   HistoryScreen, TabbedScreen); tablets keep their top-left titles and get
-  no capsule. More has no toolbar title — its LogoHeader stays, so the
-  capsule partly overlaps the Taiji icon at scroll top.
+  no capsule. More has no toolbar title and no LogoHeader; its page starts
+  with a 64.dp blank band so the first row doesn't slide under the capsule.
 - The capsule hides while a tab is searching or selecting (the search
   field / selection counter would sit under it): each tab reports via
   `HomeScreen.showTitleCapsule` (Library: not selecting and no search
@@ -170,6 +116,61 @@ search box the same day (the capsule stays, the pill is gone).
   always shown). Sub-screens (manga detail, settings, reader) are
   unaffected — the capsule is under pushed screens in the navigation
   stack, and their own AppBars are untouched.
+- The capsule itself follows the active library category: the Library tab
+  reports "书架 · 分类名" through a `HomeScreen.setCapsuleTitle` channel
+  (`capsuleTitleEvent` + `libraryCapsuleTitle` state in HomeScreen;
+  default/system categories report just "书架"). The channel was
+  briefly removed on 2026-11-12 when the user chose to keep the pill
+  search box and let the capsule yield, then restored the same day
+  when the user changed their mind: keep the capsule, drop the search
+  box (see "Search pill" below).
+- Library's category name + manga-count pill are hidden with its title on
+  phones; the category is still visible in the category tabs row, which
+  is now capsule-styled (2026-11-12): the tab row keeps its transparent
+  container and no divider, but the underline indicator is gone and the
+  selected category is a filled capsule in Miuix `surfaceContainer`
+  with bold `onSurface` text, echoing the title capsule; unselected
+  categories are plain text in `onSurfaceVariant`. The count `Pill`
+  badge is unchanged. (`TabText` gained a defaulted `fontWeight`
+  parameter for this; its other two call sites are unaffected.)
+- Browse tabs as capsules (2026-11-12): the Browse tab's 来源 / 拓展套件 /
+  迁移 row uses the same capsule style as the Library category tabs
+  (Miuix surfaceContainer fill on the selected tab, full pill radius,
+  no underline indicator or divider). Miuix's own TabRow was not used:
+  it takes only plain strings, so the extensions tab's update-count
+  badge would have been lost.
+- Top-bar action icons removed on phones (2026-11-12): the capsule
+  shares its 64.dp band with each tab's toolbar, and the action icons
+  sat under it (Library filter, Updates filter/calendar/refresh,
+  History clear-all, Browse overflow/help). On phones those actions
+  are now hidden — the band holds only the capsule and the search
+  icon (which does not overlap it, and the capsule hides while
+  searching). Tablets keep all actions (no capsule there), and
+  selection/action-mode icons are untouched (the capsule hides
+  then). Consequence: on phones Library filtering, Updates filtering
+  / upcoming / refresh, History clear-all, and the Browse overflow
+  and migration help are no longer reachable from the top bar. The
+  More page's LogoHeader Taiji icon was removed for the same reason
+  (it sat directly under the capsule); About keeps its own
+  LogoHeader, since it is a sub-screen with its own AppBar and no
+  capsule.
+- Search pill (2026-11-12 — removed the same day): on phones
+  the main tabs' bare search icon was briefly replaced by a rounded
+  search box — 48.dp high, full pill radius, `surfaceContainerHigh`
+  background, search icon + hint text. `SearchToolbar` had gained an
+  opt-in `pillSearch` parameter; only the Library, History and Browse
+  (Extensions sub-tab) call sites passed it, and only on phones, so
+  sub-pages kept the icon and tablets kept the icon plus their toolbar
+  title. The pill owned the top band on those three phone tabs, so
+  their title capsule yielded to it (their `showTitleCapsule` reports
+  also required `isTabletUi()`), and the Library hint carried the
+  category ("搜索" + category name), History's read "搜索历史". The
+  user changed their mind the same day: keep the title capsule, drop
+  the search box. The `pillSearch` parameter and its branch in
+  `SearchToolbar` are gone, the three call sites are back to the
+  magnifier icon with the default search hint, the three tabs'
+  `showTitleCapsule` reports no longer require `isTabletUi()`, and
+  the capsule category channel (`setCapsuleTitle`) is restored.
 - Empty states on the main tabs are quiet now (2026-11-12): a local
   `QuietEmptyScreen` (`presentation/components/`) replaces the shared
   `EmptyScreen` at the seven main-tab call sites (whole library,
@@ -182,23 +183,6 @@ search box the same day (the capsule stays, the pill is gone).
   only copy change is Extensions: "Well, this is awkward" is now
   "No extensions yet" (`empty_extensions_quiet`, base + zh-rCN);
   other messages reuse their existing strings.
-- Library's category name + manga-count pill are hidden with its title on
-  phones; the category is still visible in the category tabs row, which
-  is now capsule-styled (2026-11-12): the tab row keeps its transparent
-  container and no divider, but the underline indicator is gone and the
-  selected category is a filled capsule in Miuix `surfaceContainer`
-  with bold `onSurface` text, echoing the title capsule; unselected
-  categories are plain text in `onSurfaceVariant`. The count `Pill`
-  badge is unchanged. (`TabText` gained a defaulted `fontWeight`
-  parameter for this; its other two call sites are unaffected.) The
-  capsule itself follows the active category: the Library tab reports
-  "书架 · 分类名" through a `HomeScreen.setCapsuleTitle` channel
-  (`capsuleTitleEvent` + `libraryCapsuleTitle` state in HomeScreen;
-  default/system categories report just "书架"). The channel was
-  briefly removed on 2026-11-12 (commit 224b52a4) when the user chose
-  to keep the pill search box and let the capsule yield, then restored
-  the same day when the user changed their mind: keep the capsule,
-  drop the search box (see "Search pill" below).
 - Detail page cover palette (2026-11-12, Neko-style, kept quiet): the
   manga detail page now takes one color from its cover and uses it in
   only two places — a faint 0.25-alpha wash over the backdrop image
@@ -218,151 +202,45 @@ search box the same day (the capsule stays, the pill is gone).
   white, light mode darkens toward black). New dependency
   `androidx.palette:palette:1.1.0`. If the cover fails to load, or no
   swatch qualifies, the page silently stays on the default theme
-  colors. Fix 2026-11-12: `MangaViewModel` was missing the
-  `kotlinx.coroutines.flow.asStateFlow` import, so the local build
-  failed with "Unresolved reference 'asStateFlow'" at the
-  `vibrantColor` declaration — one import line. Scope deliberately kept small: no chapter-row / TopBar /
+  colors. Scope deliberately kept small: no chapter-row / TopBar /
   ripple / Snackbar tinting, no global theme change.
 - More page grouped cards (2026-11-12): the More page now uses Miuix
   grouped cards — one `Card` per group (`SwitchPreference` for the
   two switches, `ArrowPreference` for the five navigation rows), no
   dividers between rows, 12.dp between groups, 12.dp side margins.
   Entries and click behaviour are unchanged, and Support us / About /
-  Help stay removed. Settings pages stay Material3; only the More
-  page uses Miuix preferences. The page also starts with a 64.dp
-  blank band at the top: the other main tabs have a 64.dp toolbar
-  occupying the band under the title capsule, but this page has no
-  top bar, so without the spacer its first row slid under the
-  capsule and overlapped it.
-- Search pill (2026-11-12, Neko-style — removed the same day): on phones
-  the main tabs' bare search icon was briefly replaced by a rounded
-  search box — 48.dp high, full pill radius, `surfaceContainerHigh`
-  background, search icon + hint text. `SearchToolbar` had gained an
-  opt-in `pillSearch` parameter; only the Library, History and Browse
-  (Extensions sub-tab) call sites passed it, and only on phones, so
-  sub-pages kept the icon and tablets kept the icon plus their toolbar
-  title. The pill owned the top band on those three phone tabs, so
-  their title capsule yielded to it (their `showTitleCapsule` reports
-  also required `isTabletUi()`), and the Library hint carried the
-  category ("搜索" + category name), History's read "搜索历史". The
-  user changed their mind the same day: keep the title capsule, drop
-  the search box. The `pillSearch` parameter and its branch in
-  `SearchToolbar` are gone, the three call sites are back to the
-  magnifier icon with the default search hint, the three tabs'
-  `showTitleCapsule` reports no longer require `isTabletUi()`, and
-  the capsule category channel (`setCapsuleTitle`) is restored — see
-  the capsule section above.
-- Top-bar action icons removed on phones (2026-11-12): the capsule
-  shares its 64.dp band with each tab's toolbar, and the action icons
-  sat under it (Library filter, Updates filter/calendar/refresh,
-  History clear-all, Browse overflow/help). On phones those actions
-  are now hidden — the band holds only the capsule and the search
-  icon (which does not overlap it, and the capsule hides while
-  searching). Tablets keep all actions (no capsule there), and
-  selection/action-mode icons are untouched (the capsule hides
-  then). Consequence: on phones Library filtering, Updates filtering
-  / upcoming / refresh, History clear-all, and the Browse overflow
-  and migration help are no longer reachable from the top bar. The
-  More page's LogoHeader Taiji icon was removed for the same reason
-  (it sat directly under the capsule); About keeps its own
-  LogoHeader, since it is a sub-screen with its own AppBar and no
-  capsule.
-- Library page must be one continuous background — only the title capsule
-  and the bottom bar may read as separate elements. Three things used to
-  split it: (1) the toolbar's pinned scroll behavior tinted it
-  (surfaceTint overlay) as soon as the grid scrolled, (2) the category
-  tab row drew a divider line, (3) the inner Library Scaffold re-applied
-  the system-bar insets HomeScreen's outer Scaffold already applied, so
-  the content started a status-bar height below the toolbar and ended a
-  nav-bar height above the bottom bar. Fixed in LibraryTab (no scroll
-  behavior on the toolbar; inner Scaffold takes
+  Help stay removed.
+- Seam unification (2026-11-12, from the user's Library screenshot):
+  the top toolbar band was pure black (the shared AppBar paints Miuix
+  `surface` by default) while the page is the theme background. The
+  four tab toolbars (Library/Updates/History/Browse) now pass
+  `MaterialTheme.colorScheme.background` (SearchToolbar gained a
+  `backgroundColor` passthrough; the AppBar default is unchanged so
+  pushed screens keep their look, and action-mode tint is kept by
+  passing null while selecting). The list-item `HorizontalDivider`
+  under every row is removed on the Library/Updates/History tabs
+  (MangaListItem gained `showDivider`, Library passes false).
+  More tab has no toolbar/dividers.
+- One continuous background per main tab (2026-11-12): only the title
+  capsule and the bottom bar may read as separate elements. Three
+  things used to split it: (1) the toolbar's pinned scroll behavior
+  tinted it (surfaceTint overlay) as soon as the grid scrolled, (2)
+  the category tab row drew a divider line, (3) the inner Library
+  Scaffold re-applied the system-bar insets HomeScreen's outer
+  Scaffold already applied, so the content started a status-bar
+  height below the toolbar and ended a nav-bar height above the
+  bottom bar. Fixed in LibraryTab (no scroll behavior on the
+  toolbar; inner Scaffold takes
   `contentWindowInsets = WindowInsets(0, 0, 0, 0)`) and LibraryTabs
-  (`divider = {}`, transparent container). The toolbar stays on the page
-  background (surface == background in the Neko scheme), so it is
-  invisible; only its action icons show.
-- The same treatment now applies to the other four main tabs (2026-11-12):
-  Updates (UpdatesScreen: no scroll behavior on UpdatesAppBar, inner
-  Scaffold `contentWindowInsets = WindowInsets(0, 0, 0, 0)`), History
-  (HistoryScreen: same for its SearchToolbar), Browse (TabbedScreen:
-  inner Scaffold insets zeroed, PrimaryTabRow `divider = {}` +
-  transparent container; its toolbar already had no scroll behavior),
-  More (MoreScreen: inner Scaffold insets zeroed; its two
-  HorizontalDividers between sections are deliberate content separators
-  and were kept). Selection/action-mode toolbar tint is untouched
+  (`divider = {}`, transparent container). The same treatment now
+  applies to the other four main tabs: Updates (UpdatesScreen: no
+  scroll behavior on UpdatesAppBar, inner Scaffold insets zeroed),
+  History (HistoryScreen: same for its SearchToolbar), Browse
+  (TabbedScreen: inner Scaffold insets zeroed, PrimaryTabRow
+  `divider = {}` + transparent container; its toolbar already had
+  no scroll behavior), More (MoreScreen: inner Scaffold insets
+  zeroed). Selection/action-mode toolbar tint is untouched
   (deliberate signal), sub-screens are untouched.
-
-## What changed
-
-### Dependencies
-
-`presentation-core/build.gradle.kts` — added as `api` so the app module
-sees them transitively:
-
-```kotlin
-api("top.yukonga.miuix.kmp:miuix-ui-android:0.9.4")
-api("top.yukonga.miuix.kmp:miuix-preference-android:0.9.4")
-```
-
-### Theme
-
-`app/src/main/java/eu/kanade/presentation/theme/TachiyomiTheme.kt` —
-`BaseTachiyomiTheme` now wraps its content in `MiuixTheme` as well as
-`MaterialExpressiveTheme`, with a `ThemeController` following the same
-dark/light mode. Miuix keeps its own default colors (its
-`surfaceContainer` backs the floating navigation bar) rather than the
-app's custom palettes.
-
-### Floating navigation bar (phones)
-
-`app/src/main/java/eu/kanade/tachiyomi/ui/home/HomeScreen.kt` —
-the phone layout no longer uses Material3 `NavigationSuiteScaffold`.
-It uses Miuix `Scaffold` with a `FloatingNavigationBar` in the
-`floatingToolbar` slot: a detached pill (50.dp corners, surfaceContainer
-color, drop shadow) that floats above the content, centered, with a
-26.dp bottom offset plus the navigation-bar inset.
-
-- The five tabs (Library, Updates, History, Browse, More) are icon-only,
-  matching Miuix's floating-bar design; the label is kept as the content
-  description. Selection is shown by icon opacity (full for selected,
-  40% for unselected), the same as Miuix's own item.
-- The tab icons stay as `Painter`s, so the animated library icon is kept.
-  Miuix's own `FloatingNavigationBarItem` only accepts an `ImageVector`,
-  so `FloatingNavItem` mirrors it with a `Painter` instead.
-- The Updates / Browse count badges are kept (M3 `BadgedBox` + `Badge`).
-- The bar hides and shows with the existing `showBottomNav` events
-  (slide + fade). Tab content gets an extra 84.dp bottom padding
-  (52.dp bar height + 26.dp offset + shadow) so nothing hides behind it.
-- Tablets keep the Material3 navigation rail, unchanged.
-- (An icon-plus-label variant with a selected-tab indicator pill was
-  tried and reverted on 2026-11-11 at the user's request.)
-
-### Splash screen (black and white, 2026-11-11)
-
-- `ic_mihon_splash.xml` now shows the Tychii launcher foreground
-  (the white T, 108.dp) instead of the old Mihon icon.
-- Splash background `@color/splash` changed from `accent_blue`
-  (#0058A0) to pure black (#000000), so the splash is a white T on
-  black. The old `ic_mihon` drawable is still used by the More-page
-  logo and notification icons, untouched.
-
-### Navigation bar labels setting (2026-11-11)
-
-- New preference `UiPreferences.showNavBarLabels`
-  (`pref_show_navbar_labels`, default **on**): Settings → Appearance
-  → "显示导航栏文字" / "Show navigation bar labels".
-- When on, the floating bar shows icon + label (11.sp); when off,
-  icon only. The bottom content clearance follows (96.dp with
-  labels, 84.dp without).
-
-### KernelSU consistency
-
-The bar follows KernelSU's manager app (also built on Miuix 0.9.4).
-KernelSU's own bar is a custom liquid-glass implementation (backdrop
-blur + lens refraction + vibrancy, via `miuix-blur`, minSdk 33) — that
-effect is not available at Tychii's minSdk 26, so Tychii uses the
-translucent `surfaceContainer` (0.75 alpha), which is KernelSU's own
-non-blur fallback. (An icon-plus-label variant with a selected-tab
-indicator pill was tried and reverted; the bar is icon-only.)
 
 ## Neko style (2026-11-12)
 
@@ -382,17 +260,16 @@ uses MaterialExpressiveTheme.
   in `TachiyomiTheme.kt`) was pushed 2026-11-12 after three earlier
   attempts failed on approval timeout; the theme now actually uses
   the font everywhere.
-- **Library grid:** cover radius 12.dp with a 0.75.dp `#9D9D9D`
-  outline (`MangaCover`), grid gaps 16.dp horizontal / 4.dp vertical,
+- **Library grid:** cover radius 12.dp with a 0.75.dp outline in
+  `MaterialTheme.colorScheme.outline` (`MangaCover`), so it follows
+  the active Material theme (light/dark, any AppTheme) instead of a
+  hardcoded grey; grid gaps 16.dp horizontal / 4.dp vertical,
   comfortable title below the cover in bodyMedium Medium (max 3
-  lines), compact title on a black gradient scrim. Covers have a
-  0.75.dp outline whose color is `MaterialTheme.colorScheme.outline`,
-  so it follows the active Material theme (light/dark, any AppTheme)
-  instead of a hardcoded grey. The static glass gloss that used to
-  sit on every cover (a diagonal white gradient, `glassEffect = true`
-  at all 12 call sites) was removed 2026-11-12 at the user's request
-  and replaced by this outline; `MangaCover` no longer has a
-  `glassEffect` parameter.
+  lines), compact title on a black gradient scrim. The static glass
+  gloss that used to sit on every cover (a diagonal white gradient,
+  `glassEffect = true` at all 12 call sites) was removed 2026-11-12
+  at the user's request and replaced by this outline; `MangaCover`
+  no longer has a `glassEffect` parameter.
 - **Floating bar:** selected tab now uses the app primary color
   (Neko pink/yellow) instead of onSurfaceContainer; unselected uses
   onSurfaceVariant. The bar itself is unchanged (Miuix pill, labels
@@ -403,31 +280,11 @@ uses MaterialExpressiveTheme.
   Tychii keeps its 5 tabs and floating bar. The search top bar is
   also not done. The detail page itself is Miuix now (see "Manga
   detail page" below); only its cover-palette chain was kept as
-  designed. The
-  settings restyle, listed here as not done on 2026-11-12, was
-  done the same day after the user reversed "不变动其他页面" —
-  see "Settings pages" below. The reader is untouched.
-
-The settings and More pages were restyled to Miuix on 2026-11-11 and
-reverted the same day at the user's request ("不变动其他页面"):
-`PreferenceScreen`, `PreferenceScaffold`, `MoreScreen`, and the
-`SwitchPreferenceWidget` / `TextPreferenceWidget` /
-`CheckboxPreferenceWidget` are back to Mihon's original Material3
-versions. Only the home screen (floating navigation bar), the icon,
-and the splash screen use Miuix / the new design. The "show
-navigation bar labels" setting below is the one exception: it adds a
-single switch row to the Appearance settings, and the home screen
-reads it. (The settings revert itself was reversed on 2026-11-12:
-the user asked for all pages to be Miuix, and the settings pages
-were migrated then — see "Settings pages" below. Only the More
-page's revert note still applies to nothing; More is Miuix.)
-
-### Floating bar transparency
-
-The floating bar's background is `surfaceContainer` at 0.75 alpha, so
-content shows through it. A real frosted-glass blur would need
-`miuix-blur`, which requires minSdk 33; the translucent color is the
-effect without a minSdk bump.
+  designed. The reader is untouched.
+- History: the settings and More pages were first restyled to Miuix
+  on 2026-11-11 and reverted the same day at the user's request
+  ("不变动其他页面"); the user reversed that the next day and the
+  settings pages were migrated then — see "Settings pages" below.
 
 ### Rename: Mihon → Tychii
 
@@ -438,34 +295,40 @@ effect without a minSdk bump.
   MangaBaka, MangaUpdates, MyAnimeList, Shikimori).
 - Package name, applicationId and code references to Mihon are untouched.
 
-### Icon (redesigned)
+## Icon: Taiji (2026-11-12)
 
-The launcher icon is a new mark: a white bold "T" whose stem ends in a
-bookmark V-notch, on a pure black background (`#000000`) with a soft
-dark-grey glow (`#262626`) behind the mark. Strictly black and white,
-no color.
+The launcher icon is a Taiji (yin-yang) symbol. Since 2026-11-12 the
+icon is the SAME in day and night mode (user choice: keep it
+consistent) — the night-qualified resources are byte-identical copies
+of the day ones, so dark mode shows the white background and
+black-outlined Taiji, exactly like day mode. The splash background
+(`@color/splash`) is white in both modes too, and the More/About
+header (`LogoHeader`) shows the same day Taiji in dark mode.
 
-- `app/src/main/res/drawable/ic_launcher_foreground.xml` — the T mark.
-- `app/src/main/res/drawable/ic_launcher_background.xml` — black + glow.
-- `app/src/main/res/drawable/ic_launcher_monochrome.xml` — the T mark
-  in white, for themed icons.
-- The same T mark and black background are also in
-  `app/src/debug/res/drawable/` (`ic_launcher_foreground.xml`,
-  `ic_launcher_background.xml`). The debug source set overrides `main`,
-  so a debug build (what Android Studio runs by default) was still
-  showing Mihon's original icon until these were replaced too.
-
-A rendered preview is in `~/workspace/imagine_media/` as
-`media-generation-tychii-icon-bw-preview-0-*.webp`.
+- Foreground (`ic_launcher_foreground.xml`, day / `drawable-night/`,
+  night — identical): a Taiji — black half + white half with an
+  S-curve, a white dot in the black half and a black dot in the white
+  half, black outline (stroke 6).
+- Background (`ic_launcher_background.xml` white /
+  `drawable-night/` white — identical).
+- Monochrome (`ic_launcher_monochrome.xml`): the Taiji half as a
+  solid shape, for themed app icons.
+- The debug source set mirrors main (foreground + background, day +
+  night) so Android Studio's debug build shows the Taiji too.
+- Splash (`ic_mihon_splash.xml`): uses the launcher foreground
+  directly, with `@color/splash` as the background (white in both
+  modes), so the splash looks exactly like the launcher icon.
+- The More/About page header (`LogoHeader`) uses the launcher
+  foreground, so it now shows the Taiji too (same day design in
+  dark mode). It uses no tint, so the Taiji keeps its own black/white
+  colors exactly like the launcher icon.
 
 ## Settings pages (2026-11-12)
 
-All settings pages are Miuix now (the 2026-11-11 "don't touch other
-pages" instruction was reversed by the user the next day). Only the
-presentation layer changed: ViewModels, data layer, navigation and
-setting keys are untouched, and every switch / option value /
-`onValueChanged` gate behaves as before. Appearance's nav-bar-labels
-switch and bar-style list are preserved.
+All settings pages are Miuix now. Only the presentation layer changed:
+ViewModels, data layer, navigation and setting keys are untouched, and
+every switch / option value / `onValueChanged` gate behaves as before.
+Appearance's nav-bar-labels switch and bar-style list are preserved.
 
 - **Central renderer** (`presentation/more/settings/`):
   `PreferenceScaffold` is a Miuix `Scaffold` + `SmallTopAppBar`
@@ -473,10 +336,13 @@ switch and bar-style list are preserved.
   not a Compose material icon); `PreferenceScreen` puts each
   `PreferenceGroup` under a `SmallTitle` header and inside one Miuix
   `Card` (12.dp side margins, 12.dp between groups, no dividers);
-  top-level items get a one-row card. Search-highlight scrolling counts
-  three lazy items per group (header, card, spacer). The highlight
-  blink (`highlightBackground`, M3 surfaceTint) is kept and applied to
-  the Miuix rows.
+  consecutive top-level items share one card too, like a group without
+  a header (2026-11-13 — they used to each get their own card, showing
+  a hairline gap between every two boxes; see "Build fixes"). Search
+  highlight scrolling counts three lazy items per group (header, card,
+  spacer) and two per run of top-level items (card, spacer). The
+  highlight blink (`highlightBackground`, M3 surfaceTint) is kept and
+  applied to the Miuix rows.
 - **Widgets** (`widget/`): `SwitchPreferenceWidget` /
   `TextPreferenceWidget` / `CheckboxPreferenceWidget` are thin wrappers
   over Miuix `SwitchPreference` / `ArrowPreference` /
@@ -639,10 +505,12 @@ navigation and all click / drag behaviour are untouched.
 - **Manga list item** (`CommonMangaItem.MangaListItem`, used by the
   library list view, browse-source list and global search): the row
   keeps its layout and selection background, gains a Miuix
-  `HorizontalDivider` with a 16.dp start inset, and the
-  continue-reading button is a Miuix `IconButton` with the same
-  primary-container fill. The Neko grid items are untouched.
-  `BaseMangaListItem` (migration only) gets the same divider.
+  `HorizontalDivider` with a 16.dp start inset in the browse-source
+  list (the library list view passes `showDivider = false` since the
+  2026-11-12 seam unification), and the continue-reading button is
+  a Miuix `IconButton` with the same primary-container fill. The Neko
+  grid items are untouched. `BaseMangaListItem` (migration only) gets
+  the same divider.
 - **Dialogs**: `SourceOptionsDialog`, `RemoveMangaDialog`, the two
   extension dialogs, the migration dialog, the extension-details
   content-warning dialog and the browse-source display-mode menu are
@@ -680,17 +548,6 @@ navigation and all click / drag behaviour are untouched.
   sources-filter and migrate-manga empty/error states now use the
   quiet `QuietEmptyScreen` instead of the shared `EmptyScreen`.
 
-## Deliberately NOT migrated
-
-- The app shell's other screens, top bars, dialogs and lists still use
-  Material3. Only the home navigation shell moved to Miuix. (Settings
-  pages are the exception since 2026-11-12 — see "Settings pages" —
-  and the manga detail page since 2026-11-12 — see "Manga detail
-  page".)
-- No `miuix-blur`: the floating bar has no blurred backdrop (solid
-  `surfaceContainer`). Blur would need minSdk 33.
-- `miuix-nav` was not adopted; Mihon's existing navigation stays.
-
 ## Remaining pages: updates, history, download, category, stats, upcoming, misc (2026-11-12)
 
 The second half of the browse batch: the main-tab list items and
@@ -719,8 +576,9 @@ Shared core (one change, many callers):
 Updates / history:
 
 - Chapter rows (`UpdatesUiItem`) and history rows (`HistoryItem`)
-  now have a Miuix `HorizontalDivider` with a 16.dp start inset
-  under them; action icons in history rows are Miuix `IconButton`s.
+  are Miuix now (dividers under them were removed in the 2026-11-12
+  seam unification); action icons in history rows are Miuix
+  `IconButton`s.
 - The updates filter dialog uses Miuix `Switch` / dividers (its
   rows are the now-Miuix `TriStateItem`); the delete-confirmation
   dialog and both history delete dialogs are `OverlayDialog`s
@@ -807,45 +665,64 @@ Deliberately kept Material3 in this batch:
   to the manga detail area.
 - Tooltips everywhere (Miuix has none).
 
+## Deliberately NOT changed
 
-## Icon: Taiji (2026-11-12)
+- The reader: gesture-driven fullscreen viewer, highest risk.
+- Neko's Feed merge (Updates+History into one tab) and its
+  edge-attached NavigationBar: Tychii keeps its 5 tabs and floating
+  bar.
+- `miuix-nav` was not adopted; Mihon's existing navigation stays.
 
-The launcher icon is now a Taiji (yin-yang) symbol, replacing the
-black-and-white "T". Since 2026-11-12 the icon is the SAME in day and
-night mode (user choice: keep it consistent) — the night-qualified
-resources are byte-identical copies of the day ones, so dark mode
-shows the white background and black-outlined Taiji, exactly like
-day mode. The splash background (`@color/splash`) is white in both
-modes too, and the More/About header (`LogoHeader`) shows the same
-day Taiji in dark mode.
+## Build fixes
 
-- Foreground (`ic_launcher_foreground.xml`, day / `drawable-night/`,
-  night — identical): a Taiji — black half + white half with an
-  S-curve, a white dot in the black half and a black dot in the white
-  half, black outline (stroke 6).
-- Background (`ic_launcher_background.xml` white /
-  `drawable-night/` white — identical).
-- Monochrome (`ic_launcher_monochrome.xml`): the Taiji half as a
-  solid shape, for themed app icons.
-- The debug source set mirrors main (foreground + background, day +
-  night) so Android Studio's debug build shows the Taiji too.
-- Splash (`ic_mihon_splash.xml`): uses the launcher foreground
-  directly, with `@color/splash` as the background (white in both
-  modes), so the splash looks exactly like the launcher icon.
-- The More/About page header (`LogoHeader`) uses the launcher
-  foreground, so it now shows the Taiji too (same day design in
-  dark mode).
-  It uses no tint, so the Taiji keeps its own black/white colors
-  exactly like the launcher icon.
+Local build errors reported by the user after each push, fixed the
+same way (read the file, check the Miuix/library source before
+asserting an API is unavailable, scan tree-wide for the same error
+class, push, verify HEAD). Compilation is unverified in the cloud
+(the Gradle daemon fails to start there); the user builds locally
+from the GitHub ZIP.
 
-## Navigation bar labels (2026-11-12)
-
-With labels on, the floating bar item is icon (28.dp) + 11.sp label.
-It now has balanced vertical padding (8.dp top, 8.dp below the
-label) so the icon and text no longer touch the bar's top and bottom
-edges. Bar height with labels is 62.dp; content clearance is 94.dp.
-The night Taiji outline is thicker (8 vs 6) so the symbol stays
-readable on the black night background.
+- 2026-11-12 — `MangaViewModel` was missing the
+  `kotlinx.coroutines.flow.asStateFlow` import, so the build failed
+  with "Unresolved reference 'asStateFlow'" at the `vibrantColor`
+  declaration. One import line (c09f6fb8).
+- 2026-11-12 — the 0.1.2 migration left
+  `SettingsItems.CheckboxItem` calling Miuix `Checkbox` with
+  Material3's `checked`/`onCheckedChange`; Miuix `Checkbox` takes
+  `state: ToggleableState` + `onClick`. Fixed by passing
+  `ToggleableState.On/Off` with `onClick = null` (the row handles
+  the click); every other Miuix `Checkbox` call site already used
+  `state` (7930bd93).
+- 2026-11-12 — two missing imports from the same migration:
+  `CategoryDialogs.kt` used `Arrangement.End` with no
+  `layout.Arrangement` import, and the detail page `MangaScreen.kt`
+  used `0.dp` / `16.dp` with no `unit.dp` import. A tree-wide scan
+  for missing `dp` / `sp` / `ToggleableState` / `Arrangement` /
+  `asStateFlow` imports then came back clean (907b7131).
+- 2026-11-12 — seven more errors from the same migration:
+  `CategoryDialogs` closed the dialog content lambda before the
+  buttons row (stray `)`); `SettingsTrackingScreen` had a duplicated
+  `}` that closed the enclosing object early; `ChapterSettingsDialog`'s
+  `cycle` lambda inferred `() -> Unit?` and MultiSelect's `toggle`
+  inferred `() -> Boolean` (both now explicit `() -> Unit`);
+  `MangaDialogs` called `stringResource` inside NumberPicker's plain
+  `(Int) -> String` label (string now hoisted); `TrackerSearch` used
+  `onSurfaceVariant`, which Miuix lacks (now `onSurfaceVariantActions`,
+  per Miuix's Monet mapping) (7b3eb981).
+- 2026-11-12 — seam unification: the top toolbar band was pure black
+  (AppBar's Miuix `surface` default) while the page is the theme
+  background, and list-item dividers drew grey ruled lines. The four
+  tab toolbars now pass `MaterialTheme.colorScheme.background`, and
+  the divider is gone on the Library/Updates/History tabs (01049272).
+- 2026-11-12 — Browse tabs as Miuix capsules, like the Library
+  category tabs (2efd108a).
+- 2026-11-13 — settings groups merged: top-level preferences that
+  are not in a group used to each get their own Card, showing a
+  hairline gap between every two boxes while grouped items sat in
+  one continuous card (seen on the Downloads page). PreferenceScreen
+  now collects consecutive top-level items into one shared Card,
+  like a group without a header; `findHighlightedIndex` was updated
+  to the new lazy-item layout (e001cc46).
 
 ## Build
 
