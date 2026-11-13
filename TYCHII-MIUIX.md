@@ -299,12 +299,16 @@ uses MaterialExpressiveTheme.
 
 Redesigned 2026-11-13 to imitate Mihon's original icon: a circle with
 the 極 character in the middle, in a frosted-glass skeuomorphic style.
-This supersedes the Taiji icon (2026-11-12–13). The 極 is Mihon's
-original glyph path (from upstream `ic_launcher_foreground.xml`),
-scaled 1.2× about its centre so it fills the disc more. The disc keeps
-Mihon's geometry (outer circle r 103.5, blue ring to r 84) and colours
-(`#0058A0` ring, `#FAFAFA` background). Day and night are separate
-versions (day/night split kept from the Taiji change).
+This supersedes the Taiji icon (2026-11-12–13). The disc keeps Mihon's
+colours (`#0058A0` ring, `#FAFAFA` background) but is larger than
+Mihon's (outer circle r 120, blue ring to r 97.4; was r 103.5 / r 84).
+Day and night are separate versions (day/night split kept from the
+Taiji change). The 極 started as Mihon's original glyph path, but later
+the same day it was replaced with a proper traditional 極 from M PLUS
+Rounded 1c Bold — the app's own font (SIL OFL) — converted from its
+TrueType outline (quadratic → cubic, `fillType="evenOdd"` so the
+enclosed counters stay holes), about 130 units wide, centred on the
+disc.
 
 - Day foreground: frosted light disc (white → pale blue vertical
   gradient), top sheen + bottom shade clipped to the disc, blue ring
