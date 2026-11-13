@@ -737,6 +737,17 @@ grid, which share `MangaCompactGridItem`; the comfortable grid was
 already title-below. The Miuix floating bar, title capsule and
 Neko theme are untouched — only the card layout follows PiliPlus.
 
+## Build fixes
+
+- 2026-11-13: the waterfall `items` calls in UpdatesUiItem.kt and
+  HistoryScreen.kt passed `span = { _, item -> ... }`, but the
+  `List<T>` overload's `span` takes only the item, not (index,
+  item) — the (index, item) form belongs to the index-aware overload,
+  whose `itemContent` also takes both. With no matching overload the
+  whole `items` call failed to resolve, cascading into "Unresolved
+  reference 'it'" / "Cannot infer type" / "@Composable invocations"
+  errors. Fixed by using `span = { item -> ... }`.
+
 ## Waterfall layout on Library, Updates and History (2026-11-13)
 
 The three main pages are now waterfall (masonry) layouts, and the

@@ -193,8 +193,9 @@ private fun HistoryScreenContent(
                 }
             },
             // Date headers span the full width; history cards flow into
-            // the two waterfall columns.
-            span = { _, item ->
+            // the two waterfall columns. The List overload's span takes
+            // only the item, not (index, item).
+            span = { item ->
                 if (item is HistoryUiModel.Header) {
                     StaggeredGridItemSpan.FullLine
                 } else {

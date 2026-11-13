@@ -66,8 +66,9 @@ internal fun LazyStaggeredGridScope.updatesUiItems(
             }
         },
         // Date headers span the full width; update cards flow into the
-        // two waterfall columns.
-        span = { _, item ->
+        // two waterfall columns. The List overload's span takes only the
+        // item, not (index, item).
+        span = { item ->
             if (item is UpdatesUiModel.Header) {
                 StaggeredGridItemSpan.FullLine
             } else {
