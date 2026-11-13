@@ -1,29 +1,28 @@
 package eu.kanade.presentation.updates
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.sizeIn
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.LazyListScope
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.lazy.staggeredgrid.LazyStaggeredGridScope
+import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridItemSpan
+import androidx.compose.foundation.lazy.staggeredgrid.items
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -41,11 +40,10 @@ import tachiyomi.domain.updates.model.UpdatesWithRelations
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.components.ListGroupHeader
 import tachiyomi.presentation.core.components.material.DISABLED_ALPHA
-import tachiyomi.presentation.core.components.material.padding
 import tachiyomi.presentation.core.i18n.stringResource
-import tachiyomi.presentation.core.util.selectedBackground
+import top.yukonga.miuix.kmp.theme.MiuixTheme
 
-internal fun LazyListScope.updatesUiItems(
+internal fun LazyStaggeredGridScope.updatesUiItems(
     uiModels: List<UpdatesUiModel>,
     selectionMode: Boolean,
     onUpdateSelected: (UpdatesItem, Boolean, Boolean) -> Unit,
@@ -65,6 +63,15 @@ internal fun LazyListScope.updatesUiItems(
             when (it) {
                 is UpdatesUiModel.Header -> "updatesHeader-${it.hashCode()}"
                 is UpdatesUiModel.Item -> "updates-${it.item.update.mangaId}-${it.item.update.chapterId}"
+            }
+        },
+        // Date headers span the full width; update cards flow into the
+        // two waterfall columns.
+        span = { _, item ->
+            if (item is UpdatesUiModel.Header) {
+                StaggeredGridItemSpan.FullLine
+            } else {
+                StaggeredGridItemSpan.SingleLane
             }
         },
     ) { item ->
@@ -110,6 +117,14 @@ internal fun LazyListScope.updatesUiItems(
     }
 }
 
+/**
+ * Waterfall card for one update: the manga cover on top and the manga
+ * title + chapter below, in a surface card — like the Library's
+ * PiliPlus-style cards, so the Updates page flows as a waterfall
+ * instead of a uniform list. The unread dot / bookmark sit on the
+ * cover, the download indicator at the cover's bottom-end; selection
+ * is a primary outline around the card with a dimmed cover.
+ */
 @Composable
 private fun UpdatesUiItem(
     update: UpdatesWithRelations,
@@ -127,93 +142,99 @@ private fun UpdatesUiItem(
     val haptic = LocalHapticFeedback.current
     val textAlpha = if (update.read) DISABLED_ALPHA else 1f
 
-    Column {
-        Row(
-            modifier = modifier
-                .selectedBackground(selected)
-                .combinedClickable(
-                    onClick = onClick,
-                    onLongClick = {
-                        onLongClick()
-                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                    },
-                )
-                .height(56.dp)
-                .padding(horizontal = MaterialTheme.padding.medium),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            MangaCover.Square(
+    Column(
+        modifier = modifier
+            .clip(RoundedCornerShape(12.dp))
+            .background(MiuixTheme.colorScheme.surfaceContainer)
+            .then(
+                if (selected) {
+                    Modifier.border(2.dp, MaterialTheme.colorScheme.primary, RoundedCornerShape(12.dp))
+                } else {
+                    Modifier
+                },
+            )
+            .combinedClickable(
+                onClick = onClick,
+                onLongClick = {
+                    onLongClick()
+                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                },
+            ),
+    ) {
+        Box(modifier = Modifier.fillMaxWidth()) {
+            MangaCover.Book(
                 modifier = Modifier
-                    .padding(vertical = 6.dp)
-                    .fillMaxHeight(),
+                    .fillMaxWidth()
+                    .alpha(if (selected) 0.76f else 1f),
                 data = update.coverData,
+                // Top corners rounded to meet the card; the bottom is
+                // square so the cover flows into the text below.
+                shape = RoundedCornerShape(topStart = 12.dp, topEnd = 12.dp),
                 onClick = onClickCover,
             )
-
-            Column(
+            Row(
                 modifier = Modifier
-                    .padding(horizontal = MaterialTheme.padding.medium)
-                    .weight(1f),
+                    .align(Alignment.TopStart)
+                    .padding(6.dp),
+                verticalAlignment = Alignment.CenterVertically,
             ) {
-                Text(
-                    text = update.mangaTitle,
-                    maxLines = 1,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = LocalContentColor.current.copy(alpha = textAlpha),
-                    overflow = TextOverflow.Ellipsis,
-                )
-
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    var textHeight by remember { mutableIntStateOf(0) }
-                    if (!update.read) {
-                        Icon(
-                            imageVector = MaterialSymbols.RoundedFilled.Circle,
-                            contentDescription = stringResource(MR.strings.unread),
-                            modifier = Modifier
-                                .height(8.dp)
-                                .padding(end = 4.dp),
-                            tint = MaterialTheme.colorScheme.primary,
-                        )
-                    }
-                    if (update.bookmark) {
-                        Icon(
-                            imageVector = MaterialSymbols.RoundedFilled.Bookmark,
-                            contentDescription = stringResource(MR.strings.action_filter_bookmarked),
-                            modifier = Modifier
-                                .sizeIn(maxHeight = with(LocalDensity.current) { textHeight.toDp() - 2.dp }),
-                            tint = MaterialTheme.colorScheme.primary,
-                        )
-                        Spacer(modifier = Modifier.width(2.dp))
-                    }
-                    Text(
-                        text = update.chapterName,
-                        maxLines = 1,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = LocalContentColor.current.copy(alpha = textAlpha),
-                        overflow = TextOverflow.Ellipsis,
-                        onTextLayout = { textHeight = it.size.height },
-                        modifier = Modifier
-                            .weight(weight = 1f, fill = false),
+                if (!update.read) {
+                    Icon(
+                        imageVector = MaterialSymbols.RoundedFilled.Circle,
+                        contentDescription = stringResource(MR.strings.unread),
+                        modifier = Modifier.size(8.dp),
+                        tint = MaterialTheme.colorScheme.primary,
                     )
-                    if (readProgress != null) {
-                        DotSeparatorText()
-                        Text(
-                            text = readProgress,
-                            maxLines = 1,
-                            color = LocalContentColor.current.copy(alpha = DISABLED_ALPHA),
-                            overflow = TextOverflow.Ellipsis,
-                        )
-                    }
+                }
+                if (update.bookmark) {
+                    Icon(
+                        imageVector = MaterialSymbols.RoundedFilled.Bookmark,
+                        contentDescription = stringResource(MR.strings.action_filter_bookmarked),
+                        modifier = Modifier.size(14.dp),
+                        tint = MaterialTheme.colorScheme.primary,
+                    )
                 }
             }
+            if (onDownloadChapter != null) {
+                ChapterDownloadIndicator(
+                    enabled = true,
+                    modifier = Modifier
+                        .align(Alignment.BottomEnd)
+                        .padding(6.dp),
+                    downloadStateProvider = downloadStateProvider,
+                    downloadProgressProvider = downloadProgressProvider,
+                    onClick = { onDownloadChapter(it) },
+                )
+            }
+        }
 
-            ChapterDownloadIndicator(
-                enabled = onDownloadChapter != null,
-                modifier = Modifier.padding(start = 4.dp),
-                downloadStateProvider = downloadStateProvider,
-                downloadProgressProvider = downloadProgressProvider,
-                onClick = { onDownloadChapter?.invoke(it) },
+        Column(modifier = Modifier.padding(horizontal = 6.dp, vertical = 5.dp)) {
+            Text(
+                text = update.mangaTitle,
+                maxLines = 1,
+                style = MaterialTheme.typography.bodyMedium,
+                color = LocalContentColor.current.copy(alpha = textAlpha),
+                overflow = TextOverflow.Ellipsis,
             )
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    text = update.chapterName,
+                    maxLines = 1,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = LocalContentColor.current.copy(alpha = textAlpha),
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.weight(weight = 1f, fill = false),
+                )
+                if (readProgress != null) {
+                    DotSeparatorText()
+                    Text(
+                        text = readProgress,
+                        maxLines = 1,
+                        color = LocalContentColor.current.copy(alpha = DISABLED_ALPHA),
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                }
+            }
         }
     }
 }

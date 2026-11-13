@@ -1,6 +1,7 @@
 package eu.kanade.presentation.updates
 
 import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.WindowInsets
@@ -42,7 +43,9 @@ import mihon.icons.materialsymbols.rounded.FlipToBack
 import mihon.icons.materialsymbols.rounded.Refresh
 import mihon.icons.materialsymbols.rounded.SelectAll
 import tachiyomi.i18n.MR
-import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.staggeredgrid.LazyVerticalStaggeredGrid
+import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridCells
+import androidx.compose.ui.unit.dp
 import tachiyomi.presentation.core.components.material.PullRefresh
 import tachiyomi.presentation.core.components.material.Scaffold
 import tachiyomi.presentation.core.i18n.stringResource
@@ -177,12 +180,16 @@ fun UpdateScreen(
                             )
                         }
                     } else {
-                        // Plain list, no fast-scroll thumb (see
-                        // LazyLibraryGrid).
-                        LazyColumn(
+                        // Waterfall grid: update cards flow into two uneven
+                        // columns (see LazyLibraryGrid). No fast-scroll
+                        // thumb.
+                        LazyVerticalStaggeredGrid(
+                            columns = StaggeredGridCells.Fixed(2),
                             // Empty space below the last item so it clears
                             // the floating bar.
-                            contentPadding = contentPadding + PaddingValues(bottom = LiquidNavBarClearance),
+                            contentPadding = contentPadding + PaddingValues(bottom = LiquidNavBarClearance) + PaddingValues(8.dp),
+                            verticalItemSpacing = 8.dp,
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
                         ) {
                             updatesUiItems(
                                 uiModels = state.getUiModel(),

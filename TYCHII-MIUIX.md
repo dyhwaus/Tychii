@@ -737,6 +737,29 @@ grid, which share `MangaCompactGridItem`; the comfortable grid was
 already title-below. The Miuix floating bar, title capsule and
 Neko theme are untouched — only the card layout follows PiliPlus.
 
+## Waterfall layout on Library, Updates and History (2026-11-13)
+
+The three main pages are now waterfall (masonry) layouts, and the
+only things floating above the content are the title capsule, the
+bottom bar and the floating action capsule (search / sort / display /
+filter) — no other overlay.
+
+- Library: the grid is now a `LazyVerticalStaggeredGrid`
+  (`LazyLibraryGrid`), so the PiliPlus-style cards (cover + a 1- or
+  2-line title) flow into two uneven columns instead of lining up in
+  uniform rows. The list display mode is untouched (still a list).
+  The Browse source grids still use the regular grid.
+- Updates: the list is now a 2-column staggered grid of cards.
+  Each update is a surface card with the manga cover on top (top
+  corners rounded) and the manga title + chapter below; the unread
+  dot / bookmark sit on the cover, the download indicator at the
+  cover's bottom-end. Date headers span the full width. Selection is
+  a primary outline around the card with a dimmed cover.
+- History: the list is now a 2-column staggered grid of cards. Each
+  entry is a surface card with the cover on top and the title +
+  chapter/time below; the favourite / delete actions sit in a small
+  row under the text. Date headers span the full width.
+
 ## Explore chips: breathing room from the toolbar and divider (2026-11-13)
 
 On the per-source Explore page the Popular / Latest / Filter chips sat

@@ -1,9 +1,14 @@
 package eu.kanade.presentation.history
 
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.staggeredgrid.LazyVerticalStaggeredGrid
+import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridCells
+import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridItemSpan
+import androidx.compose.foundation.lazy.staggeredgrid.items
+import androidx.compose.ui.unit.dp
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -37,7 +42,6 @@ import mihon.icons.materialsymbols.rounded.DeleteSweep
 import mihon.icons.materialsymbols.rounded.Search
 import tachiyomi.domain.history.model.HistoryWithRelations
 import tachiyomi.i18n.MR
-import androidx.compose.foundation.lazy.LazyColumn
 import tachiyomi.presentation.core.components.ListGroupHeader
 import tachiyomi.presentation.core.components.material.Scaffold
 import tachiyomi.presentation.core.i18n.stringResource
@@ -170,10 +174,14 @@ private fun HistoryScreenContent(
         UiPreferences.timeFormat(timeFormat, locale.platformLocale, is24HourSystem)
     }
 
-    // Plain list, no fast-scroll thumb (see LazyLibraryGrid).
-    LazyColumn(
+    // Waterfall grid: history cards flow into two uneven columns (see
+    // LazyLibraryGrid). No fast-scroll thumb.
+    LazyVerticalStaggeredGrid(
+        columns = StaggeredGridCells.Fixed(2),
         // Empty space below the last item so it clears the floating bar.
-        contentPadding = contentPadding + PaddingValues(bottom = LiquidNavBarClearance),
+        contentPadding = contentPadding + PaddingValues(bottom = LiquidNavBarClearance) + PaddingValues(8.dp),
+        verticalItemSpacing = 8.dp,
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         items(
             items = history,
@@ -182,6 +190,15 @@ private fun HistoryScreenContent(
                 when (it) {
                     is HistoryUiModel.Header -> "header"
                     is HistoryUiModel.Item -> "item"
+                }
+            },
+            // Date headers span the full width; history cards flow into
+            // the two waterfall columns.
+            span = { _, item ->
+                if (item is HistoryUiModel.Header) {
+                    StaggeredGridItemSpan.FullLine
+                } else {
+                    StaggeredGridItemSpan.SingleLane
                 }
             },
         ) { item ->
