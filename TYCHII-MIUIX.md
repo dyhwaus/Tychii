@@ -737,6 +737,19 @@ grid, which share `MangaCompactGridItem`; the comfortable grid was
 already title-below. The Miuix floating bar, title capsule and
 Neko theme are untouched — only the card layout follows PiliPlus.
 
+## Top gap on Library, Updates and History (2026-11-14)
+
+With the Mihon top-bar container gone at rest, the first row of
+covers sat right at the top and the floating title capsule cut
+into it. The three pages now have the same top gap as the other
+pages (Browse menu / More) and the Explore page: a shared
+`TopCapsuleClearance = 64.dp` of plain padding above the first
+item, so the first row clears the capsule band. It is padding, not
+a toolbar band, so when the list scrolls the covers move up
+through it and stay visible instead of hiding behind a solid bar.
+History's toolbar is now conditional too (only when searching),
+like the Library and Updates ones, so all three pages match.
+
 ## Top bar container removed on Library, Updates and Explore (2026-11-14)
 
 The title capsule stays (it is the Miuix addition, not the problem).
