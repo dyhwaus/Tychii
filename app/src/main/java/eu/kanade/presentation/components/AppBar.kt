@@ -410,24 +410,30 @@ fun SearchToolbar(
 
                 if (!searchEnabled) {
                     // Don't show search action
-                } else if (searchQuery == null && showSearchIcon) {
-                    TooltipBox(
-                        positionProvider = rememberTooltipPositionProvider(TooltipAnchorPosition.Above),
-                        tooltip = {
-                            PlainTooltip {
-                                Text(stringResource(MR.strings.action_search))
-                            }
-                        },
-                        state = rememberTooltipState(),
-                        focusable = false,
-                    ) {
-                        IconButton(
-                            onClick = onClick,
+                } else if (searchQuery == null) {
+                    // Kept as the bare null check (not `&& showSearchIcon`):
+                    // the next branch relies on searchQuery being smart-cast
+                    // to non-null here, and folding the flag into this
+                    // condition would break that cast (UNSAFE_CALL).
+                    if (showSearchIcon) {
+                        TooltipBox(
+                            positionProvider = rememberTooltipPositionProvider(TooltipAnchorPosition.Above),
+                            tooltip = {
+                                PlainTooltip {
+                                    Text(stringResource(MR.strings.action_search))
+                                }
+                            },
+                            state = rememberTooltipState(),
+                            focusable = false,
                         ) {
-                            Icon(
-                                MaterialSymbols.Rounded.Search,
-                                contentDescription = stringResource(MR.strings.action_search),
-                            )
+                            IconButton(
+                                onClick = onClick,
+                            ) {
+                                Icon(
+                                    MaterialSymbols.Rounded.Search,
+                                    contentDescription = stringResource(MR.strings.action_search),
+                                )
+                            }
                         }
                     }
                 } else if (searchQuery.isNotEmpty()) {
