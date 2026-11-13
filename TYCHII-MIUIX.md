@@ -592,6 +592,21 @@ now: a `TextButton` for Reset, a primary Miuix `Button` for Filter,
 a Miuix divider, and the header background matches the sheet surface
 (`surfaceContainerHigh`).
 
+## Hide the Updates tab (2026-11-13)
+
+A new Appearance setting, "隐藏更新页" (`pref_hide_updates_tab`,
+`UiPreferences.hideUpdatesTab`, default off). When on, the Updates
+tab is removed from the bottom bar (and the tablet navigation rail):
+`HomeScreen` builds its tab list as `TABS - UpdatesTab` and both
+the phone bar and the rail render that list, so a hidden tab is
+never selectable. Two guards keep the navigator consistent: if the
+Updates tab is the current tab when it is hidden, it falls back to
+the Library tab, and the Updates launcher shortcut (`Tab.Updates`
+from `MainActivity`) opens the Library tab instead — the shortcut
+handler reads the preference directly so the value is never stale.
+The change takes effect immediately, no restart needed. The updates
+themselves are untouched (they still arrive; only the tab is hidden).
+
 ## Remaining pages: updates, history, download, category, stats, upcoming, misc (2026-11-12)
 
 The second half of the browse batch: the main-tab list items and

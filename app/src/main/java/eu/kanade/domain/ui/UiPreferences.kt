@@ -57,6 +57,9 @@ class UiPreferences(
     // it falls back to TRANSLUCENT (see HomeScreen).
     val barStyle: Preference<BarStyle> = preferenceStore.getEnum("pref_bar_style", BarStyle.LIQUID_GLASS)
 
+    // Hides the Updates tab from the bottom bar (and the navigation rail).
+    val hideUpdatesTab: Preference<Boolean> = preferenceStore.getBoolean("pref_hide_updates_tab", false)
+
     companion object {
         fun dateFormat(format: String, locale: Locale): DateTimeFormatter = when (format) {
             "" -> DateTimeFormatter.ofLocalizedDate(FormatStyle.SHORT).withLocale(locale)

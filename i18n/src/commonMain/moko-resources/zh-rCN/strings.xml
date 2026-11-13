@@ -864,6 +864,7 @@
     <string name="pref_hide_missing_chapter_indicators">隐藏缺失章节提示符</string>
     <string name="pref_display_images_description">在漫画注释中显示图片</string>
     <string name="pref_show_navbar_labels">显示导航栏文字</string>
+    <string name="pref_hide_updates_tab">隐藏更新页</string>
     <string name="pref_bar_style">栏样式</string>
     <string name="bar_style_opaque">不透明</string>
     <string name="bar_style_translucent">半透明</string>

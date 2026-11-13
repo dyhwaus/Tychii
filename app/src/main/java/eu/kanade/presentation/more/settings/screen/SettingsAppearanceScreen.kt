@@ -171,6 +171,10 @@ object SettingsAppearanceScreen : SearchableSettings {
                     preference = uiPreferences.showNavBarLabels,
                     title = stringResource(MR.strings.pref_show_navbar_labels),
                 ),
+                Preference.PreferenceItem.SwitchPreference(
+                    preference = uiPreferences.hideUpdatesTab,
+                    title = stringResource(MR.strings.pref_hide_updates_tab),
+                ),
                 Preference.PreferenceItem.ListPreference(
                     preference = uiPreferences.barStyle,
                     entries = BarStyle.entries

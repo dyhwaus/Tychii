@@ -114,6 +114,9 @@ object HomeScreen : Screen() {
         val barStyle by remember {
             context.appGraph.uiPreferences.barStyle
         }.collectAsState()
+        val hideUpdatesTab by remember {
+            context.appGraph.uiPreferences.hideUpdatesTab
+        }.collectAsState()
         // One style for both floating bars (bottom navigation + title
         // capsule). Liquid glass only runs on API 32+; below that it
         // behaves like translucent (see MiuixGlass.kt).
@@ -123,6 +126,9 @@ object HomeScreen : Screen() {
             barStyle
         }
         val glassEnabled = effectiveBarStyle == BarStyle.LIQUID_GLASS
+        // The Updates tab can be hidden from Settings; the bar and the
+        // rail both render this list, so a hidden tab is never selectable.
+        val tabs = if (hideUpdatesTab) TABS - UpdatesTab else TABS
         // The blur source. Created unconditionally (it is only a handle);
         // it is only *applied* to the content layer when glass is enabled.
         val backdrop = rememberLayerBackdrop()
@@ -130,6 +136,14 @@ object HomeScreen : Screen() {
             tab = LibraryTab,
             key = TabNavigatorKey,
         ) { tabNavigator ->
+            // If the Updates tab is hidden while it is the current tab,
+            // fall back to the Library tab (otherwise the bar would have
+            // no selected tab).
+            LaunchedEffect(hideUpdatesTab) {
+                if (hideUpdatesTab && tabNavigator.current == UpdatesTab) {
+                    tabNavigator.current = LibraryTab
+                }
+            }
             // Provide usable navigator to content screen
             CompositionLocalProvider(LocalNavigator provides navigator) {
                 val tabletUi = isTabletUi()
@@ -169,7 +183,7 @@ object HomeScreen : Screen() {
                         ),
                         navigationItemVerticalArrangement = Arrangement.Center,
                         navigationItems = {
-                            TABS.fastForEach {
+                            tabs.fastForEach {
                                 NavigationSuiteItem(it, NavigationSuiteType.NavigationRail)
                             }
                         },
@@ -254,14 +268,14 @@ object HomeScreen : Screen() {
                         ) {
                             val scope = rememberCoroutineScope()
                             TychiiLiquidBar(
-                                tabs = TABS,
+                                tabs = tabs,
                                 selectedIndex = {
-                                    TABS.indexOfFirst {
+                                    tabs.indexOfFirst {
                                         it::class == tabNavigator.current::class
                                     }
                                 },
                                 onTabSelected = { index ->
-                                    tabNavigator.current = TABS[index]
+                                    tabNavigator.current = tabs[index]
                                 },
                                 onTabClick = { tab ->
                                     if (tabNavigator.current::class == tab::class) {
@@ -295,7 +309,16 @@ object HomeScreen : Screen() {
                     openTabEvent.receiveAsFlow().collectLatest {
                         tabNavigator.current = when (it) {
                             is Tab.Library -> LibraryTab
-                            Tab.Updates -> UpdatesTab
+                            // The Updates shortcut still arrives when the
+                            // tab is hidden; fall back to the Library tab
+                            // instead of opening a tab that is not in the
+                            // bar. Read the preference here (not the
+                            // composed state) so the value is never stale.
+                            Tab.Updates -> if (context.appGraph.uiPreferences.hideUpdatesTab.get()) {
+                                LibraryTab
+                            } else {
+                                UpdatesTab
+                            }
                             Tab.History -> HistoryTab
                             is Tab.Browse -> {
                                 if (it.toExtensions) {
