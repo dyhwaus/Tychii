@@ -188,7 +188,11 @@ fun MangaChapterListItem(
         }
         }
         if (showDivider) {
-            HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp))
+            // The divider sat flush under the date line; 8.dp on both
+            // sides centers it between two chapters (20.dp each way).
+            HorizontalDivider(
+                modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+            )
         }
     }
 }

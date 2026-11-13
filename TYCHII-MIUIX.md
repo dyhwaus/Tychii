@@ -430,7 +430,11 @@ are untouched, and the tablet two-pane layout keeps its structure.
 - **Chapter list**: rows keep `SwipeableActionsBox` (Miuix has no
   swipe actions) and their theme colors; rows are separated by Miuix
   `HorizontalDivider`s with 16.dp side insets (no divider after the
-  last chapter). The chapter header is a Miuix subtitle-style section
+  last chapter). The divider carries 8.dp vertical padding on both
+  sides (2026-11-13, from the user's detail-page screenshot: it used
+  to sit flush under the date line, reading as part of the chapter
+  above; it now sits centered between two chapters, 20.dp each way).
+  The chapter header is a Miuix subtitle-style section
   title; the missing-chapters row uses a Miuix divider. The download
   indicator's menus are `OverlayDropdownPopup`s.
 - **Assembly** (`MangaScreen`): Miuix `Scaffold` with the M3
