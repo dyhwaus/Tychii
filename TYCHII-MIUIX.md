@@ -300,10 +300,12 @@ uses MaterialExpressiveTheme.
 Redesigned 2026-11-13 to imitate Mihon's original icon: a circle with
 the 極 character in the middle, in a frosted-glass skeuomorphic style.
 This supersedes the Taiji icon (2026-11-12–13). The disc keeps Mihon's
-colours (`#0058A0` ring, `#FAFAFA` background) but is larger than
-Mihon's (outer circle r 120, blue ring to r 97.4; was r 103.5 / r 84).
-Day and night are separate versions (day/night split kept from the
-Taiji change). The 極 started as Mihon's original glyph path, then a
+background colour (`#FAFAFA`) but is larger than Mihon's (outer circle
+r 120, ring to r 97.4; was r 103.5 / r 84). The ring is black by day
+and white at night (flat `#000000` / `#FFFFFF`; it was Mihon's
+`#0058A0` blue until 2026-11-13). Day and night are separate versions
+(day/night split kept from the Taiji change). The 極 started as Mihon's
+original glyph path, then a
 proper traditional 極 from M PLUS Rounded 1c Bold (the app's own
 font, SIL OFL). Later the same day the user sent their own font file
 (`GangTieSongTiSpecial-1_1_dwmp.ttf`, "FAKE-MTRSong 80's Special V4",
@@ -316,11 +318,12 @@ The font file itself is not in the repo — only the single 極 outline
 is used, in the launcher icon.
 
 - Day foreground: frosted light disc (white → pale blue vertical
-  gradient), top sheen + bottom shade clipped to the disc, blue ring
-  with a lighter top, a thin white rim-light arc, dark `#031019` 極
+  gradient), top sheen + bottom shade clipped to the disc, flat black
+  ring with a thin white rim-light arc on top, dark `#031019` 極
   with a soft drop shadow.
 - Night foreground: frosted dark disc (dark blue-grey gradient),
-  brighter blue ring, near-white `#EDF4FA` 極, background `#1B1A1F`.
+  flat white ring (no rim light — white on white would be invisible),
+  near-white `#EDF4FA` 極, background `#1B1A1F`.
 - The frosted effect is faked with linear gradients only (a vector
   can't do noise): disc gradient, sheen/shade caps, ring gradient,
   rim light. Gradients use `aapt:attr` (`xmlns:aapt`), API 24+;
