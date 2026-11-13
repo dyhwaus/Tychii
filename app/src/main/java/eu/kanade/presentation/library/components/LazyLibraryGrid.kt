@@ -5,10 +5,10 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyGridScope
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import tachiyomi.presentation.core.components.FastScrollLazyVerticalGrid
 import tachiyomi.presentation.core.util.plus
 
 @Composable
@@ -18,7 +18,9 @@ internal fun LazyLibraryGrid(
     contentPadding: PaddingValues,
     content: LazyGridScope.() -> Unit,
 ) {
-    FastScrollLazyVerticalGrid(
+    // Plain grid, no fast-scroll thumb: the thumb sat on the right edge
+    // over the covers, next to the floating action capsule.
+    LazyVerticalGrid(
         columns = if (columns == 0) GridCells.Adaptive(128.dp) else GridCells.Fixed(columns),
         modifier = modifier,
         contentPadding = contentPadding + PaddingValues(8.dp),

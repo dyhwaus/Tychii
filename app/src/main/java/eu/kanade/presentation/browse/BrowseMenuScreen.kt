@@ -18,7 +18,7 @@ import mihon.icons.materialsymbols.rounded.Public
 import mihon.icons.materialsymbols.rounded.Sync
 import mihon.icons.materialsymbols.roundedfilled.Extension
 import tachiyomi.i18n.MR
-import tachiyomi.presentation.core.components.ScrollbarLazyColumn
+import androidx.compose.foundation.lazy.LazyColumn
 import tachiyomi.presentation.core.components.material.Scaffold
 import tachiyomi.presentation.core.i18n.stringResource
 import tachiyomi.presentation.core.util.plus
@@ -45,7 +45,8 @@ fun BrowseMenuScreen(
     ) { contentPadding ->
         // Empty space below the last item so it clears the floating bar,
         // and above the first item so it clears the title capsule band.
-        ScrollbarLazyColumn(
+        // Plain list, no scrollbar thumb (see LazyLibraryGrid).
+        LazyColumn(
             contentPadding = contentPadding + PaddingValues(
                 top = TopListGap,
                 bottom = LiquidNavBarClearance,

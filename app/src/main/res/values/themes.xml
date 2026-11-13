@@ -59,7 +59,11 @@
         <!-- Themes -->
         <item name="android:windowLightStatusBar">@bool/lightStatusBar</item>
         <item name="android:statusBarColor">@android:color/transparent</item>
-        <item name="android:navigationBarColor">@color/amoled_surface</item>
+        <!-- Transparent, like the status bar: the app draws edge-to-edge
+             and MainActivity's enableEdgeToEdge keeps it that way, so the
+             app background shows behind the gesture bar instead of a
+             solid band of a different color. -->
+        <item name="android:navigationBarColor">@android:color/transparent</item>
         <item name="android:navigationBarDividerColor" tools:targetApi="o_mr1">@null</item>
         <item name="android:enforceNavigationBarContrast" tools:targetApi="Q">false</item>
         <item name="android:enforceStatusBarContrast" tools:targetApi="Q">false</item>

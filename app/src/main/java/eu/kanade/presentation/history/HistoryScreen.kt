@@ -38,7 +38,7 @@ import mihon.icons.materialsymbols.rounded.DeleteSweep
 import mihon.icons.materialsymbols.rounded.Search
 import tachiyomi.domain.history.model.HistoryWithRelations
 import tachiyomi.i18n.MR
-import tachiyomi.presentation.core.components.FastScrollLazyColumn
+import androidx.compose.foundation.lazy.LazyColumn
 import tachiyomi.presentation.core.components.ListGroupHeader
 import tachiyomi.presentation.core.components.material.Scaffold
 import tachiyomi.presentation.core.i18n.stringResource
@@ -171,7 +171,8 @@ private fun HistoryScreenContent(
         UiPreferences.timeFormat(timeFormat, locale.platformLocale, is24HourSystem)
     }
 
-    FastScrollLazyColumn(
+    // Plain list, no fast-scroll thumb (see LazyLibraryGrid).
+    LazyColumn(
         // Empty space below the last item so it clears the floating bar,
         // and above the first item so it clears the title capsule band.
         contentPadding = contentPadding + PaddingValues(

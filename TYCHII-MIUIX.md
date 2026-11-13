@@ -700,6 +700,34 @@ capsule must stay outside the layer recorded by `layerBackdrop`
 (HomeScreen renders it as an overlay sibling of the Scaffold), or
 it would blur itself and crash hwui.
 
+## Tab lists: no scrollbar thumb, selected icon, edge-to-edge (2026-11-13)
+
+Three small fixes in one round. The tab lists (Library grid and
+list, Updates, History, Browse menu, More) no longer show the
+right-edge drag indicator: they use plain `LazyColumn` /
+`LazyVerticalGrid` instead of `FastScrollLazyColumn` /
+`FastScrollLazyVerticalGrid` / `ScrollbarLazyColumn`. The shared
+components themselves are untouched, so settings and other screens
+keep their scrollbars; only the five tabs lose the thumb (it sat
+over the covers next to the floating capsule).
+
+In liquid-glass mode the selected tab's icon vanished: the sliding
+indicator pill is a second glass layer, and it was drawn over the
+bar's Row, so it painted the blurred page over the icon. The bar
+is now three layers — glass background Row, indicator pill, then
+the tab content in its own Row on top — so the icons stay visible
+above the pill. The content Row mirrors the background Row's size
+and motion (same height, padding, rubber-band offset and press
+scale) so the icons sit exactly where they did.
+
+Edge-to-edge: the themes painted the navigation bar solid black
+(`@color/amoled_surface`, `#000000`) while the app background is
+`#1A1C1E`, so a dark band showed between the gesture bar and the
+app. `android:navigationBarColor` is now `@android:color/transparent`
+in both `values/themes.xml` (Base.Theme.Tachiyomi) and
+`values-v27/themes.xml` (Base.V27.Tachiyomi), matching the
+status bar and MainActivity's `enableEdgeToEdge`.
+
 ## Remaining pages: updates, history, download, category, stats, upcoming, misc (2026-11-12)
 
 The second half of the browse batch: the main-tab list items and

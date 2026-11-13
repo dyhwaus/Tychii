@@ -43,7 +43,7 @@ import mihon.icons.materialsymbols.rounded.FlipToBack
 import mihon.icons.materialsymbols.rounded.Refresh
 import mihon.icons.materialsymbols.rounded.SelectAll
 import tachiyomi.i18n.MR
-import tachiyomi.presentation.core.components.FastScrollLazyColumn
+import androidx.compose.foundation.lazy.LazyColumn
 import tachiyomi.presentation.core.components.material.PullRefresh
 import tachiyomi.presentation.core.components.material.Scaffold
 import tachiyomi.presentation.core.i18n.stringResource
@@ -180,7 +180,9 @@ fun UpdateScreen(
                             )
                         }
                     } else {
-                        FastScrollLazyColumn(
+                        // Plain list, no fast-scroll thumb (see
+                        // LazyLibraryGrid).
+                        LazyColumn(
                             // Empty space below the last item so it clears
                             // the floating bar, and above the first item so
                             // it clears the title capsule band.

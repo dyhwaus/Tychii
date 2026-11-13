@@ -28,6 +28,7 @@ import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
@@ -302,12 +303,12 @@ internal fun MiuixLiquidBottomBar(
                 )
                 .then(if (isBlurEnabled) interactiveHighlight.modifier else Modifier)
                 .height(64.dp)
-                .padding(4.dp),
+                .padding(4.dp)
+                .fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            CompositionLocalProvider(LocalContentColor provides tabContentColor) {
-                content()
-            }
+            // No tab content here: it lives in the overlay Row below,
+            // on top of the indicator pill.
         }
 
         if (tabWidthPx > 0f) {
@@ -398,6 +399,35 @@ internal fun MiuixLiquidBottomBar(
                         .height(56.dp)
                         .width(tabWidthDp),
                 )
+            }
+        }
+
+        // Tab content, on top of the indicator pill. The pill's glass
+        // used to be drawn over this Row, so it painted the blurred page
+        // over the selected icon and the icon vanished. This Row mirrors
+        // the background Row's size and motion (same height, padding,
+        // rubber-band offset and press scale) so the icons sit exactly
+        // where they did.
+        Row(
+            Modifier
+                .graphicsLayer {
+                    translationX = panelOffset
+                    val width = size.width.coerceAtLeast(1f)
+                    val s = lerp(
+                        1f,
+                        1f + 16.dp.toPx() / width,
+                        dampedDragAnimation.pressProgress,
+                    )
+                    scaleX = s
+                    scaleY = s
+                }
+                .height(64.dp)
+                .padding(4.dp)
+                .fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            CompositionLocalProvider(LocalContentColor provides tabContentColor) {
+                content()
             }
         }
     }

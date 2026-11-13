@@ -1,7 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <style name="Base.V27.Tachiyomi" parent="Base.Theme.Tachiyomi">
-        <item name="android:navigationBarColor">?attr/colorSurface</item>
+        <!-- Transparent, like the base theme: the navigation bar must not
+             paint a solid band between the gesture bar and the app. -->
+        <item name="android:navigationBarColor">@android:color/transparent</item>
         <item name="android:windowLightNavigationBar">@bool/lightNavigationBar</item>
     </style>
 
