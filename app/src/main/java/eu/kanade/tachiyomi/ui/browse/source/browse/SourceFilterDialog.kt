@@ -7,11 +7,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.LocalTextStyle
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -27,8 +23,12 @@ import tachiyomi.presentation.core.components.SelectItem
 import tachiyomi.presentation.core.components.SortItem
 import tachiyomi.presentation.core.components.TextItem
 import tachiyomi.presentation.core.components.TriStateItem
-import tachiyomi.presentation.core.components.material.Button
 import tachiyomi.presentation.core.i18n.stringResource
+import top.yukonga.miuix.kmp.basic.Button
+import top.yukonga.miuix.kmp.basic.ButtonDefaults
+import top.yukonga.miuix.kmp.basic.HorizontalDivider
+import top.yukonga.miuix.kmp.basic.TextButton
+import top.yukonga.miuix.kmp.theme.MiuixTheme
 
 @Composable
 fun SourceFilterDialog(
@@ -45,24 +45,23 @@ fun SourceFilterDialog(
             stickyHeader {
                 Row(
                     modifier = Modifier
-                        .background(MaterialTheme.colorScheme.background)
+                        .background(MiuixTheme.colorScheme.surfaceContainerHigh)
                         .padding(8.dp),
                 ) {
-                    TextButton(onClick = onReset) {
-                        Text(
-                            text = stringResource(MR.strings.action_reset),
-                            style = LocalTextStyle.current.copy(
-                                color = MaterialTheme.colorScheme.primary,
-                            ),
-                        )
-                    }
+                    TextButton(
+                        text = stringResource(MR.strings.action_reset),
+                        onClick = onReset,
+                    )
 
                     Spacer(modifier = Modifier.weight(1f))
 
-                    Button(onClick = {
-                        onFilter()
-                        onDismissRequest()
-                    }) {
+                    Button(
+                        onClick = {
+                            onFilter()
+                            onDismissRequest()
+                        },
+                        colors = ButtonDefaults.buttonColorsPrimary(),
+                    ) {
                         Text(stringResource(MR.strings.action_filter))
                     }
                 }

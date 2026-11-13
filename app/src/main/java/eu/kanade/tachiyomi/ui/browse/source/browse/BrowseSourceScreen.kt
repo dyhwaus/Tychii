@@ -8,9 +8,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.material3.FilterChip
-import androidx.compose.material3.FilterChipDefaults
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SnackbarHost
@@ -23,11 +20,17 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.LocalUriHandler
+import androidx.compose.ui.unit.dp
+import top.yukonga.miuix.kmp.basic.Button
+import top.yukonga.miuix.kmp.basic.ButtonDefaults
+import top.yukonga.miuix.kmp.basic.HorizontalDivider
+import top.yukonga.miuix.kmp.theme.MiuixTheme
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import dev.zacsweers.metrox.viewmodel.assistedMetroViewModel
@@ -129,7 +132,7 @@ data class BrowseSourceScreen(
             topBar = {
                 Column(
                     modifier = Modifier
-                        .background(MaterialTheme.colorScheme.surface)
+                        .background(MiuixTheme.colorScheme.surface)
                         .pointerInput(Unit) {},
                 ) {
                     BrowseSourceToolbar(
@@ -151,59 +154,32 @@ data class BrowseSourceScreen(
                             .padding(horizontal = MaterialTheme.padding.small),
                         horizontalArrangement = Arrangement.spacedBy(MaterialTheme.padding.small),
                     ) {
-                        FilterChip(
+                        FilterButton(
                             selected = state.listing == Listing.Popular,
                             onClick = {
                                 viewModel.resetFilters()
                                 viewModel.setListing(Listing.Popular)
                             },
-                            leadingIcon = {
-                                Icon(
-                                    imageVector = MaterialSymbols.RoundedFilled.Favorite,
-                                    contentDescription = null,
-                                    modifier = Modifier
-                                        .size(FilterChipDefaults.IconSize),
-                                )
-                            },
-                            label = {
-                                Text(text = stringResource(MR.strings.popular))
-                            },
+                            icon = MaterialSymbols.RoundedFilled.Favorite,
+                            label = stringResource(MR.strings.popular),
                         )
                         if (source.supportsLatest) {
-                            FilterChip(
+                            FilterButton(
                                 selected = state.listing == Listing.Latest,
                                 onClick = {
                                     viewModel.resetFilters()
                                     viewModel.setListing(Listing.Latest)
                                 },
-                                leadingIcon = {
-                                    Icon(
-                                        imageVector = MaterialSymbols.Rounded.Verified,
-                                        contentDescription = null,
-                                        modifier = Modifier
-                                            .size(FilterChipDefaults.IconSize),
-                                    )
-                                },
-                                label = {
-                                    Text(text = stringResource(MR.strings.latest))
-                                },
+                                icon = MaterialSymbols.Rounded.Verified,
+                                label = stringResource(MR.strings.latest),
                             )
                         }
                         if (state.filters.isNotEmpty()) {
-                            FilterChip(
+                            FilterButton(
                                 selected = state.listing is Listing.Search,
                                 onClick = viewModel::openFilterSheet,
-                                leadingIcon = {
-                                    Icon(
-                                        imageVector = MaterialSymbols.Rounded.FilterList,
-                                        contentDescription = null,
-                                        modifier = Modifier
-                                            .size(FilterChipDefaults.IconSize),
-                                    )
-                                },
-                                label = {
-                                    Text(text = stringResource(MR.strings.action_filter))
-                                },
+                                icon = MaterialSymbols.Rounded.FilterList,
+                                label = stringResource(MR.strings.action_filter),
                             )
                         }
                     }
@@ -314,5 +290,30 @@ data class BrowseSourceScreen(
     sealed class SearchType(val txt: String) {
         class Text(txt: String) : SearchType(txt)
         class Genre(txt: String) : SearchType(txt)
+    }
+}
+
+// Same small Miuix button chip as the global search toolbar (Miuix has
+// no chip; selected uses the primary button colors).
+@Composable
+private fun FilterButton(
+    selected: Boolean,
+    onClick: () -> Unit,
+    icon: ImageVector,
+    label: String,
+) {
+    Button(
+        onClick = onClick,
+        colors = if (selected) ButtonDefaults.buttonColorsPrimary() else ButtonDefaults.buttonColors(),
+    ) {
+        Icon(
+            imageVector = icon,
+            contentDescription = null,
+            modifier = Modifier.size(18.dp),
+        )
+        Text(
+            text = label,
+            modifier = Modifier.padding(start = 4.dp),
+        )
     }
 }

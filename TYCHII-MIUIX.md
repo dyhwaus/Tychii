@@ -574,6 +574,24 @@ navigation and all click / drag behaviour are untouched.
   sources-filter and migrate-manga empty/error states now use the
   quiet `QuietEmptyScreen` instead of the shared `EmptyScreen`.
 
+## Explore page: per-source browsing (2026-11-13)
+
+The per-source page (tap a source in Browse to see its manga, the
+"explore" page) still had the last Material3 chips in the app: the
+listing selector (Popular / Latest / Filter) was a Material3
+`FilterChip` row. It now uses the same small Miuix `Button` chips as
+the global search toolbar (selected = primary button colors), as a
+private `FilterButton` in `BrowseSourceScreen.kt`. The top band
+(toolbar + chips) sits on Miuix `surface` instead of Material
+surface, so there is no seam between the toolbar and the chips row,
+and the divider under the chips is Miuix. The filter sheet
+(`SourceFilterDialog`) keeps its shared filter rows (checkbox and
+tri-state are already Miuix; text / select / sort rows are shared
+with settings and stay as they are), but its sticky header is Miuix
+now: a `TextButton` for Reset, a primary Miuix `Button` for Filter,
+a Miuix divider, and the header background matches the sheet surface
+(`surfaceContainerHigh`).
+
 ## Remaining pages: updates, history, download, category, stats, upcoming, misc (2026-11-12)
 
 The second half of the browse batch: the main-tab list items and
