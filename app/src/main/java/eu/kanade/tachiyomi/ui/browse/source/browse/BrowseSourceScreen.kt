@@ -36,6 +36,7 @@ import cafe.adriel.voyager.navigator.currentOrThrow
 import dev.zacsweers.metrox.viewmodel.assistedMetroViewModel
 import eu.kanade.presentation.browse.BrowseSourceContent
 import eu.kanade.presentation.browse.MissingSourceScreen
+import eu.kanade.tachiyomi.ui.home.HomeScreen
 import eu.kanade.presentation.browse.components.BrowseSourceToolbar
 import eu.kanade.presentation.browse.components.RemoveMangaDialog
 import eu.kanade.presentation.category.components.ChangeCategoryDialog
@@ -126,6 +127,14 @@ data class BrowseSourceScreen(
 
         LaunchedEffect(source) {
             assistUrl = (source as? HttpSource)?.getHomeUrl()
+        }
+
+        // No title capsule on the Explore page: it floats over the top
+        // of the covers and cuts them off. The toolbar already shows
+        // the source name. Returning to the Browse menu restores the
+        // capsule (BrowseTab sets it on entry).
+        LaunchedEffect(Unit) {
+            HomeScreen.showTitleCapsule(false)
         }
 
         Scaffold(

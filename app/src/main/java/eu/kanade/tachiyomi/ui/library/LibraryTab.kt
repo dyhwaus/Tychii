@@ -307,13 +307,10 @@ data object LibraryTab : Tab {
             HomeScreen.showBottomNav(!state.selectionMode)
         }
 
-        // The title capsule hides while selecting or searching (the
-        // selection counter / search field would sit under it).
-        // Tablets have no capsule, so the check there is a no-op.
-        LaunchedEffect(state.selectionMode, state.searchQuery) {
-            HomeScreen.showTitleCapsule(
-                !state.selectionMode && state.searchQuery == null,
-            )
+        // No title capsule on the Library page: it floats over the top
+        // of the covers and cuts them off.
+        LaunchedEffect(Unit) {
+            HomeScreen.showTitleCapsule(false)
         }
 
         LaunchedEffect(state.isLoading) {

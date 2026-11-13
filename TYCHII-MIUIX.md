@@ -737,6 +737,15 @@ grid, which share `MangaCompactGridItem`; the comfortable grid was
 already title-below. The Miuix floating bar, title capsule and
 Neko theme are untouched — only the card layout follows PiliPlus.
 
+## Top overlay removed on Library, Updates and Explore (2026-11-14)
+
+The floating title capsule (the top overlay) is hidden on the
+Library, Updates and per-source Explore pages, so it no longer
+floats over the top of the covers and cuts them off. The toolbars
+stay (they hold the back button / search / selection actions). The
+History page keeps its capsule, and returning to the Browse menu
+restores it there.
+
 ## Build fixes
 
 - 2026-11-13: the waterfall `items` calls in UpdatesUiItem.kt and
@@ -983,6 +992,15 @@ Deliberately kept Material3 in this batch:
   edge-attached NavigationBar: Tychii keeps its 5 tabs and floating
   bar.
 - `miuix-nav` was not adopted; Mihon's existing navigation stays.
+
+## Top overlay removed on Library, Updates and Explore (2026-11-14)
+
+The floating title capsule (the top overlay) is hidden on the
+Library, Updates and per-source Explore pages, so it no longer
+floats over the top of the covers and cuts them off. The toolbars
+stay (they hold the back button / search / selection actions). The
+History page keeps its capsule, and returning to the Browse menu
+restores it there.
 
 ## Build fixes
 
