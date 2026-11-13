@@ -914,6 +914,11 @@ Deliberately kept Material3 in this batch:
 
 ## Build fixes
 
+- 2026-11-13 (9e1ea10a): the PiliPlus card restyle removed the `Color`
+  import along with the deleted title overlay, but `selectedOutline`
+  (line ~301) still takes a `Color` parameter — the import is restored.
+  `Brush` and `Shadow` are still unused and stay removed.
+
 Local build errors reported by the user after each push, fixed the
 same way (read the file, check the Miuix/library source before
 asserting an API is unavailable, scan tree-wide for the same error
