@@ -39,7 +39,10 @@ data class BrowseSectionScreen(val section: BrowseSection) : Screen() {
     @Composable
     override fun Content() {
         val navigator = LocalNavigator.currentOrThrow
-        val navigateUp = { navigator.pop() }
+        // navigator.pop() returns Boolean; the explicit Unit type keeps
+        // the lambda from inferring () -> Boolean, which the call sites
+        // below would reject.
+        val navigateUp: () -> Unit = { navigator.pop() }
         when (section) {
             BrowseSection.Sources -> {
                 BrowseSectionContent(

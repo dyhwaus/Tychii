@@ -822,6 +822,11 @@ from the GitHub ZIP.
   now collects consecutive top-level items into one shared Card,
   like a group without a header; `findHighlightedIndex` was updated
   to the new lazy-item layout (e001cc46).
+- 2026-11-13 — `BrowseSectionScreen` held `val navigateUp =
+  { navigator.pop() }`; `pop()` returns Boolean, so the lambda
+  inferred `() -> Boolean` and the three section call sites
+  rejected it (expected `() -> Unit`). The val is now typed
+  explicitly `() -> Unit`, which coerces the Boolean result.
 
 ## Build
 
