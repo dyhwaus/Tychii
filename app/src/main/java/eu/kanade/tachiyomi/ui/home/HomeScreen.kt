@@ -289,13 +289,19 @@ object HomeScreen : Screen() {
                         // Centered page-title capsule, replacing the
                         // top-left title of each tab's own toolbar. The Box
                         // is the 64.dp toolbar band below the status bar,
-                        // and the capsule is centered in it. Hidden while
+                        // and the capsule is centered in it. The extra
+                        // 8.dp top padding keeps the capsule clear of the
+                        // status bar: centered in the bare 64.dp band it
+                        // sat only ~12.dp below the status bar and read
+                        // as touching it, especially on pages whose own
+                        // toolbar is gone (e.g. Extensions). Hidden while
                         // a tab is searching or selecting (see
                         // showTitleCapsule above).
                         Box(
                             modifier = Modifier
                                 .align(Alignment.TopCenter)
                                 .statusBarsPadding()
+                                .padding(top = 8.dp)
                                 .height(64.dp)
                                 .fillMaxWidth(),
                             contentAlignment = Alignment.Center,

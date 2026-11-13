@@ -61,13 +61,13 @@ fun MoreScreen(
         LazyColumn(
             contentPadding = contentPadding + PaddingValues(bottom = LiquidNavBarClearance),
         ) {
-            // Top blank band: the other main tabs have a 64.dp toolbar
-            // occupying the top band under the title capsule, so their
-            // content starts below it. This page has no top bar — without
-            // this spacer the first row would slide under the capsule
-            // and its text would overlap it.
+            // Top blank band: the title capsule floats in a 64.dp band
+            // plus 8.dp of extra top padding (see TopCapsuleClearance),
+            // so this page's content starts below it. This page has no
+            // top bar — without this spacer the first row would slide
+            // under the capsule and its text would overlap it.
             item {
-                Spacer(modifier = Modifier.height(64.dp))
+                Spacer(modifier = Modifier.height(72.dp))
             }
             // Grouped Miuix cards, one card per group (same grouping the
             // old dividers marked). No dividers between rows — that is
