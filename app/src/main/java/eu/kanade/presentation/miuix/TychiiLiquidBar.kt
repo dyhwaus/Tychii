@@ -122,3 +122,11 @@ private val LiquidBarVerticalPadding = 8.dp
 // whole content for it, because that left a dead band behind the bar
 // that the covers scrolled under.
 val LiquidNavBarClearance = 96.dp
+
+// Top clearance for the tab lists: the title capsule floats in a
+// 64.dp band below the status bar, so a list needs this much empty
+// space above its first item for the item to clear the capsule. It
+// is plain padding, not a toolbar band, so when the list scrolls the
+// covers move up through it and stay visible instead of hiding
+// behind a solid bar.
+val TopCapsuleClearance = 64.dp

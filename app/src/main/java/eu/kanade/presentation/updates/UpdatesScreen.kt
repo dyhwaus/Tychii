@@ -28,6 +28,7 @@ import eu.kanade.presentation.manga.components.ChapterDownloadAction
 import eu.kanade.presentation.manga.components.MangaBottomActionMenu
 import eu.kanade.presentation.miuix.CapsuleAction
 import eu.kanade.presentation.miuix.LiquidNavBarClearance
+import eu.kanade.presentation.miuix.TopCapsuleClearance
 import eu.kanade.presentation.util.isTabletUi
 import eu.kanade.tachiyomi.data.download.model.Download
 import eu.kanade.tachiyomi.ui.home.HomeScreen
@@ -193,8 +194,12 @@ fun UpdateScreen(
                         LazyVerticalStaggeredGrid(
                             columns = StaggeredGridCells.Fixed(2),
                             // Empty space below the last item so it clears
-                            // the floating bar.
-                            contentPadding = contentPadding + PaddingValues(bottom = LiquidNavBarClearance) + PaddingValues(8.dp),
+                            // the floating bar, and above the first item so
+                            // it clears the floating capsule. The top gap
+                            // is plain padding, not a toolbar band, so when
+                            // scrolling the covers move up through it and
+                            // stay visible.
+                            contentPadding = contentPadding + PaddingValues(top = TopCapsuleClearance, bottom = LiquidNavBarClearance) + PaddingValues(8.dp),
                             verticalItemSpacing = 8.dp,
                             horizontalArrangement = Arrangement.spacedBy(8.dp),
                         ) {

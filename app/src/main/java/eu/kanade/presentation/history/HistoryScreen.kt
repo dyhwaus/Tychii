@@ -30,6 +30,7 @@ import eu.kanade.presentation.components.relativeDateText
 import eu.kanade.presentation.history.components.HistoryItem
 import eu.kanade.presentation.miuix.CapsuleAction
 import eu.kanade.presentation.miuix.LiquidNavBarClearance
+import eu.kanade.presentation.miuix.TopCapsuleClearance
 import eu.kanade.presentation.theme.TachiyomiPreviewTheme
 import eu.kanade.presentation.util.isTabletUi
 import eu.kanade.presentation.util.rememberIs24HourSystem
@@ -94,39 +95,46 @@ fun HistoryScreen(
         // behavior on the toolbar: a pinned scroll behavior would tint
         // the toolbar (surfaceTint overlay) as soon as the list scrolls.
         contentWindowInsets = WindowInsets(0, 0, 0, 0),
+        // No top bar at rest: the toolbar is an original Mihon
+        // container whose band sits above the covers and cuts them
+        // off. It only appears when searching, when its field is
+        // actually needed. The title lives in the floating capsule
+        // and search in the floating action capsule.
         topBar = { _ ->
-            SearchToolbar(
-                // The bar sits on the page background: AppBar's Miuix-surface
-                // default is pure black in dark mode and showed as a band.
-                backgroundColor = MaterialTheme.colorScheme.background,
-                titleContent = { if (isTabletUi()) AppBarTitle(stringResource(MR.strings.history)) },
-                searchQuery = state.searchQuery,
-                onChangeSearchQuery = onSearchQueryChange,
-                // Phones: the floating capsule provides the search icon,
-                // so the toolbar's magnifier is hidden there; tablets
-                // keep it (no capsule there). The reset button while
-                // searching still shows.
-                showSearchIcon = isTabletUi(),
-                actions = {
-                    // Phones: the centered title capsule floats in this
-                    // same 64.dp band, and the action icon sat under it.
-                    // Hidden on phones so the band holds only the capsule;
-                    // tablets keep it (no capsule there).
-                    if (isTabletUi()) {
-                        AppBarActions(
-                            listOf(
-                                AppBar.Action(
-                                    title = stringResource(MR.strings.pref_clear_history),
-                                    icon = MaterialSymbols.Rounded.DeleteSweep,
-                                    onClick = {
-                                        onDialogChange(HistoryViewModel.Dialog.DeleteAll)
-                                    },
+            if (state.searchQuery != null) {
+                SearchToolbar(
+                    // The bar sits on the page background: AppBar's Miuix-surface
+                    // default is pure black in dark mode and showed as a band.
+                    backgroundColor = MaterialTheme.colorScheme.background,
+                    titleContent = { if (isTabletUi()) AppBarTitle(stringResource(MR.strings.history)) },
+                    searchQuery = state.searchQuery,
+                    onChangeSearchQuery = onSearchQueryChange,
+                    // Phones: the floating capsule provides the search icon,
+                    // so the toolbar's magnifier is hidden there; tablets
+                    // keep it (no capsule there). The reset button while
+                    // searching still shows.
+                    showSearchIcon = isTabletUi(),
+                    actions = {
+                        // Phones: the centered title capsule floats in this
+                        // same 64.dp band, and the action icon sat under it.
+                        // Hidden on phones so the band holds only the capsule;
+                        // tablets keep it (no capsule there).
+                        if (isTabletUi()) {
+                            AppBarActions(
+                                listOf(
+                                    AppBar.Action(
+                                        title = stringResource(MR.strings.pref_clear_history),
+                                        icon = MaterialSymbols.Rounded.DeleteSweep,
+                                        onClick = {
+                                            onDialogChange(HistoryViewModel.Dialog.DeleteAll)
+                                        },
+                                    ),
                                 ),
-                            ),
-                        )
-                    }
-                },
-            )
+                            )
+                        }
+                    },
+                )
+            }
         },
         snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
     ) { contentPadding ->
@@ -178,8 +186,12 @@ private fun HistoryScreenContent(
     // LazyLibraryGrid). No fast-scroll thumb.
     LazyVerticalStaggeredGrid(
         columns = StaggeredGridCells.Fixed(2),
-        // Empty space below the last item so it clears the floating bar.
-        contentPadding = contentPadding + PaddingValues(bottom = LiquidNavBarClearance) + PaddingValues(8.dp),
+        // Empty space below the last item so it clears the floating
+        // bar, and above the first item so it clears the floating
+        // capsule. The top gap is plain padding, not a toolbar band,
+        // so when scrolling the covers move up through it and stay
+        // visible.
+        contentPadding = contentPadding + PaddingValues(top = TopCapsuleClearance, bottom = LiquidNavBarClearance) + PaddingValues(8.dp),
         verticalItemSpacing = 8.dp,
         horizontalArrangement = Arrangement.spacedBy(8.dp),
     ) {

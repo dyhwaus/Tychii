@@ -19,6 +19,7 @@ import androidx.compose.ui.platform.LocalLayoutDirection
 import eu.kanade.core.preference.PreferenceMutableState
 import eu.kanade.presentation.miuix.CapsuleAction
 import eu.kanade.presentation.miuix.LiquidNavBarClearance
+import eu.kanade.presentation.miuix.TopCapsuleClearance
 import eu.kanade.tachiyomi.ui.home.HomeScreen
 import eu.kanade.tachiyomi.ui.library.LibraryItem
 import kotlinx.coroutines.delay
@@ -167,8 +168,13 @@ fun LibraryContent(
                 // already applied the Scaffold's top/start/end padding
                 // (the 64.dp toolbar band), so adding it here again
                 // counted the band twice and pushed the first row much
-                // lower than the other pages' first item.
+                // lower than the other pages' first item. The top gap
+                // is TopCapsuleClearance: plain padding (not a toolbar
+                // band) so the first row clears the floating capsule
+                // and, when scrolling, the covers move up through it
+                // and stay visible.
                 contentPadding = PaddingValues(
+                    top = TopCapsuleClearance,
                     bottom = contentPadding.calculateBottomPadding() + LiquidNavBarClearance,
                 ),
                 hasActiveFilters = hasActiveFilters,
