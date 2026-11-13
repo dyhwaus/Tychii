@@ -737,6 +737,13 @@ grid, which share `MangaCompactGridItem`; the comfortable grid was
 already title-below. The Miuix floating bar, title capsule and
 Neko theme are untouched — only the card layout follows PiliPlus.
 
+## Explore chips: breathing room from the toolbar and divider (2026-11-13)
+
+On the per-source Explore page the Popular / Latest / Filter chips sat
+flush against the toolbar above and the divider below, with no gap
+either side. The chips row now has 8.dp of vertical padding, so it
+breathes on both sides.
+
 ## Floating action capsule: clear of the right edge (2026-11-13)
 
 The floating action capsule (search / sort / display / filter) sat

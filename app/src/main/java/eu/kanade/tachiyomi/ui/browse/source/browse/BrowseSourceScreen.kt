@@ -151,7 +151,13 @@ data class BrowseSourceScreen(
                     Row(
                         modifier = Modifier
                             .horizontalScroll(rememberScrollState())
-                            .padding(horizontal = MaterialTheme.padding.small),
+                            // Breathing room above and below the chips: they
+                            // used to sit flush against the toolbar above
+                            // and the divider below.
+                            .padding(
+                                horizontal = MaterialTheme.padding.small,
+                                vertical = 8.dp,
+                            ),
                         horizontalArrangement = Arrangement.spacedBy(MaterialTheme.padding.small),
                     ) {
                         FilterButton(
