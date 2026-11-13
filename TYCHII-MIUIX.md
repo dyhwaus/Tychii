@@ -647,6 +647,20 @@ when there are no tabs the icons stand alone on the same row):
 The settings sheet itself is unchanged (still the full sort /
 display / filter pages). The top-bar actions stay tablet-only.
 
+## Bottom-bar clearance lives on the lists (2026-11-13)
+
+The tab content used to end 96.dp above the bottom (a padding on
+HomeScreen's outer content box), leaving a dead band behind the
+floating bar — and the covers still scrolled under it, so the last
+row showed only half a cover at the bottom. The band is gone: the
+content now runs to the system navigation bar and the page is one
+continuous background (the Scaffold's). Each tab list pads its own
+bottom instead, by the shared `LiquidNavBarClearance` (96.dp, in
+`TychiiLiquidBar.kt`): Library grid/list, Updates, History, Browse
+menu, More. The last item now scrolls fully above the bar. (The
+bar is hidden while the Library selection menu is showing, so the
+extra bottom space there is harmless.)
+
 ## Remaining pages: updates, history, download, category, stats, upcoming, misc (2026-11-12)
 
 The second half of the browse batch: the main-tab list items and

@@ -1,5 +1,6 @@
 package eu.kanade.presentation.browse
 
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.height
@@ -8,6 +9,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import eu.kanade.presentation.miuix.LiquidNavBarClearance
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.rounded.Public
 import mihon.icons.materialsymbols.rounded.Sync
@@ -16,6 +18,7 @@ import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.components.ScrollbarLazyColumn
 import tachiyomi.presentation.core.components.material.Scaffold
 import tachiyomi.presentation.core.i18n.stringResource
+import tachiyomi.presentation.core.util.plus
 import top.yukonga.miuix.kmp.basic.Card
 import top.yukonga.miuix.kmp.preference.ArrowPreference
 
@@ -31,7 +34,10 @@ fun BrowseMenuScreen(
         // re-apply them (dead strips top and bottom).
         contentWindowInsets = WindowInsets(0, 0, 0, 0),
     ) { contentPadding ->
-        ScrollbarLazyColumn(contentPadding = contentPadding) {
+        // Empty space below the last item so it clears the floating bar.
+        ScrollbarLazyColumn(
+            contentPadding = contentPadding + PaddingValues(bottom = LiquidNavBarClearance),
+        ) {
             // Top blank band: the other main tabs have a 64.dp toolbar
             // occupying the top band under the title capsule, so their
             // content starts below it. This page has no top bar — without

@@ -2,6 +2,7 @@ package eu.kanade.presentation.updates
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -23,6 +24,7 @@ import eu.kanade.presentation.components.AppBar
 import eu.kanade.presentation.components.AppBarActions
 import eu.kanade.presentation.manga.components.ChapterDownloadAction
 import eu.kanade.presentation.manga.components.MangaBottomActionMenu
+import eu.kanade.presentation.miuix.LiquidNavBarClearance
 import eu.kanade.presentation.util.isTabletUi
 import eu.kanade.tachiyomi.data.download.model.Download
 import eu.kanade.tachiyomi.ui.updates.UpdatesItem
@@ -44,6 +46,7 @@ import tachiyomi.presentation.core.i18n.stringResource
 import eu.kanade.presentation.components.QuietEmptyScreen
 import tachiyomi.presentation.core.screens.LoadingScreen
 import tachiyomi.presentation.core.theme.active
+import tachiyomi.presentation.core.util.plus
 import kotlin.time.Duration.Companion.seconds
 
 @Composable
@@ -138,7 +141,10 @@ fun UpdateScreen(
                         }
                     } else {
                         FastScrollLazyColumn(
-                            contentPadding = contentPadding,
+                            // Empty space below the last item so it clears
+                            // the floating bar.
+                            contentPadding = contentPadding +
+                                PaddingValues(bottom = LiquidNavBarClearance),
                         ) {
                             updatesLastUpdatedItem(lastUpdated)
 

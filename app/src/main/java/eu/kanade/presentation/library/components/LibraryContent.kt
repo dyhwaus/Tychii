@@ -21,6 +21,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalLayoutDirection
 import eu.kanade.core.preference.PreferenceMutableState
+import eu.kanade.presentation.miuix.LiquidNavBarClearance
 import eu.kanade.tachiyomi.ui.library.LibraryItem
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -126,7 +127,12 @@ fun LibraryContent(
         ) {
             LibraryPager(
                 state = pagerState,
-                contentPadding = PaddingValues(bottom = contentPadding.calculateBottomPadding()),
+                // The grid needs this much empty space below its last row
+                // so the row clears the floating bar (HomeScreen no longer
+                // insets the whole content for it).
+                contentPadding = PaddingValues(
+                    bottom = contentPadding.calculateBottomPadding() + LiquidNavBarClearance,
+                ),
                 hasActiveFilters = hasActiveFilters,
                 selection = selection,
                 searchQuery = searchQuery,

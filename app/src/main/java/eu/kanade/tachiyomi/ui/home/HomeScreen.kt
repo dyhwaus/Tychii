@@ -8,7 +8,6 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.animation.togetherWith
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -90,12 +89,6 @@ object HomeScreen : Screen() {
 
     @Suppress("ConstPropertyName")
     private const val TabNavigatorKey = "HomeTabs"
-
-    // Bottom padding for tab content so nothing hides behind the liquid
-    // bar: the bar is 64.dp tall with or without labels, plus 32.dp of
-    // bottom offset (+ shadow). The navigation-bar inset is already in the
-    // Scaffold's PaddingValues.
-    private val LiquidNavBarClearance = 96.dp
 
     private val TABS = listOf(
         LibraryTab,
@@ -210,11 +203,17 @@ object HomeScreen : Screen() {
                             // floating bar in dark mode.
                             containerColor = MaterialTheme.colorScheme.background,
                         ) { paddingValues ->
+                            // No bottom clearance and no background of its
+                            // own here: the content used to end 96.dp above
+                            // the bottom, leaving a dead band behind the bar
+                            // that the covers scrolled under (only half a
+                            // cover showed at the bottom). Each tab list now
+                            // pads its own bottom by LiquidNavBarClearance,
+                            // so its last item clears the bar, and the page
+                            // is one continuous background (the Scaffold's).
                             Box(
                                 modifier = Modifier
                                     .padding(paddingValues)
-                                    .padding(bottom = LiquidNavBarClearance)
-                                    .background(MaterialTheme.colorScheme.background)
                                     .then(
                                         if (glassEnabled) {
                                             Modifier.layerBackdrop(backdrop)

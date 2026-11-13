@@ -22,6 +22,7 @@ import eu.kanade.presentation.components.AppBarTitle
 import eu.kanade.presentation.components.SearchToolbar
 import eu.kanade.presentation.components.relativeDateText
 import eu.kanade.presentation.history.components.HistoryItem
+import eu.kanade.presentation.miuix.LiquidNavBarClearance
 import eu.kanade.presentation.theme.TachiyomiPreviewTheme
 import eu.kanade.presentation.util.isTabletUi
 import eu.kanade.presentation.util.rememberIs24HourSystem
@@ -38,6 +39,7 @@ import tachiyomi.presentation.core.components.material.Scaffold
 import tachiyomi.presentation.core.i18n.stringResource
 import eu.kanade.presentation.components.QuietEmptyScreen
 import tachiyomi.presentation.core.screens.LoadingScreen
+import tachiyomi.presentation.core.util.plus
 import tachiyomi.presentation.core.util.collectAsState
 
 @Composable
@@ -133,7 +135,8 @@ private fun HistoryScreenContent(
     }
 
     FastScrollLazyColumn(
-        contentPadding = contentPadding,
+        // Empty space below the last item so it clears the floating bar.
+        contentPadding = contentPadding + PaddingValues(bottom = LiquidNavBarClearance),
     ) {
         items(
             items = history,

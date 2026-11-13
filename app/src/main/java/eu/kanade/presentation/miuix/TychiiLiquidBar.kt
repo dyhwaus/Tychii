@@ -114,3 +114,11 @@ fun TychiiLiquidBar(
 /** The capsule's outer padding from the screen edges and the gesture bar. */
 private val LiquidBarOuterPadding = 12.dp
 private val LiquidBarVerticalPadding = 8.dp
+
+// Bottom clearance for the tab lists: the bar is 64.dp tall and floats
+// 8.dp above the gesture bar, so a list needs this much empty space
+// below its last item for the item to clear the bar. Each list adds it
+// to its own bottom content padding; HomeScreen does not inset the
+// whole content for it, because that left a dead band behind the bar
+// that the covers scrolled under.
+val LiquidNavBarClearance = 96.dp
