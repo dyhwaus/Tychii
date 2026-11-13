@@ -661,6 +661,35 @@ menu, More. The last item now scrolls fully above the bar. (The
 bar is hidden while the Library selection menu is showing, so the
 extra bottom space there is harmless.)
 
+## Floating action capsule (2026-11-13)
+
+The search/sort/display/filter icons (and each tab's own actions)
+live in a floating Miuix capsule on the right edge, over the list —
+`MiuixFloatingCapsule`, same material as the title capsule and the
+bottom bar (solid surfaceContainer, 0.75 alpha, or liquid glass with
+blur + vibrancy + tilt highlight, by BarStyle). No layer behind it:
+it floats over the covers with only a 12.dp gap from the screen
+edge, covering part of the content while shown. It hides once the
+user has scrolled down past 120.dp (a nested-scroll observer in
+HomeScreen that consumes nothing) and comes back on any upward
+scroll, on tab switch, and it hides while searching or selecting
+(same condition as the title capsule). Each tab reports its actions
+to HomeScreen (conflated channel, re-reported when the state they
+depend on changes); a tab with no actions reports an empty list.
+Library reports search/sort/display/filter (the sort/display
+dropdowns still render in the Library content, from the root
+scaffold; the tab row holds only the category tabs now, and the
+toolbar magnifier is hidden on phones via SearchToolbar's
+`showSearchIcon` — the reset button while searching still shows).
+Updates reports filter/upcoming/refresh, History reports
+search/clear-history. Browse menu and More report nothing (the
+capsule stays hidden there); the pushed Browse sections keep their
+own toolbars. Tablets never show it (they keep the toolbar actions
+and the navigation rail). Like the other two glass pieces, the
+capsule must stay outside the layer recorded by `layerBackdrop`
+(HomeScreen renders it as an overlay sibling of the Scaffold), or
+it would blur itself and crash hwui.
+
 ## Remaining pages: updates, history, download, category, stats, upcoming, misc (2026-11-12)
 
 The second half of the browse batch: the main-tab list items and

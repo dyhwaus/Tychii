@@ -315,6 +315,10 @@ fun SearchToolbar(
     titleContent: @Composable () -> Unit = {},
     navigateUp: (() -> Unit)? = null,
     searchEnabled: Boolean = true,
+    // Hides only the magnifier (the search field's reset button still
+    // shows while searching). The main tabs pass false on phones: the
+    // floating capsule provides the search icon there.
+    showSearchIcon: Boolean = true,
     placeholderText: String? = null,
     onSearch: (String) -> Unit = {},
     onClickCloseSearch: () -> Unit = { onChangeSearchQuery(null) },
@@ -406,7 +410,7 @@ fun SearchToolbar(
 
                 if (!searchEnabled) {
                     // Don't show search action
-                } else if (searchQuery == null) {
+                } else if (searchQuery == null && showSearchIcon) {
                     TooltipBox(
                         positionProvider = rememberTooltipPositionProvider(TooltipAnchorPosition.Above),
                         tooltip = {

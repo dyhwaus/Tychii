@@ -5,7 +5,9 @@ import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.Arrangement
@@ -30,6 +32,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
@@ -37,7 +40,12 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
+import androidx.compose.ui.input.nestedscroll.NestedScrollSource
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
@@ -49,7 +57,9 @@ import cafe.adriel.voyager.navigator.currentOrThrow
 import cafe.adriel.voyager.navigator.tab.LocalTabNavigator
 import cafe.adriel.voyager.navigator.tab.TabNavigator
 import eu.kanade.domain.ui.model.BarStyle
+import eu.kanade.presentation.miuix.CapsuleAction
 import eu.kanade.presentation.miuix.MiuixCapsuleTitle
+import eu.kanade.presentation.miuix.MiuixFloatingCapsule
 import eu.kanade.presentation.miuix.TychiiLiquidBar
 import eu.kanade.presentation.theme.isMiuixGlassSupported
 import eu.kanade.presentation.util.Screen
@@ -83,6 +93,10 @@ object HomeScreen : Screen() {
     private val showBottomNavEvent = Channel<Boolean>()
     private val showTitleCapsuleEvent = Channel<Boolean>()
     private val capsuleTitleEvent = Channel<String>()
+    // The current tab's floating-capsule actions (search, sort, ...).
+    // Conflated: only the latest report matters, and a tab re-reports
+    // whenever the state its actions depend on changes.
+    private val capsuleActionsEvent = Channel<List<CapsuleAction>>(Channel.CONFLATED)
 
     @Suppress("ConstPropertyName")
     private const val TabFadeDuration = 200
@@ -161,6 +175,48 @@ object HomeScreen : Screen() {
                 LaunchedEffect(Unit) {
                     capsuleTitleEvent.receiveAsFlow().collectLatest { libraryCapsuleTitle = it }
                 }
+                // The floating capsule's actions, reported by the current
+                // tab (each tab re-reports when the state its actions
+                // depend on changes; a tab with no actions reports an
+                // empty list, hiding the capsule).
+                var capsuleActions by remember { mutableStateOf<List<CapsuleAction>>(emptyList()) }
+                LaunchedEffect(Unit) {
+                    capsuleActionsEvent.receiveAsFlow().collectLatest { capsuleActions = it }
+                }
+                // The capsule hides once the user has scrolled down past
+                // a threshold, and comes back on any upward scroll. The
+                // connection only observes (it consumes nothing), so
+                // scrolling is unaffected.
+                val capsuleHideThresholdPx = with(LocalDensity.current) { 120.dp.toPx() }
+                var capsuleScrollVisible by remember { mutableStateOf(true) }
+                var capsuleScrolledDown by remember { mutableFloatStateOf(0f) }
+                val capsuleScrollConnection = remember(capsuleHideThresholdPx) {
+                    object : NestedScrollConnection {
+                        override fun onPostScroll(
+                            consumed: Offset,
+                            available: Offset,
+                            source: NestedScrollSource,
+                        ): Offset {
+                            if (consumed.y < 0f) {
+                                capsuleScrolledDown += -consumed.y
+                                if (capsuleScrolledDown > capsuleHideThresholdPx) {
+                                    capsuleScrollVisible = false
+                                }
+                            } else if (consumed.y > 0f) {
+                                capsuleScrolledDown = 0f
+                                capsuleScrollVisible = true
+                            }
+                            return Offset.Zero
+                        }
+                    }
+                }
+                // Switching tabs shows the capsule again (the new tab
+                // starts at the top); the tab reports its own actions
+                // then too.
+                LaunchedEffect(tabNavigator.current) {
+                    capsuleScrollVisible = true
+                    capsuleScrolledDown = 0f
+                }
                 if (tabletUi) {
                     // Tablets keep the Material3 navigation rail; the floating
                     // bar is a phone layout.
@@ -186,15 +242,20 @@ object HomeScreen : Screen() {
                     }
                 } else {
                     // Phones use the liquid-glass floating bar (Wenku8Reader
-                    // style). The bar and the title capsule must stay OUTSIDE
-                    // the layer recorded by the backdrop: the backdrop is
-                    // applied only to the tab content below, and both bars
-                    // are siblings in an outer Box. Putting either inside
-                    // the recorded layer would make it blur itself and crash
-                    // hwui (infinite recursion in
+                    // style). The bar, the title capsule and the floating
+                    // action capsule must stay OUTSIDE the layer recorded
+                    // by the backdrop: the backdrop is applied only to the
+                    // tab content below, and the three are siblings in an
+                    // outer Box. Putting any of them inside the recorded
+                    // layer would make it blur itself and crash hwui
+                    // (infinite recursion in
                     // RenderNode::prepareTreeImpl — see Wenku8Reader's
                     // MainScaffold for the two verified pitfalls).
-                    Box(Modifier.fillMaxSize()) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .nestedScroll(capsuleScrollConnection),
+                    ) {
                         MiuixScaffold(
                             // The Scaffold background must match the app theme
                             // background. Miuix's own dark surface is pure black
@@ -288,6 +349,31 @@ object HomeScreen : Screen() {
                                 barStyle = effectiveBarStyle,
                                 backdrop = backdrop,
                                 tabBadge = { tab -> tabBadge(tab) },
+                            )
+                        }
+                        // Floating action capsule: the current tab's
+                        // search/sort/... icons, on the right edge over
+                        // the list. Same glass as the title capsule and
+                        // the bottom bar, so it stays outside the recorded
+                        // layer (a sibling of the Scaffold, like those
+                        // two). No layer behind it — it floats over the
+                        // covers with only a 12.dp gap from the screen
+                        // edge, covering part of the content while shown.
+                        // Hidden while searching or selecting (the title
+                        // capsule hides then too), while scrolling down,
+                        // and when the tab reports no actions.
+                        AnimatedVisibility(
+                            visible = showTitleCapsule && capsuleScrollVisible && capsuleActions.isNotEmpty(),
+                            enter = fadeIn() + slideInHorizontally(initialOffsetX = { it }),
+                            exit = fadeOut() + slideOutHorizontally(targetOffsetX = { it }),
+                            modifier = Modifier
+                                .align(Alignment.CenterEnd)
+                                .padding(end = 12.dp),
+                        ) {
+                            MiuixFloatingCapsule(
+                                actions = capsuleActions,
+                                barStyle = effectiveBarStyle,
+                                backdrop = backdrop,
                             )
                         }
                     }
@@ -473,6 +559,10 @@ object HomeScreen : Screen() {
 
     suspend fun setCapsuleTitle(title: String) {
         capsuleTitleEvent.send(title)
+    }
+
+    suspend fun setCapsuleActions(actions: List<CapsuleAction>) {
+        capsuleActionsEvent.send(actions)
     }
 
     sealed interface Tab {

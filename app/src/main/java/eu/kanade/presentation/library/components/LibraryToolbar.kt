@@ -98,11 +98,15 @@ private fun LibraryRegularToolbar(
         },
         searchQuery = searchQuery,
         onChangeSearchQuery = onSearchQueryChange,
+        // Phones: the floating capsule provides the search icon, so the
+        // toolbar's magnifier is hidden there; tablets keep it (no
+        // capsule there). The reset button while searching still shows.
+        showSearchIcon = isTabletUi(),
         actions = {
             // Phones: the centered title capsule floats in this same
             // 64.dp band, and the action icons sat under it. The icons
-            // are hidden on phones so the band holds only the capsule
-            // and the search icon; tablets keep them (no capsule there).
+            // are hidden on phones so the band holds only the capsule;
+            // tablets keep them (no capsule there).
             if (isTabletUi()) {
                 val filterTint = if (hasFilters) MaterialTheme.colorScheme.active else LocalContentColor.current
                 AppBarActions(

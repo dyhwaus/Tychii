@@ -256,6 +256,7 @@ data object LibraryTab : Tab {
                         displayMode = displayMode,
                         onDisplayModeSelected = settingsViewModel::setDisplayMode,
                         onClickFilter = viewModel::showSettingsDialog,
+                        onClickSearch = { viewModel.search("") },
                     )
                 }
             }

@@ -1,178 +1,120 @@
 package eu.kanade.presentation.library.components
 
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Row
 import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
 import dev.icerock.moko.resources.StringResource
 import mihon.icons.materialsymbols.MaterialSymbols
-import mihon.icons.materialsymbols.automirroredrounded.Sort
-import mihon.icons.materialsymbols.automirroredroundedfilled.ViewList
 import mihon.icons.materialsymbols.rounded.ArrowDownward
 import mihon.icons.materialsymbols.rounded.ArrowUpward
-import mihon.icons.materialsymbols.rounded.FilterList
-import mihon.icons.materialsymbols.roundedfilled.ViewCompact
-import mihon.icons.materialsymbols.roundedfilled.ViewModule
 import tachiyomi.domain.library.model.LibraryDisplayMode
 import tachiyomi.domain.library.model.LibrarySort
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.i18n.stringResource
-import tachiyomi.presentation.core.theme.active
 import top.yukonga.miuix.kmp.basic.DropdownDefaults
 import top.yukonga.miuix.kmp.basic.DropdownEntry
 import top.yukonga.miuix.kmp.basic.DropdownItem
-import top.yukonga.miuix.kmp.basic.IconButton
 import top.yukonga.miuix.kmp.popup.OverlayDropdownPopup
-import top.yukonga.miuix.kmp.theme.MiuixTheme
 
-// The Library page's view options as small icons: sort, display mode and
-// filter. They used to live in the top bar, but the centered title capsule
-// sits over that band on phones, so they moved here — pinned to the end
-// of the category tab row, clear of the capsule.
+// The Library page's sort and display-mode dropdowns. Their buttons
+// live in the floating capsule (HomeScreen); this only renders the
+// dropdowns, which pop up from the root scaffold. (The filter button
+// opens the settings sheet, so it needs no dropdown.)
 @Composable
-fun LibraryViewOptions(
+fun LibraryViewOptionsDropdowns(
     sort: LibrarySort,
     hasTrackers: Boolean,
     onSetSort: (LibrarySort.Type, LibrarySort.Direction) -> Unit,
     displayMode: LibraryDisplayMode,
     onDisplayModeSelected: (LibraryDisplayMode) -> Unit,
-    hasActiveFilters: Boolean,
-    onClickFilter: () -> Unit,
-    modifier: Modifier = Modifier,
+    selectingSort: Boolean,
+    onSelectingSortChange: (Boolean) -> Unit,
+    selectingDisplayMode: Boolean,
+    onSelectingDisplayModeChange: (Boolean) -> Unit,
 ) {
-    var selectingSort by remember { mutableStateOf(false) }
-    var selectingDisplayMode by remember { mutableStateOf(false) }
-    Row(
-        modifier = modifier,
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Box {
-            IconButton(onClick = { selectingSort = true }) {
-                Icon(
-                    imageVector = MaterialSymbols.AutoMirroredRounded.Sort,
-                    contentDescription = stringResource(MR.strings.action_sort),
-                    tint = MiuixTheme.colorScheme.onSurface,
-                )
-            }
-            OverlayDropdownPopup(
-                entries = listOf(
-                    DropdownEntry(
-                        items = sortOptions(hasTrackers).map { (titleRes, mode) ->
-                            DropdownItem(
-                                text = stringResource(titleRes),
-                                selected = sort.type == mode,
-                                // The direction rides on the selected row,
-                                // like the arrow on the settings sheet's sort item.
-                                icon = if (sort.type == mode && mode != LibrarySort.Type.Random) {
-                                    { modifier ->
-                                        Icon(
-                                            imageVector = if (sort.isAscending) {
-                                                MaterialSymbols.Rounded.ArrowUpward
-                                            } else {
-                                                MaterialSymbols.Rounded.ArrowDownward
-                                            },
-                                            contentDescription = null,
-                                            modifier = modifier,
-                                        )
+    OverlayDropdownPopup(
+        entries = listOf(
+            DropdownEntry(
+                items = sortOptions(hasTrackers).map { (titleRes, mode) ->
+                    DropdownItem(
+                        text = stringResource(titleRes),
+                        selected = sort.type == mode,
+                        // The direction rides on the selected row,
+                        // like the arrow on the settings sheet's sort item.
+                        icon = if (sort.type == mode && mode != LibrarySort.Type.Random) {
+                            { modifier ->
+                                Icon(
+                                    imageVector = if (sort.isAscending) {
+                                        MaterialSymbols.Rounded.ArrowUpward
+                                    } else {
+                                        MaterialSymbols.Rounded.ArrowDownward
+                                    },
+                                    contentDescription = null,
+                                    modifier = modifier,
+                                )
+                            }
+                        } else {
+                            null
+                        },
+                        onClick = {
+                            onSelectingSortChange(false)
+                            if (mode == LibrarySort.Type.Random) {
+                                onSetSort(mode, LibrarySort.Direction.Ascending)
+                            } else {
+                                // Same rule as the settings sheet:
+                                // tapping the active type flips the
+                                // direction, any other type keeps it.
+                                val sortDescending = !sort.isAscending
+                                val direction = if (sort.type == mode) {
+                                    if (sortDescending) {
+                                        LibrarySort.Direction.Ascending
+                                    } else {
+                                        LibrarySort.Direction.Descending
                                     }
                                 } else {
-                                    null
-                                },
-                                onClick = {
-                                    selectingSort = false
-                                    if (mode == LibrarySort.Type.Random) {
-                                        onSetSort(mode, LibrarySort.Direction.Ascending)
+                                    if (sortDescending) {
+                                        LibrarySort.Direction.Descending
                                     } else {
-                                        // Same rule as the settings sheet:
-                                        // tapping the active type flips the
-                                        // direction, any other type keeps it.
-                                        val sortDescending = !sort.isAscending
-                                        val direction = if (sort.type == mode) {
-                                            if (sortDescending) {
-                                                LibrarySort.Direction.Ascending
-                                            } else {
-                                                LibrarySort.Direction.Descending
-                                            }
-                                        } else {
-                                            if (sortDescending) {
-                                                LibrarySort.Direction.Descending
-                                            } else {
-                                                LibrarySort.Direction.Ascending
-                                            }
-                                        }
-                                        onSetSort(mode, direction)
+                                        LibrarySort.Direction.Ascending
                                     }
-                                },
-                            )
+                                }
+                                onSetSort(mode, direction)
+                            }
                         },
-                    ),
-                ),
-                show = selectingSort,
-                onDismiss = { selectingSort = false },
-                onDismissFinished = {},
-                maxHeight = null,
-                dropdownColors = DropdownDefaults.dropdownColors(),
-                renderInRootScaffold = true,
-                collapseOnSelection = true,
-            )
-        }
-        Box {
-            IconButton(onClick = { selectingDisplayMode = true }) {
-                Icon(
-                    imageVector = when (displayMode) {
-                        LibraryDisplayMode.List -> MaterialSymbols.AutoMirroredRoundedFilled.ViewList
-                        LibraryDisplayMode.ComfortableGrid -> MaterialSymbols.RoundedFilled.ViewModule
-                        LibraryDisplayMode.CompactGrid,
-                        LibraryDisplayMode.CoverOnlyGrid,
-                        -> MaterialSymbols.RoundedFilled.ViewCompact
-                    },
-                    contentDescription = stringResource(MR.strings.action_display_mode),
-                    tint = MiuixTheme.colorScheme.onSurface,
-                )
-            }
-            OverlayDropdownPopup(
-                entries = listOf(
-                    DropdownEntry(
-                        items = displayModes.map { (titleRes, mode) ->
-                            DropdownItem(
-                                text = stringResource(titleRes),
-                                selected = displayMode == mode,
-                                onClick = {
-                                    selectingDisplayMode = false
-                                    onDisplayModeSelected(mode)
-                                },
-                            )
-                        },
-                    ),
-                ),
-                show = selectingDisplayMode,
-                onDismiss = { selectingDisplayMode = false },
-                onDismissFinished = {},
-                maxHeight = null,
-                dropdownColors = DropdownDefaults.dropdownColors(),
-                renderInRootScaffold = true,
-                collapseOnSelection = true,
-            )
-        }
-        IconButton(onClick = onClickFilter) {
-            Icon(
-                imageVector = MaterialSymbols.Rounded.FilterList,
-                contentDescription = stringResource(MR.strings.action_filter),
-                tint = if (hasActiveFilters) {
-                    MaterialTheme.colorScheme.active
-                } else {
-                    MiuixTheme.colorScheme.onSurface
+                    )
                 },
-            )
-        }
-    }
+            ),
+        ),
+        show = selectingSort,
+        onDismiss = { onSelectingSortChange(false) },
+        onDismissFinished = {},
+        maxHeight = null,
+        dropdownColors = DropdownDefaults.dropdownColors(),
+        renderInRootScaffold = true,
+        collapseOnSelection = true,
+    )
+    OverlayDropdownPopup(
+        entries = listOf(
+            DropdownEntry(
+                items = displayModes.map { (titleRes, mode) ->
+                    DropdownItem(
+                        text = stringResource(titleRes),
+                        selected = displayMode == mode,
+                        onClick = {
+                            onSelectingDisplayModeChange(false)
+                            onDisplayModeSelected(mode)
+                        },
+                    )
+                },
+            ),
+        ),
+        show = selectingDisplayMode,
+        onDismiss = { onSelectingDisplayModeChange(false) },
+        onDismissFinished = {},
+        maxHeight = null,
+        dropdownColors = DropdownDefaults.dropdownColors(),
+        renderInRootScaffold = true,
+        collapseOnSelection = true,
+    )
 }
 
 // Same sort list as the settings sheet's sort page (tracker score only

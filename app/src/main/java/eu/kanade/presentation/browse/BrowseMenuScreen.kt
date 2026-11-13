@@ -7,9 +7,11 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import eu.kanade.presentation.miuix.LiquidNavBarClearance
+import eu.kanade.tachiyomi.ui.home.HomeScreen
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.rounded.Public
 import mihon.icons.materialsymbols.rounded.Sync
@@ -28,6 +30,12 @@ fun BrowseMenuScreen(
     onClickExtensions: () -> Unit,
     onClickMigration: () -> Unit,
 ) {
+    // This page has no actions: the floating capsule stays hidden here
+    // (its sections keep their own toolbars).
+    LaunchedEffect(Unit) {
+        HomeScreen.setCapsuleActions(emptyList())
+    }
+
     Scaffold(
         // Same as the More page: HomeScreen's outer Scaffold already
         // applies the system-bar insets, so this inner Scaffold must not

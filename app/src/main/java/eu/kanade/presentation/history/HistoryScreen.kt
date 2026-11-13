@@ -8,6 +8,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
@@ -22,15 +23,18 @@ import eu.kanade.presentation.components.AppBarTitle
 import eu.kanade.presentation.components.SearchToolbar
 import eu.kanade.presentation.components.relativeDateText
 import eu.kanade.presentation.history.components.HistoryItem
+import eu.kanade.presentation.miuix.CapsuleAction
 import eu.kanade.presentation.miuix.LiquidNavBarClearance
 import eu.kanade.presentation.theme.TachiyomiPreviewTheme
 import eu.kanade.presentation.util.isTabletUi
 import eu.kanade.presentation.util.rememberIs24HourSystem
 import eu.kanade.tachiyomi.ui.history.HistoryViewModel
+import eu.kanade.tachiyomi.ui.home.HomeScreen
 import kotlinx.datetime.LocalDate
 import mihon.app.di.appGraph
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.rounded.DeleteSweep
+import mihon.icons.materialsymbols.rounded.Search
 import tachiyomi.domain.history.model.HistoryWithRelations
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.components.FastScrollLazyColumn
@@ -52,6 +56,33 @@ fun HistoryScreen(
     onClickFavorite: (mangaId: Long) -> Unit,
     onDialogChange: (HistoryViewModel.Dialog?) -> Unit,
 ) {
+    // The tab's actions for the floating capsule (HomeScreen): the
+    // search and clear-history icons live there now, not in the top
+    // bar. Hidden while searching (the capsule hides then, like the
+    // title capsule).
+    val searchDescription = stringResource(MR.strings.action_search)
+    val clearDescription = stringResource(MR.strings.pref_clear_history)
+    LaunchedEffect(state.searchQuery) {
+        if (state.searchQuery != null) {
+            HomeScreen.setCapsuleActions(emptyList())
+        } else {
+            HomeScreen.setCapsuleActions(
+                listOf(
+                    CapsuleAction(
+                        icon = MaterialSymbols.Rounded.Search,
+                        contentDescription = searchDescription,
+                        onClick = { onSearchQueryChange("") },
+                    ),
+                    CapsuleAction(
+                        icon = MaterialSymbols.Rounded.DeleteSweep,
+                        contentDescription = clearDescription,
+                        onClick = { onDialogChange(HistoryViewModel.Dialog.DeleteAll) },
+                    ),
+                ),
+            )
+        }
+    }
+
     Scaffold(
         // Same as the Library page: HomeScreen's outer Scaffold already
         // applies the system-bar insets, so this inner Scaffold must not
@@ -67,11 +98,16 @@ fun HistoryScreen(
                 titleContent = { if (isTabletUi()) AppBarTitle(stringResource(MR.strings.history)) },
                 searchQuery = state.searchQuery,
                 onChangeSearchQuery = onSearchQueryChange,
+                // Phones: the floating capsule provides the search icon,
+                // so the toolbar's magnifier is hidden there; tablets
+                // keep it (no capsule there). The reset button while
+                // searching still shows.
+                showSearchIcon = isTabletUi(),
                 actions = {
                     // Phones: the centered title capsule floats in this
                     // same 64.dp band, and the action icon sat under it.
-                    // Hidden on phones so the band holds only the capsule
-                    // and the search icon; tablets keep it (no capsule).
+                    // Hidden on phones so the band holds only the capsule;
+                    // tablets keep it (no capsule there).
                     if (isTabletUi()) {
                         AppBarActions(
                             listOf(

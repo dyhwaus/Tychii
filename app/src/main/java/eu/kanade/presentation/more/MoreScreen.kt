@@ -7,9 +7,11 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import eu.kanade.presentation.miuix.LiquidNavBarClearance
+import eu.kanade.tachiyomi.ui.home.HomeScreen
 import eu.kanade.tachiyomi.ui.more.DownloadQueueState
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.automirroredrounded.Label
@@ -42,6 +44,11 @@ fun MoreScreen(
     onClickDataAndStorage: () -> Unit,
     onClickSettings: () -> Unit,
 ) {
+    // This page has no actions: the floating capsule stays hidden here.
+    LaunchedEffect(Unit) {
+        HomeScreen.setCapsuleActions(emptyList())
+    }
+
     Scaffold(
         // Same as the Library page: HomeScreen's outer Scaffold already
         // applies the system-bar insets, so this inner Scaffold must not

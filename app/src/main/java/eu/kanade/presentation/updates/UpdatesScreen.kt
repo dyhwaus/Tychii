@@ -12,6 +12,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -24,9 +25,11 @@ import eu.kanade.presentation.components.AppBar
 import eu.kanade.presentation.components.AppBarActions
 import eu.kanade.presentation.manga.components.ChapterDownloadAction
 import eu.kanade.presentation.manga.components.MangaBottomActionMenu
+import eu.kanade.presentation.miuix.CapsuleAction
 import eu.kanade.presentation.miuix.LiquidNavBarClearance
 import eu.kanade.presentation.util.isTabletUi
 import eu.kanade.tachiyomi.data.download.model.Download
+import eu.kanade.tachiyomi.ui.home.HomeScreen
 import eu.kanade.tachiyomi.ui.updates.UpdatesItem
 import eu.kanade.tachiyomi.ui.updates.UpdatesViewModel
 import kotlinx.coroutines.delay
@@ -73,6 +76,42 @@ fun UpdateScreen(
     }
 
     val scope = rememberCoroutineScope()
+
+    // The tab's actions for the floating capsule (HomeScreen): the
+    // filter/upcoming/refresh icons live there now, not in the top bar.
+    // Hidden while selecting (the capsule hides then, like the title
+    // capsule). Resolved during composition (stringResource and the
+    // theme colour are @Composable and can't run inside LaunchedEffect).
+    val filterDescription = stringResource(MR.strings.action_filter)
+    val upcomingDescription = stringResource(MR.strings.action_view_upcoming)
+    val refreshDescription = stringResource(MR.strings.action_update_library)
+    val activeColor = MaterialTheme.colorScheme.active
+    LaunchedEffect(hasActiveFilters, state.selectionMode) {
+        if (state.selectionMode) {
+            HomeScreen.setCapsuleActions(emptyList())
+        } else {
+            HomeScreen.setCapsuleActions(
+                listOf(
+                    CapsuleAction(
+                        icon = MaterialSymbols.Rounded.FilterList,
+                        contentDescription = filterDescription,
+                        onClick = onFilterClicked,
+                        tint = if (hasActiveFilters) activeColor else null,
+                    ),
+                    CapsuleAction(
+                        icon = MaterialSymbols.Rounded.CalendarMonth,
+                        contentDescription = upcomingDescription,
+                        onClick = onCalendarClicked,
+                    ),
+                    CapsuleAction(
+                        icon = MaterialSymbols.Rounded.Refresh,
+                        contentDescription = refreshDescription,
+                        onClick = { scope.launch { onUpdateLibrary() } },
+                    ),
+                ),
+            )
+        }
+    }
 
     Scaffold(
         // Same as the Library page: HomeScreen's outer Scaffold already

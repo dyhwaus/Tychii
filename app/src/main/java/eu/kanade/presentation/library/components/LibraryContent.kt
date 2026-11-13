@@ -1,15 +1,12 @@
 package eu.kanade.presentation.library.components
 
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.calculateEndPadding
 import androidx.compose.foundation.layout.calculateStartPadding
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -17,19 +14,30 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalLayoutDirection
 import eu.kanade.core.preference.PreferenceMutableState
+import eu.kanade.presentation.miuix.CapsuleAction
 import eu.kanade.presentation.miuix.LiquidNavBarClearance
+import eu.kanade.tachiyomi.ui.home.HomeScreen
 import eu.kanade.tachiyomi.ui.library.LibraryItem
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import mihon.icons.materialsymbols.MaterialSymbols
+import mihon.icons.materialsymbols.automirroredrounded.Sort
+import mihon.icons.materialsymbols.automirroredroundedfilled.ViewList
+import mihon.icons.materialsymbols.rounded.FilterList
+import mihon.icons.materialsymbols.rounded.Search
+import mihon.icons.materialsymbols.roundedfilled.ViewCompact
+import mihon.icons.materialsymbols.roundedfilled.ViewModule
 import tachiyomi.domain.category.model.Category
 import tachiyomi.domain.library.model.LibraryDisplayMode
 import tachiyomi.domain.library.model.LibraryManga
 import tachiyomi.domain.library.model.LibrarySort
+import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.components.material.PullRefresh
+import tachiyomi.presentation.core.i18n.stringResource
+import tachiyomi.presentation.core.theme.active
 import kotlin.time.Duration.Companion.seconds
 
 @Composable
@@ -58,6 +66,7 @@ fun LibraryContent(
     displayMode: LibraryDisplayMode,
     onDisplayModeSelected: (LibraryDisplayMode) -> Unit,
     onClickFilter: () -> Unit,
+    onClickSearch: () -> Unit,
 ) {
     Column(
         modifier = Modifier.padding(
@@ -71,44 +80,89 @@ fun LibraryContent(
         val scope = rememberCoroutineScope()
         var isRefreshing by remember(pagerState.currentPage) { mutableStateOf(false) }
 
-        // The view-option icons (sort, display mode, filter) sit at the
-        // end of the category tab row, so they are always reachable
-        // without opening the settings sheet — and clear of the centered
-        // title capsule, which is why they left the top bar. When there
-        // are no tabs the icons stand alone on the same row.
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            if (showPageTabs && categories.isNotEmpty() && (categories.size > 1 || !categories.first().isSystemCategory)) {
-                LaunchedEffect(categories) {
-                    if (categories.size <= pagerState.currentPage) {
-                        pagerState.scrollToPage(categories.size - 1)
-                    }
-                }
-                Box(modifier = Modifier.weight(1f)) {
-                    LibraryTabs(
-                        categories = categories,
-                        pagerState = pagerState,
-                        getItemCountForCategory = getItemCountForCategory,
-                        onTabItemClick = {
-                            scope.launch {
-                                pagerState.animateScrollToPage(it)
-                            }
-                        },
-                    )
-                }
+        // The sort/display dropdowns are opened from the floating
+        // capsule (HomeScreen); their buttons live there, the popups
+        // render here from the root scaffold.
+        var selectingSort by remember { mutableStateOf(false) }
+        var selectingDisplayMode by remember { mutableStateOf(false) }
+        LibraryViewOptionsDropdowns(
+            sort = sort,
+            hasTrackers = hasTrackers,
+            onSetSort = onSetSort,
+            displayMode = displayMode,
+            onDisplayModeSelected = onDisplayModeSelected,
+            selectingSort = selectingSort,
+            onSelectingSortChange = { selectingSort = it },
+            selectingDisplayMode = selectingDisplayMode,
+            onSelectingDisplayModeChange = { selectingDisplayMode = it },
+        )
+
+        // The tab's actions for the floating capsule (HomeScreen): the
+        // search/sort/display/filter icons live there now, not in the
+        // tab row or the top bar. Hidden while searching or selecting
+        // (the capsule hides then, like the title capsule).
+        val searching = searchQuery != null
+        val selecting = selection.isNotEmpty()
+        // Resolved during composition (stringResource and the theme
+        // colour are @Composable and can't run inside LaunchedEffect).
+        val searchDescription = stringResource(MR.strings.action_search)
+        val sortDescription = stringResource(MR.strings.action_sort)
+        val displayDescription = stringResource(MR.strings.action_display_mode)
+        val filterDescription = stringResource(MR.strings.action_filter)
+        val activeColor = MaterialTheme.colorScheme.active
+        LaunchedEffect(displayMode, hasActiveFilters, searching, selecting) {
+            if (searching || selecting) {
+                HomeScreen.setCapsuleActions(emptyList())
             } else {
-                Spacer(modifier = Modifier.weight(1f))
+                HomeScreen.setCapsuleActions(
+                    listOf(
+                        CapsuleAction(
+                            icon = MaterialSymbols.Rounded.Search,
+                            contentDescription = searchDescription,
+                            onClick = onClickSearch,
+                        ),
+                        CapsuleAction(
+                            icon = MaterialSymbols.AutoMirroredRounded.Sort,
+                            contentDescription = sortDescription,
+                            onClick = { selectingSort = true },
+                        ),
+                        CapsuleAction(
+                            icon = when (displayMode) {
+                                LibraryDisplayMode.List -> MaterialSymbols.AutoMirroredRoundedFilled.ViewList
+                                LibraryDisplayMode.ComfortableGrid -> MaterialSymbols.RoundedFilled.ViewModule
+                                LibraryDisplayMode.CompactGrid,
+                                LibraryDisplayMode.CoverOnlyGrid,
+                                -> MaterialSymbols.RoundedFilled.ViewCompact
+                            },
+                            contentDescription = displayDescription,
+                            onClick = { selectingDisplayMode = true },
+                        ),
+                        CapsuleAction(
+                            icon = MaterialSymbols.Rounded.FilterList,
+                            contentDescription = filterDescription,
+                            onClick = onClickFilter,
+                            tint = if (hasActiveFilters) activeColor else null,
+                        ),
+                    ),
+                )
             }
-            LibraryViewOptions(
-                sort = sort,
-                hasTrackers = hasTrackers,
-                onSetSort = onSetSort,
-                displayMode = displayMode,
-                onDisplayModeSelected = onDisplayModeSelected,
-                hasActiveFilters = hasActiveFilters,
-                onClickFilter = onClickFilter,
+        }
+
+        if (showPageTabs && categories.isNotEmpty() && (categories.size > 1 || !categories.first().isSystemCategory)) {
+            LaunchedEffect(categories) {
+                if (categories.size <= pagerState.currentPage) {
+                    pagerState.scrollToPage(categories.size - 1)
+                }
+            }
+            LibraryTabs(
+                categories = categories,
+                pagerState = pagerState,
+                getItemCountForCategory = getItemCountForCategory,
+                onTabItemClick = {
+                    scope.launch {
+                        pagerState.animateScrollToPage(it)
+                    }
+                },
             )
         }
 
