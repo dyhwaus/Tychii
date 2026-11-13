@@ -3,8 +3,9 @@
     android:height="108dp"
     android:viewportWidth="432"
     android:viewportHeight="432">
-    <!-- Day background: white -->
+    <!-- Night background: near-black (#1B1A1F, from the dark-mode
+         reference), so the white half of the Taiji reads on it -->
     <path
-        android:fillColor="#FFFFFF"
+        android:fillColor="#1B1A1F"
         android:pathData="M0,0h432v432H0z" />
 </vector>

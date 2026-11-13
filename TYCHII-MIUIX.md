@@ -295,33 +295,34 @@ uses MaterialExpressiveTheme.
   MangaBaka, MangaUpdates, MyAnimeList, Shikimori).
 - Package name, applicationId and code references to Mihon are untouched.
 
-## Icon: Taiji (2026-11-12)
+## Icon: Taiji (2026-11-12, day/night split 2026-11-13)
 
-The launcher icon is a Taiji (yin-yang) symbol. Since 2026-11-12 the
-icon is the SAME in day and night mode (user choice: keep it
-consistent) — the night-qualified resources are byte-identical copies
-of the day ones, so dark mode shows the white background and
-black-outlined Taiji, exactly like day mode. The splash background
-(`@color/splash`) is white in both modes too, and the More/About
-header (`LogoHeader`) shows the same day Taiji in dark mode.
+The launcher icon is a Taiji (yin-yang) symbol. Day and night use
+different versions (2026-11-13, from the user's reference image —
+this reverses the 2026-11-12 decision to use one icon for both
+modes): day is a white background with a black-dominant Taiji and a
+black outline; night is a near-black `#1B1A1F` background with the
+same Taiji geometry and all colors inverted — white-dominant Taiji,
+white outline. The splash background (`@color/splash`) follows:
+white in day mode, `#1B1A1F` at night, so the splash looks exactly
+like the launcher icon in both modes.
 
-- Foreground (`ic_launcher_foreground.xml`, day / `drawable-night/`,
-  night — identical): a Taiji — black half + white half with an
-  S-curve, a white dot in the black half and a black dot in the white
-  half, black outline (stroke 6).
-- Background (`ic_launcher_background.xml` white /
-  `drawable-night/` white — identical).
+- Foreground (`ic_launcher_foreground.xml` day, `drawable-night/`
+  night): a Taiji — black half + white half with an S-curve, a white
+  dot in the black half and a black dot in the white half, black
+  outline (stroke 6) in day mode. The night file keeps the same
+  `pathData` and swaps every color (white half ↔ black half, both
+  dots, outline white).
+- Background (`ic_launcher_background.xml` white day /
+  `drawable-night/` `#1B1A1F` night — the dark value is measured
+  from the reference image).
 - Monochrome (`ic_launcher_monochrome.xml`): the Taiji half as a
-  solid shape, for themed app icons.
+  solid shape, for themed app icons (single color, no night variant).
 - The debug source set mirrors main (foreground + background, day +
   night) so Android Studio's debug build shows the Taiji too.
 - Splash (`ic_mihon_splash.xml`): uses the launcher foreground
-  directly, with `@color/splash` as the background (white in both
-  modes), so the splash looks exactly like the launcher icon.
-- The More/About page header (`LogoHeader`) uses the launcher
-  foreground, so it now shows the Taiji too (same day design in
-  dark mode). It uses no tint, so the Taiji keeps its own black/white
-  colors exactly like the launcher icon.
+  directly, with `@color/splash` as the background, so the splash
+  looks exactly like the launcher icon.
 
 ## Settings pages (2026-11-12)
 
