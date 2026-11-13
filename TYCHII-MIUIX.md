@@ -747,6 +747,14 @@ Neko theme are untouched — only the card layout follows PiliPlus.
   whole `items` call failed to resolve, cascading into "Unresolved
   reference 'it'" / "Cannot infer type" / "@Composable invocations"
   errors. Fixed by using `span = { item -> ... }`.
+- 2026-11-13: LibraryCompactGrid.kt and LibraryComfortableGrid.kt
+  still imported the regular grid's `items`
+  (`lazy.grid.items`), but their content lambda is now a
+  `LazyStaggeredGridScope`, so the List-based staggered `items`
+  extension never resolved — the compiler fell back to the scope's
+  member `items(count: Int, ...)` ("No value passed for parameter
+  'count'", and the item lambda's parameter became `Int`). Fixed by
+  importing `lazy.staggeredgrid.items` in both files.
 
 ## Waterfall layout on Library, Updates and History (2026-11-13)
 
