@@ -10,7 +10,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.util.fastForEachIndexed
 import eu.kanade.presentation.more.settings.screen.SearchableSettings
 import eu.kanade.presentation.more.settings.widget.PreferenceGroupHeader
 import kotlinx.coroutines.delay
@@ -47,17 +46,51 @@ fun PreferenceScreen(
         state = state,
         contentPadding = contentPadding,
     ) {
-        items.fastForEachIndexed { i, preference ->
-            when (preference) {
+        var i = 0
+        while (i < items.size) {
+            when (val preference = items[i]) {
                 // Create Preference Group
                 is Preference.PreferenceGroup -> {
-                    if (!preference.visible) return@fastForEachIndexed
+                    if (preference.visible) {
+                        item {
+                            PreferenceGroupHeader(
+                                title = preference.title,
+                                highlighted = preference.title == highlightKey,
+                            )
+                        }
+                        item {
+                            Card(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 12.dp),
+                            ) {
+                                preference.preferenceItems.forEach { item ->
+                                    PreferenceItem(
+                                        item = item,
+                                        highlightKey = highlightKey,
+                                    )
+                                }
+                            }
+                        }
+                        if (i < items.lastIndex) {
+                            item {
+                                Spacer(modifier = Modifier.height(12.dp))
+                            }
+                        }
+                    }
+                    i++
+                }
 
-                    item {
-                        PreferenceGroupHeader(
-                            title = preference.title,
-                            highlighted = preference.title == highlightKey,
-                        )
+                // Consecutive top-level items share one card, like a group
+                // without a header. Each item used to get its own card, so
+                // a run of them showed a hairline gap between every two
+                // boxes while grouped items sat in one continuous card.
+                is Preference.PreferenceItem<*, *> -> {
+                    val run = mutableListOf<Preference.PreferenceItem<*, *>>()
+                    var j = i
+                    while (j < items.size && items[j] is Preference.PreferenceItem<*, *>) {
+                        run.add(items[j] as Preference.PreferenceItem<*, *>)
+                        j++
                     }
                     item {
                         Card(
@@ -65,7 +98,7 @@ fun PreferenceScreen(
                                 .fillMaxWidth()
                                 .padding(horizontal = 12.dp),
                         ) {
-                            preference.preferenceItems.forEach { item ->
+                            run.forEach { item ->
                                 PreferenceItem(
                                     item = item,
                                     highlightKey = highlightKey,
@@ -73,46 +106,45 @@ fun PreferenceScreen(
                             }
                         }
                     }
-                    item {
-                        if (i < items.lastIndex) {
+                    if (j < items.size) {
+                        item {
                             Spacer(modifier = Modifier.height(12.dp))
                         }
                     }
-                }
-
-                // Create Preference Item
-                is Preference.PreferenceItem<*, *> -> item {
-                    Card(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 12.dp),
-                    ) {
-                        PreferenceItem(
-                            item = preference,
-                            highlightKey = highlightKey,
-                        )
-                    }
+                    i = j
                 }
             }
         }
     }
 }
 
-// Each visible group contributes three lazy items (header, card, spacer;
-// the last group has no spacer, but nothing follows it), a top-level item one.
+// A visible group contributes three lazy items (header, card, spacer;
+// two when last), a run of top-level items two (card, spacer; one when
+// last). Mirrors the emission above so search highlight scrolls to the
+// right card.
 private fun List<Preference>.findHighlightedIndex(highlightKey: String): Int {
     var index = 0
-    for (preference in this) {
-        when (preference) {
+    var i = 0
+    while (i < size) {
+        when (val preference = this[i]) {
             is Preference.PreferenceGroup -> {
-                if (!preference.visible) continue
+                if (!preference.visible) {
+                    i++
+                    continue
+                }
                 if (preference.title == highlightKey) return index
                 if (preference.preferenceItems.any { it.title == highlightKey }) return index + 1
-                index += 3
+                index += if (i < lastIndex) 3 else 2
+                i++
             }
             is Preference.PreferenceItem<*, *> -> {
-                if (preference.title == highlightKey) return index
-                index += 1
+                var j = i
+                while (j < size && this[j] is Preference.PreferenceItem<*, *>) {
+                    if ((this[j] as Preference.PreferenceItem<*, *>).title == highlightKey) return index
+                    j++
+                }
+                index += if (j < size) 2 else 1
+                i = j
             }
         }
     }

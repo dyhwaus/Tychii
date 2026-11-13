@@ -52,7 +52,15 @@ uses the same capsule style as the Library category tabs (Miuix
 surfaceContainer fill on the selected tab, full pill radius, no
 underline indicator or divider). Miuix's own TabRow was not used:
 it takes only plain strings, so the extensions tab's update-count
-badge would have been lost. The 0.1.2 release is the
+badge would have been lost. Settings groups merged 2026-11-13: top-level
+preferences that are not in a group used to each get their own
+Card, so a run of them showed a hairline gap between every two
+boxes while grouped items sat in one continuous card (seen on the
+Downloads page). PreferenceScreen now collects consecutive
+top-level items into one shared Card, like a group without a
+header; the 12.dp rhythm between cards is kept, and
+findHighlightedIndex was updated to the new lazy-item layout so
+search highlight still scrolls to the right card. The 0.1.2 release is the
 full-page Miuix restyle (2026-11-12): every user-visible page except
 the reader now follows the Miuix style — settings, manga detail,
 browse/source/extensions/migration, updates/history list items,
