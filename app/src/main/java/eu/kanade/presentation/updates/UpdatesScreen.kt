@@ -27,6 +27,7 @@ import eu.kanade.presentation.manga.components.ChapterDownloadAction
 import eu.kanade.presentation.manga.components.MangaBottomActionMenu
 import eu.kanade.presentation.miuix.CapsuleAction
 import eu.kanade.presentation.miuix.LiquidNavBarClearance
+import eu.kanade.presentation.miuix.TopListGap
 import eu.kanade.presentation.util.isTabletUi
 import eu.kanade.tachiyomi.data.download.model.Download
 import eu.kanade.tachiyomi.ui.home.HomeScreen
@@ -181,9 +182,12 @@ fun UpdateScreen(
                     } else {
                         FastScrollLazyColumn(
                             // Empty space below the last item so it clears
-                            // the floating bar.
-                            contentPadding = contentPadding +
-                                PaddingValues(bottom = LiquidNavBarClearance),
+                            // the floating bar, and above the first item so
+                            // it clears the title capsule band.
+                            contentPadding = contentPadding + PaddingValues(
+                                top = TopListGap,
+                                bottom = LiquidNavBarClearance,
+                            ),
                         ) {
                             updatesLastUpdatedItem(lastUpdated)
 

@@ -661,6 +661,16 @@ menu, More. The last item now scrolls fully above the bar. (The
 bar is hidden while the Library selection menu is showing, so the
 extra bottom space there is harmless.)
 
+The top got the same treatment (2026-11-13): the first row was
+being cut off by the title capsule band. Each list now also adds a
+shared `TopListGap` (32.dp) above its first item — 64.dp toolbar
+band + 32.dp gap = 96.dp in total, mirroring the bottom. The
+Library had an extra bug here: it built a fresh `PaddingValues`
+with only the bottom, dropping the Scaffold's own top padding (the
+64.dp band), so its first row slid under the band; it now adds to
+the Scaffold's padding with the `plus` operator like the other
+lists.
+
 ## Floating action capsule (2026-11-13)
 
 The search/sort/display/filter icons (and each tab's own actions)

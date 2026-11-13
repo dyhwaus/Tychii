@@ -19,6 +19,7 @@ import androidx.compose.ui.platform.LocalLayoutDirection
 import eu.kanade.core.preference.PreferenceMutableState
 import eu.kanade.presentation.miuix.CapsuleAction
 import eu.kanade.presentation.miuix.LiquidNavBarClearance
+import eu.kanade.presentation.miuix.TopListGap
 import eu.kanade.tachiyomi.ui.home.HomeScreen
 import eu.kanade.tachiyomi.ui.library.LibraryItem
 import kotlinx.coroutines.delay
@@ -38,6 +39,7 @@ import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.components.material.PullRefresh
 import tachiyomi.presentation.core.i18n.stringResource
 import tachiyomi.presentation.core.theme.active
+import tachiyomi.presentation.core.util.plus
 import kotlin.time.Duration.Companion.seconds
 
 @Composable
@@ -183,9 +185,16 @@ fun LibraryContent(
                 state = pagerState,
                 // The grid needs this much empty space below its last row
                 // so the row clears the floating bar (HomeScreen no longer
-                // insets the whole content for it).
-                contentPadding = PaddingValues(
-                    bottom = contentPadding.calculateBottomPadding() + LiquidNavBarClearance,
+                // insets the whole content for it), and this much above
+                // its first row so the row clears the title capsule band
+                // instead of being cut off by it. The top is added to the
+                // Scaffold's own padding (the 64.dp toolbar band) rather
+                // than replacing it: building a fresh PaddingValues with
+                // only the bottom used to drop the band, so the first row
+                // slid under it.
+                contentPadding = contentPadding + PaddingValues(
+                    top = TopListGap,
+                    bottom = LiquidNavBarClearance,
                 ),
                 hasActiveFilters = hasActiveFilters,
                 selection = selection,

@@ -11,6 +11,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import eu.kanade.presentation.miuix.LiquidNavBarClearance
+import eu.kanade.presentation.miuix.TopListGap
 import eu.kanade.tachiyomi.ui.home.HomeScreen
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.rounded.Public
@@ -42,9 +43,13 @@ fun BrowseMenuScreen(
         // re-apply them (dead strips top and bottom).
         contentWindowInsets = WindowInsets(0, 0, 0, 0),
     ) { contentPadding ->
-        // Empty space below the last item so it clears the floating bar.
+        // Empty space below the last item so it clears the floating bar,
+        // and above the first item so it clears the title capsule band.
         ScrollbarLazyColumn(
-            contentPadding = contentPadding + PaddingValues(bottom = LiquidNavBarClearance),
+            contentPadding = contentPadding + PaddingValues(
+                top = TopListGap,
+                bottom = LiquidNavBarClearance,
+            ),
         ) {
             // Top blank band: the other main tabs have a 64.dp toolbar
             // occupying the top band under the title capsule, so their
