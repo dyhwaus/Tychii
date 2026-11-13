@@ -10,6 +10,8 @@ import eu.kanade.domain.ui.model.ThemeMode
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.i18n.stringResource
 import top.yukonga.miuix.kmp.basic.TabRow
+import top.yukonga.miuix.kmp.basic.TabRowDefaults
+import top.yukonga.miuix.kmp.theme.MiuixTheme
 
 private val options = mapOf(
     ThemeMode.SYSTEM to MR.strings.theme_system,
@@ -29,6 +31,14 @@ internal fun AppThemeModePreferenceWidget(
         onTabSelected = { onItemClick(modes[it]) },
         // The default 9.dp spacing left black gaps between the three
         // options; flush tabs read as one segmented control.
+        // The default row background is `surface` (pure black in dark
+        // mode), which does not match the card (`surfaceContainer`) the
+        // row sits in, so it read as a mismatched band. Match the row to
+        // the card, and give the selected tab the next shade up.
+        colors = TabRowDefaults.tabRowColors(
+            backgroundColor = MiuixTheme.colorScheme.surfaceContainer,
+            selectedBackgroundColor = MiuixTheme.colorScheme.surfaceContainerHighest,
+        ),
         itemSpacing = 0.dp,
         modifier = Modifier
             .fillMaxWidth()

@@ -737,6 +737,18 @@ grid, which share `MangaCompactGridItem`; the comfortable grid was
 already title-below. The Miuix floating bar, title capsule and
 Neko theme are untouched — only the card layout follows PiliPlus.
 
+## Theme mode TabRow: match the card background (2026-11-13)
+
+The theme mode TabRow （系統 / 淺色 / 深色） in Settings → Appearance
+still read as a mismatched band: its default row background is
+`surface` (pure black in dark mode, #F7F7F7 in light), while the card
+it sits in is `surfaceContainer`. The row now takes
+`surfaceContainer` so it blends into the card, and the selected tab
+takes `surfaceContainerHighest` (one shade up: #2D2D2D in dark,
+#E8E8E8 in light) so it still stands out. The earlier
+`itemSpacing = 0.dp` fix (one segmented control, no black gaps) is
+unchanged.
+
 ## Extension status pill (2026-11-13)
 
 `ExtensionPill` (the status capsule in the Extensions list and on the
