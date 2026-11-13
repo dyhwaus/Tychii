@@ -27,6 +27,9 @@ internal fun AppThemeModePreferenceWidget(
         tabs = modes.map { stringResource(options.getValue(it)) },
         selectedTabIndex = modes.indexOf(value).coerceAtLeast(0),
         onTabSelected = { onItemClick(modes[it]) },
+        // The default 9.dp spacing left black gaps between the three
+        // options; flush tabs read as one segmented control.
+        itemSpacing = 0.dp,
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = PrefsHorizontalPadding, vertical = 8.dp),

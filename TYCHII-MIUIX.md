@@ -381,6 +381,11 @@ Appearance's nav-bar-labels switch and bar-style list are preserved.
   had no other caller and was deleted. The search page keeps its
   own text field in a plain Miuix top-bar row (Miuix `SearchBar` is a
   full search UI and did not fit) and its M3 result rows.
+- **Theme mode**: the 系統 / 淺色 / 深色 TabRow uses `itemSpacing =
+  0.dp` (2026-11-13, from the user's Appearance screenshot: Miuix's
+  default 9.dp spacing left black gaps between the three options, so
+  they read as three separate pills; flush tabs form one segmented
+  control). The same widget is reused by the onboarding theme step.
 - **Data / Advanced / Tracking**: top-bar help buttons are Miuix
   `IconButton`s; the backup create/restore segmented buttons are two
   Miuix `Button`s; the export-column dialog, the Shizuku-missing
