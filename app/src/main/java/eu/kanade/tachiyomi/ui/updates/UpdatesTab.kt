@@ -116,12 +116,9 @@ data object UpdatesTab : Tab {
 
         LaunchedEffect(state.selectionMode) {
             HomeScreen.showBottomNav(!state.selectionMode)
-        }
-
-        // No title capsule on the Updates page: it floats over the top
-        // of the covers and cuts them off.
-        LaunchedEffect(Unit) {
-            HomeScreen.showTitleCapsule(false)
+            // The title capsule hides in selection mode (the action-mode
+            // counter would sit under it).
+            HomeScreen.showTitleCapsule(!state.selectionMode)
         }
 
         LaunchedEffect(state.isLoading) {

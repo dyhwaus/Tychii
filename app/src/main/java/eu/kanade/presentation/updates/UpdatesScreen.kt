@@ -122,17 +122,24 @@ fun UpdateScreen(
         // behavior on the toolbar: a pinned scroll behavior would tint
         // the toolbar (surfaceTint overlay) as soon as the list scrolls.
         contentWindowInsets = WindowInsets(0, 0, 0, 0),
+        // No top bar at rest: the toolbar is an original Mihon
+        // container whose band sits above the covers and cuts them
+        // off. It only appears in selection mode, when its action
+        // mode is actually needed. The title lives in the floating
+        // capsule and the actions in the floating action capsule.
         topBar = { _ ->
-            UpdatesAppBar(
-                onCalendarClicked = { onCalendarClicked() },
-                onUpdateLibrary = { scope.launch { onUpdateLibrary() } },
-                onFilterClicked = { onFilterClicked() },
-                hasFilters = hasActiveFilters,
-                actionModeCounter = state.selected.size,
-                onSelectAll = { onSelectAll(true) },
-                onInvertSelection = { onInvertSelection() },
-                onCancelActionMode = { onSelectAll(false) },
-            )
+            if (state.selected.isNotEmpty()) {
+                UpdatesAppBar(
+                    onCalendarClicked = { onCalendarClicked() },
+                    onUpdateLibrary = { scope.launch { onUpdateLibrary() } },
+                    onFilterClicked = { onFilterClicked() },
+                    hasFilters = hasActiveFilters,
+                    actionModeCounter = state.selected.size,
+                    onSelectAll = { onSelectAll(true) },
+                    onInvertSelection = { onInvertSelection() },
+                    onCancelActionMode = { onSelectAll(false) },
+                )
+            }
         },
         bottomBar = {
             UpdatesBottomBar(

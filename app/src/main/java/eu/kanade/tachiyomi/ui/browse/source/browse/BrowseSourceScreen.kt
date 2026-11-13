@@ -36,15 +36,12 @@ import cafe.adriel.voyager.navigator.currentOrThrow
 import dev.zacsweers.metrox.viewmodel.assistedMetroViewModel
 import eu.kanade.presentation.browse.BrowseSourceContent
 import eu.kanade.presentation.browse.MissingSourceScreen
-import eu.kanade.tachiyomi.ui.home.HomeScreen
-import eu.kanade.presentation.browse.components.BrowseSourceToolbar
 import eu.kanade.presentation.browse.components.RemoveMangaDialog
 import eu.kanade.presentation.category.components.ChangeCategoryDialog
 import eu.kanade.presentation.manga.DuplicateMangaDialog
 import eu.kanade.presentation.util.AssistContentScreen
 import eu.kanade.presentation.util.Screen
 import eu.kanade.tachiyomi.source.online.HttpSource
-import eu.kanade.tachiyomi.ui.browse.extension.details.SourcePreferencesScreen
 import eu.kanade.tachiyomi.ui.browse.source.browse.BrowseSourceViewModel.Listing
 import eu.kanade.tachiyomi.ui.category.CategoryScreen
 import eu.kanade.tachiyomi.ui.manga.MangaScreen
@@ -129,34 +126,18 @@ data class BrowseSourceScreen(
             assistUrl = (source as? HttpSource)?.getHomeUrl()
         }
 
-        // No title capsule on the Explore page: it floats over the top
-        // of the covers and cuts them off. The toolbar already shows
-        // the source name. Returning to the Browse menu restores the
-        // capsule (BrowseTab sets it on entry).
-        LaunchedEffect(Unit) {
-            HomeScreen.showTitleCapsule(false)
-        }
-
         Scaffold(
+            // No toolbar at the top: the toolbar is an original Mihon
+            // container whose band sits above the covers and cuts them
+            // off. Only the filter chips stay, as the top element.
+            // Back goes through the system back gesture; the source
+            // title lives in the floating capsule.
             topBar = {
                 Column(
                     modifier = Modifier
                         .background(MiuixTheme.colorScheme.surface)
                         .pointerInput(Unit) {},
                 ) {
-                    BrowseSourceToolbar(
-                        searchQuery = state.toolbarQuery,
-                        onSearchQueryChange = viewModel::setToolbarQuery,
-                        source = source,
-                        displayMode = viewModel.displayMode,
-                        onDisplayModeChange = { viewModel.displayMode = it },
-                        navigateUp = navigateUp,
-                        onWebViewClick = onWebViewClick,
-                        onHelpClick = onHelpClick,
-                        onSettingsClick = { navigator.push(SourcePreferencesScreen(sourceId)) },
-                        onSearch = viewModel::search,
-                    )
-
                     Row(
                         modifier = Modifier
                             .horizontalScroll(rememberScrollState())

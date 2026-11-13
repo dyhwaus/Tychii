@@ -138,42 +138,50 @@ data object LibraryTab : Tab {
             // band above the bottom bar, so the page would look split
             // into sections instead of one continuous background.
             contentWindowInsets = WindowInsets(0, 0, 0, 0),
+            // No top bar at rest: the toolbar is an original Mihon
+            // container whose band sits above the covers and cuts them
+            // off. It only appears when searching or selecting, when
+            // its field / action mode is actually needed. The title
+            // lives in the floating capsule and search in the floating
+            // action capsule.
             topBar = { _ ->
-                // No scroll behavior on purpose: a pinned scroll behavior
-                // would tint the toolbar (surfaceTint overlay) as soon as
-                // the grid scrolls, painting a band across the top. The
-                // toolbar stays on the page background, so only the
-                // floating title capsule is visible up there.
-                val title = state.getToolbarTitle(
-                    defaultTitle = stringResource(MR.strings.label_library),
-                    defaultCategoryTitle = stringResource(MR.strings.label_default),
-                    page = state.coercedActiveCategoryIndex,
-                )
-                LibraryToolbar(
-                    hasActiveFilters = state.hasActiveFilters,
-                    selectedCount = state.selection.size,
-                    title = title,
-                    onClickUnselectAll = viewModel::clearSelection,
-                    onClickSelectAll = viewModel::selectAll,
-                    onClickInvertSelection = viewModel::invertSelection,
-                    onClickFilter = viewModel::showSettingsDialog,
-                    onClickRefresh = { scope.launch { onClickRefresh(state.activeCategory) } },
-                    onClickGlobalUpdate = { scope.launch { onClickRefresh(null) } },
-                    onClickOpenRandomManga = {
-                        scope.launch {
-                            val randomItem = viewModel.getRandomLibraryItemForCurrentCategory()
-                            if (randomItem != null) {
-                                navigator.push(MangaScreen(randomItem.libraryManga.manga.id))
-                            } else {
-                                snackbarHostState.showSnackbar(
-                                    context.stringResource(MR.strings.information_no_entries_found),
-                                )
+                if (state.searchQuery != null || state.selection.isNotEmpty()) {
+                    // No scroll behavior on purpose: a pinned scroll behavior
+                    // would tint the toolbar (surfaceTint overlay) as soon as
+                    // the grid scrolls, painting a band across the top. The
+                    // toolbar stays on the page background, so only the
+                    // floating title capsule is visible up there.
+                    val title = state.getToolbarTitle(
+                        defaultTitle = stringResource(MR.strings.label_library),
+                        defaultCategoryTitle = stringResource(MR.strings.label_default),
+                        page = state.coercedActiveCategoryIndex,
+                    )
+                    LibraryToolbar(
+                        hasActiveFilters = state.hasActiveFilters,
+                        selectedCount = state.selection.size,
+                        title = title,
+                        onClickUnselectAll = viewModel::clearSelection,
+                        onClickSelectAll = viewModel::selectAll,
+                        onClickInvertSelection = viewModel::invertSelection,
+                        onClickFilter = viewModel::showSettingsDialog,
+                        onClickRefresh = { scope.launch { onClickRefresh(state.activeCategory) } },
+                        onClickGlobalUpdate = { scope.launch { onClickRefresh(null) } },
+                        onClickOpenRandomManga = {
+                            scope.launch {
+                                val randomItem = viewModel.getRandomLibraryItemForCurrentCategory()
+                                if (randomItem != null) {
+                                    navigator.push(MangaScreen(randomItem.libraryManga.manga.id))
+                                } else {
+                                    snackbarHostState.showSnackbar(
+                                        context.stringResource(MR.strings.information_no_entries_found),
+                                    )
+                                }
                             }
-                        }
-                    },
-                    searchQuery = state.searchQuery,
-                    onSearchQueryChange = viewModel::search,
-                )
+                        },
+                        searchQuery = state.searchQuery,
+                        onSearchQueryChange = viewModel::search,
+                    )
+                }
             },
             bottomBar = {
                 LibraryBottomActionMenu(
@@ -307,10 +315,13 @@ data object LibraryTab : Tab {
             HomeScreen.showBottomNav(!state.selectionMode)
         }
 
-        // No title capsule on the Library page: it floats over the top
-        // of the covers and cuts them off.
-        LaunchedEffect(Unit) {
-            HomeScreen.showTitleCapsule(false)
+        // The title capsule hides while selecting or searching (the
+        // selection counter / search field would sit under it).
+        // Tablets have no capsule, so the check there is a no-op.
+        LaunchedEffect(state.selectionMode, state.searchQuery) {
+            HomeScreen.showTitleCapsule(
+                !state.selectionMode && state.searchQuery == null,
+            )
         }
 
         LaunchedEffect(state.isLoading) {
