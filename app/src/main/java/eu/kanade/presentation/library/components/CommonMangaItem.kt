@@ -26,9 +26,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
-import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Shadow
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -43,6 +40,7 @@ import tachiyomi.presentation.core.i18n.stringResource
 import tachiyomi.presentation.core.util.selectedBackground
 import top.yukonga.miuix.kmp.basic.HorizontalDivider
 import top.yukonga.miuix.kmp.basic.IconButton
+import top.yukonga.miuix.kmp.theme.MiuixTheme
 import tachiyomi.domain.manga.model.MangaCover as MangaCoverModel
 
 object CommonMangaItemDefaults {
@@ -66,7 +64,9 @@ private val ContinueReadingButtonListSpacing = 8.dp
 private const val GRID_SELECTED_COVER_ALPHA = 0.76f
 
 /**
- * Layout of grid list item with title overlaying the cover.
+ * Layout of grid list item as a PiliPlus-style card: the cover on top
+ * and the title below it (2 lines), in a surface card — instead of the
+ * title overlaid on the cover, which hid the bottom of the cover.
  * Accepts null [title] for a cover-only view.
  */
 @Composable
@@ -86,89 +86,55 @@ fun MangaCompactGridItem(
         onClick = onClick,
         onLongClick = onLongClick,
     ) {
-        MangaGridCover(
-            cover = {
-                MangaCover.Book(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .alpha(if (isSelected) GRID_SELECTED_COVER_ALPHA else coverAlpha),
-                    data = coverData,
-                )
-            },
-            badgesStart = coverBadgeStart,
-            badgesEnd = coverBadgeEnd,
-            content = {
-                if (title != null) {
-                    CoverTextOverlay(
-                        title = title,
-                        onClickContinueReading = onClickContinueReading,
-                    )
-                } else if (onClickContinueReading != null) {
-                    ContinueReadingButton(
-                        size = ContinueReadingButtonSizeLarge,
-                        iconSize = ContinueReadingButtonIconSizeLarge,
-                        onClick = onClickContinueReading,
-                        modifier = Modifier
-                            .padding(ContinueReadingButtonGridPadding)
-                            .align(Alignment.BottomEnd),
-                    )
-                }
-            },
-        )
-    }
-}
-
-/**
- * Title overlay for [MangaCompactGridItem]: a black gradient scrim with
- * white text, like Neko's compact grid.
- */
-@Composable
-private fun BoxScope.CoverTextOverlay(
-    title: String,
-    onClickContinueReading: (() -> Unit)? = null,
-) {
-    Box(
-        modifier = Modifier
-            .clip(RoundedCornerShape(bottomStart = 12.dp, bottomEnd = 12.dp))
-            .background(
-                Brush.verticalGradient(
-                    0f to Color.Transparent,
-                    0.5f to Color(0x1A000000),
-                    1f to Color(0xDE000000),
-                ),
-            )
-            .fillMaxHeight(0.5f)
-            .fillMaxWidth()
-            .align(Alignment.BottomCenter),
-    )
-    Row(
-        modifier = Modifier.align(Alignment.BottomStart),
-        verticalAlignment = Alignment.Bottom,
-    ) {
-        GridItemTitle(
+        Column(
             modifier = Modifier
-                .weight(1f)
-                .padding(8.dp),
-            title = title,
-            style = MaterialTheme.typography.titleSmall.copy(
-                color = Color.White,
-                shadow = Shadow(
-                    color = Color.Black,
-                    blurRadius = 4f,
-                ),
-            ),
-            minLines = 1,
-        )
-        if (onClickContinueReading != null) {
-            ContinueReadingButton(
-                size = ContinueReadingButtonSizeSmall,
-                iconSize = ContinueReadingButtonIconSizeSmall,
-                onClick = onClickContinueReading,
-                modifier = Modifier.padding(
-                    end = ContinueReadingButtonGridPadding,
-                    bottom = ContinueReadingButtonGridPadding,
-                ),
+                .clip(RoundedCornerShape(12.dp))
+                .background(MiuixTheme.colorScheme.surfaceContainer),
+        ) {
+            MangaGridCover(
+                cover = {
+                    MangaCover.Book(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .alpha(if (isSelected) GRID_SELECTED_COVER_ALPHA else coverAlpha),
+                        data = coverData,
+                        // Top corners rounded to meet the card; the bottom
+                        // is square so the cover flows into the title area.
+                        // Cover-only has no title below, so it keeps the
+                        // full rounding.
+                        shape = if (title != null) {
+                            RoundedCornerShape(topStart = 12.dp, topEnd = 12.dp)
+                        } else {
+                            RoundedCornerShape(12.dp)
+                        },
+                    )
+                },
+                badgesStart = coverBadgeStart,
+                badgesEnd = coverBadgeEnd,
+                content = {
+                    if (onClickContinueReading != null) {
+                        ContinueReadingButton(
+                            size = ContinueReadingButtonSizeLarge,
+                            iconSize = ContinueReadingButtonIconSizeLarge,
+                            onClick = onClickContinueReading,
+                            modifier = Modifier
+                                .padding(ContinueReadingButtonGridPadding)
+                                .align(Alignment.BottomEnd),
+                        )
+                    }
+                },
             )
+            if (title != null) {
+                GridItemTitle(
+                    modifier = Modifier.padding(horizontal = 6.dp, vertical = 5.dp),
+                    title = title,
+                    style = MaterialTheme.typography.bodyMedium.copy(
+                        fontWeight = FontWeight.Medium,
+                    ),
+                    minLines = 2,
+                    maxLines = 2,
+                )
+            }
         }
     }
 }

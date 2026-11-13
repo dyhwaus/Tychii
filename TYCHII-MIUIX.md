@@ -720,6 +720,23 @@ capsule must stay outside the layer recorded by `layerBackdrop`
 (HomeScreen renders it as an overlay sibling of the Scaffold), or
 it would blur itself and crash hwui.
 
+## Library grid: PiliPlus-style cards (2026-11-13)
+
+The compact grid item is now a PiliPlus-style card, after
+[bggRGjQaUbCoE/PiliPlus](https://github.com/bggRGjQaUbCoE/PiliPlus)
+(`VideoCardV`): the whole item is a surface card (Miuix
+`surfaceContainer`, 12.dp corners) with the cover on top and the
+title below it (2 lines, 6.dp / 5.dp padding), instead of the title
+overlaid on the cover with a black gradient scrim — which hid the
+bottom of the cover. The cover keeps only its top corners rounded
+so it flows into the title area (cover-only, with no title below,
+keeps the full rounding). The cover badges (unread / downloads /
+language) and the continue-reading button stay on the cover. This
+applies to the Library compact grid and to the Browse source compact
+grid, which share `MangaCompactGridItem`; the comfortable grid was
+already title-below. The Miuix floating bar, title capsule and
+Neko theme are untouched — only the card layout follows PiliPlus.
+
 ## Tab lists: no scrollbar thumb, selected icon, edge-to-edge (2026-11-13)
 
 Three small fixes in one round. The tab lists (Library grid and
