@@ -737,6 +737,16 @@ grid, which share `MangaCompactGridItem`; the comfortable grid was
 already title-below. The Miuix floating bar, title capsule and
 Neko theme are untouched — only the card layout follows PiliPlus.
 
+## Extension status pill (2026-11-13)
+
+`ExtensionPill` (the status capsule in the Extensions list and on the
+extension details page — install state, obsolete, content warning,
+private installer) is now a true pill: fully rounded ends
+(`CircleShape`) instead of the 4.dp rounded rectangle, a slightly
+stronger tinted background of the status color (0.15 alpha), a
+medium-weight label, and a little more breathing room (8.dp / 3.dp
+padding). The status colors themselves are unchanged.
+
 ## Tab lists: no scrollbar thumb, selected icon, edge-to-edge (2026-11-13)
 
 Three small fixes in one round. The tab lists (Library grid and
