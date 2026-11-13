@@ -295,34 +295,35 @@ uses MaterialExpressiveTheme.
   MangaBaka, MangaUpdates, MyAnimeList, Shikimori).
 - Package name, applicationId and code references to Mihon are untouched.
 
-## Icon: Taiji (2026-11-12, day/night split 2026-11-13)
+## Icon: frosted disc + 極 (2026-11-13)
 
-The launcher icon is a Taiji (yin-yang) symbol. Day and night use
-different versions (2026-11-13, from the user's reference image —
-this reverses the 2026-11-12 decision to use one icon for both
-modes): day is a white background with a black-dominant Taiji and a
-black outline; night is a near-black `#1B1A1F` background with the
-same Taiji geometry and all colors inverted — white-dominant Taiji,
-white outline. The splash background (`@color/splash`) follows:
-white in day mode, `#1B1A1F` at night, so the splash looks exactly
-like the launcher icon in both modes.
+Redesigned 2026-11-13 to imitate Mihon's original icon: a circle with
+the 極 character in the middle, in a frosted-glass skeuomorphic style.
+This supersedes the Taiji icon (2026-11-12–13). The 極 is Mihon's
+original glyph path (from upstream `ic_launcher_foreground.xml`),
+scaled 1.2× about its centre so it fills the disc more. The disc keeps
+Mihon's geometry (outer circle r 103.5, blue ring to r 84) and colours
+(`#0058A0` ring, `#FAFAFA` background). Day and night are separate
+versions (day/night split kept from the Taiji change).
 
-- Foreground (`ic_launcher_foreground.xml` day, `drawable-night/`
-  night): a Taiji — black half + white half with an S-curve, a white
-  dot in the black half and a black dot in the white half, black
-  outline (stroke 6) in day mode. The night file keeps the same
-  `pathData` and swaps every color (white half ↔ black half, both
-  dots, outline white).
-- Background (`ic_launcher_background.xml` white day /
-  `drawable-night/` `#1B1A1F` night — the dark value is measured
-  from the reference image).
-- Monochrome (`ic_launcher_monochrome.xml`): the Taiji half as a
-  solid shape, for themed app icons (single color, no night variant).
+- Day foreground: frosted light disc (white → pale blue vertical
+  gradient), top sheen + bottom shade clipped to the disc, blue ring
+  with a lighter top, a thin white rim-light arc, dark `#031019` 極
+  with a soft drop shadow.
+- Night foreground: frosted dark disc (dark blue-grey gradient),
+  brighter blue ring, near-white `#EDF4FA` 極, background `#1B1A1F`.
+- The frosted effect is faked with linear gradients only (a vector
+  can't do noise): disc gradient, sheen/shade caps, ring gradient,
+  rim light. Gradients use `aapt:attr` (`xmlns:aapt`), API 24+;
+  minSdk is 26.
+- Monochrome (`ic_launcher_monochrome.xml`): unchanged, Mihon's 極
+  as a solid shape for themed app icons.
 - The debug source set mirrors main (foreground + background, day +
-  night) so Android Studio's debug build shows the Taiji too.
+  night) so Android Studio's debug build shows the new icon too.
 - Splash (`ic_mihon_splash.xml`): uses the launcher foreground
-  directly, with `@color/splash` as the background, so the splash
-  looks exactly like the launcher icon.
+  directly, with `@color/splash` as the background (`#FAFAFA` day,
+  `#1B1A1F` night), so the splash looks exactly like the launcher
+  icon.
 
 ## Settings pages (2026-11-12)
 

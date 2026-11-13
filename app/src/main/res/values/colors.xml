@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Splash background matches the launcher icon background: white by day -->
-    <color name="splash">#FFFFFF</color>
+    <!-- Splash background matches the launcher icon background: #FAFAFA, as Mihon's original -->
+    <color name="splash">#FAFAFA</color>
 
     <color name="accent_blue">#0058A0</color>
     <color name="icon_background">#FAFAFA</color>
