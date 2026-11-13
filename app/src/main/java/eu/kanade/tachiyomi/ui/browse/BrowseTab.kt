@@ -2,25 +2,19 @@ package eu.kanade.tachiyomi.ui.browse
 
 import androidx.compose.animation.graphics.res.animatedVectorResource
 import androidx.compose.animation.graphics.vector.AnimatedImageVector
-import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
 import androidx.compose.ui.platform.LocalContext
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.Navigator
+import cafe.adriel.voyager.navigator.currentOrThrow
 import cafe.adriel.voyager.navigator.tab.LocalTabNavigator
 import cafe.adriel.voyager.navigator.tab.TabOptions
-import dev.zacsweers.metrox.viewmodel.metroViewModel
-import eu.kanade.presentation.components.TabbedScreen
+import eu.kanade.presentation.browse.BrowseMenuScreen
 import eu.kanade.presentation.util.Tab
 import eu.kanade.presentation.util.rememberAnimatedVectorPainter
 import eu.kanade.tachiyomi.R
-import eu.kanade.tachiyomi.ui.browse.extension.ExtensionsViewModel
-import eu.kanade.tachiyomi.ui.browse.extension.extensionsTab
-import eu.kanade.tachiyomi.ui.browse.migration.sources.migrateSourceTab
 import eu.kanade.tachiyomi.ui.browse.source.globalsearch.GlobalSearchScreen
-import eu.kanade.tachiyomi.ui.browse.source.sourcesTab
 import eu.kanade.tachiyomi.ui.home.HomeScreen
 import eu.kanade.tachiyomi.ui.main.MainActivity
 import kotlinx.coroutines.channels.BufferOverflow
@@ -49,46 +43,33 @@ data object BrowseTab : Tab {
         navigator.push(GlobalSearchScreen())
     }
 
-    private val switchToExtensionTabChannel = Channel<Unit>(1, BufferOverflow.DROP_OLDEST)
+    // A section to open (from a launcher shortcut). Buffered so the
+    // request survives switching to this tab; the menu collects it and
+    // pushes the section screen.
+    private val showSectionChannel = Channel<BrowseSection>(1, BufferOverflow.DROP_OLDEST)
 
-    fun showExtension() {
-        switchToExtensionTabChannel.trySend(Unit)
+    fun showSection(section: BrowseSection) {
+        showSectionChannel.trySend(section)
     }
 
     @Composable
     override fun Content() {
         val context = LocalContext.current
-
-        // Hoisted for extensions tab's search bar
-        val extensionsViewModel = metroViewModel<ExtensionsViewModel>()
-        val extensionsSearchQuery by extensionsViewModel.searchQuery.collectAsStateWithLifecycle()
-
-        val tabs = listOf(
-            sourcesTab(),
-            extensionsTab(extensionsViewModel),
-            migrateSourceTab(),
-        )
-
-        val state = rememberPagerState { tabs.size }
-
-        TabbedScreen(
-            titleRes = MR.strings.browse,
-            tabs = tabs,
-            state = state,
-            searchQuery = extensionsSearchQuery,
-            onChangeSearchQuery = extensionsViewModel::search,
-        )
-        // The title capsule hides while the extensions search field is
-        // open (it would sit under the capsule). Tablets have no
-        // capsule, so the check there is a no-op.
-        LaunchedEffect(extensionsSearchQuery) {
-            HomeScreen.showTitleCapsule(extensionsSearchQuery == null)
-        }
+        val navigator = LocalNavigator.currentOrThrow
+        // The menu has no search or selection mode: the capsule is always
+        // shown. (Without this, it would keep the previous tab's hidden state.)
         LaunchedEffect(Unit) {
-            switchToExtensionTabChannel.receiveAsFlow()
-                .collectLatest { state.scrollToPage(1) }
+            HomeScreen.showTitleCapsule(true)
         }
-
+        BrowseMenuScreen(
+            onClickSources = { navigator.push(BrowseSectionScreen(BrowseSection.Sources)) },
+            onClickExtensions = { navigator.push(BrowseSectionScreen(BrowseSection.Extensions)) },
+            onClickMigration = { navigator.push(BrowseSectionScreen(BrowseSection.Migration)) },
+        )
+        LaunchedEffect(Unit) {
+            showSectionChannel.receiveAsFlow()
+                .collectLatest { navigator.push(BrowseSectionScreen(it)) }
+        }
         LaunchedEffect(Unit) {
             (context as? MainActivity)?.ready = true
         }

@@ -607,6 +607,27 @@ handler reads the preference directly so the value is never stale.
 The change takes effect immediately, no restart needed. The updates
 themselves are untouched (they still arrive; only the tab is hidden).
 
+## Browse tab: first-level menu like the More page (2026-11-13)
+
+The Browse tab is no longer a pager of three tabs (来源 / 拓展套件 /
+迁移）. It is a first-level menu like the More page: one grouped
+Miuix card with three `ArrowPreference` rows (来源， 拓展套件， 迁移）,
+and tapping a row opens that section as its own screen
+(`BrowseSectionScreen`, one per section). Each section is still the
+same `TabContent` the pager used, rendered with its own top bar
+(back button, title, the section's actions) instead of the shared
+tab bar; the Extensions section keeps its search field (the title
+capsule hides while it is open, as before). The launcher shortcuts
+still open their section directly: the Sources and Extensions
+shortcuts send a `BrowseSection` through a buffered channel that the
+menu collects and pushes. Tapping the Browse tab again still opens
+global search. The `TabbedScreen` composable is now unused (Browse
+was its only caller); the `TabContent` type still lives in that file
+and is used by the section wrappers. Each section creates its own
+ViewModels on entry now (they used to live on the Browse tab and
+survive tab switches); the lists are reactive Flows, so entry is
+just a re-subscription.
+
 ## Remaining pages: updates, history, download, category, stats, upcoming, misc (2026-11-12)
 
 The second half of the browse batch: the main-tab list items and

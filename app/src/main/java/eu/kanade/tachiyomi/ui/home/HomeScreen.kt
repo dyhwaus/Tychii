@@ -55,6 +55,7 @@ import eu.kanade.presentation.miuix.TychiiLiquidBar
 import eu.kanade.presentation.theme.isMiuixGlassSupported
 import eu.kanade.presentation.util.Screen
 import eu.kanade.presentation.util.isTabletUi
+import eu.kanade.tachiyomi.ui.browse.BrowseSection
 import eu.kanade.tachiyomi.ui.browse.BrowseTab
 import eu.kanade.tachiyomi.ui.download.DownloadQueueScreen
 import eu.kanade.tachiyomi.ui.history.HistoryTab
@@ -321,9 +322,16 @@ object HomeScreen : Screen() {
                             }
                             Tab.History -> HistoryTab
                             is Tab.Browse -> {
-                                if (it.toExtensions) {
-                                    BrowseTab.showExtension()
-                                }
+                                // A launcher shortcut opens its section
+                                // directly instead of the menu; the menu
+                                // collects the request and pushes it.
+                                BrowseTab.showSection(
+                                    if (it.toExtensions) {
+                                        BrowseSection.Extensions
+                                    } else {
+                                        BrowseSection.Sources
+                                    },
+                                )
                                 BrowseTab
                             }
                             is Tab.More -> MoreTab
