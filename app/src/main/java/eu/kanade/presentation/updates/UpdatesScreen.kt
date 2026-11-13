@@ -56,7 +56,6 @@ import kotlin.time.Duration.Companion.seconds
 fun UpdateScreen(
     state: UpdatesViewModel.State,
     snackbarHostState: SnackbarHostState,
-    lastUpdated: Long,
     onClickCover: (UpdatesItem) -> Unit,
     onSelectAll: (Boolean) -> Unit,
     onInvertSelection: () -> Unit,
@@ -168,7 +167,6 @@ fun UpdateScreen(
                                 .padding(contentPadding)
                                 .fillMaxSize(),
                         ) {
-                            UpdatesLastUpdatedHeader(lastUpdated = lastUpdated)
                             QuietEmptyScreen(
                                 stringRes = if (hasActiveFilters) {
                                     MR.strings.error_no_match
@@ -186,8 +184,6 @@ fun UpdateScreen(
                             // the floating bar.
                             contentPadding = contentPadding + PaddingValues(bottom = LiquidNavBarClearance),
                         ) {
-                            updatesLastUpdatedItem(lastUpdated)
-
                             updatesUiItems(
                                 uiModels = state.getUiModel(),
                                 selectionMode = state.selectionMode,

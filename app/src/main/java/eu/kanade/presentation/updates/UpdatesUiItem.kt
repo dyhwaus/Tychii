@@ -1,7 +1,6 @@
 package eu.kanade.presentation.updates
 
 import androidx.compose.foundation.combinedClickable
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -26,7 +25,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalHapticFeedback
-import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import eu.kanade.presentation.components.relativeDateText
@@ -34,7 +32,6 @@ import eu.kanade.presentation.manga.components.ChapterDownloadAction
 import eu.kanade.presentation.manga.components.ChapterDownloadIndicator
 import eu.kanade.presentation.manga.components.DotSeparatorText
 import eu.kanade.presentation.manga.components.MangaCover
-import eu.kanade.presentation.util.relativeTimeSpanString
 import eu.kanade.tachiyomi.data.download.model.Download
 import eu.kanade.tachiyomi.ui.updates.UpdatesItem
 import mihon.icons.materialsymbols.MaterialSymbols
@@ -47,33 +44,6 @@ import tachiyomi.presentation.core.components.material.DISABLED_ALPHA
 import tachiyomi.presentation.core.components.material.padding
 import tachiyomi.presentation.core.i18n.stringResource
 import tachiyomi.presentation.core.util.selectedBackground
-
-internal fun LazyListScope.updatesLastUpdatedItem(
-    lastUpdated: Long,
-) {
-    item(key = "updates-lastUpdated") {
-        UpdatesLastUpdatedHeader(
-            lastUpdated = lastUpdated,
-            modifier = Modifier.animateItem(fadeInSpec = null, fadeOutSpec = null),
-        )
-    }
-}
-
-@Composable
-internal fun UpdatesLastUpdatedHeader(
-    lastUpdated: Long,
-    modifier: Modifier = Modifier,
-) {
-    Box(
-        modifier = modifier
-            .padding(horizontal = MaterialTheme.padding.medium, vertical = MaterialTheme.padding.small),
-    ) {
-        Text(
-            text = stringResource(MR.strings.updates_last_update_info, relativeTimeSpanString(lastUpdated)),
-            fontStyle = FontStyle.Italic,
-        )
-    }
-}
 
 internal fun LazyListScope.updatesUiItems(
     uiModels: List<UpdatesUiModel>,

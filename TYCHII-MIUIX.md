@@ -737,6 +737,23 @@ grid, which share `MangaCompactGridItem`; the comfortable grid was
 already title-below. The Miuix floating bar, title capsule and
 Neko theme are untouched — only the card layout follows PiliPlus.
 
+## Library and Updates: no containers above the content (2026-11-13)
+
+The containers above the Library and Updates pages are gone, leaving
+only the title bar (the floating capsule). On the Library this was the
+category tabs row (`LibraryTabs`): the pager still swipes between
+categories, and the capsule title now always names the category being
+viewed (with its manga count), so there is still a way to tell which
+one it is — `getToolbarTitle` no longer falls back to the default
+title or the whole-library count when tabs were shown. On Updates
+this was the "last updated" header (`updatesLastUpdatedItem` /
+`UpdatesLastUpdatedHeader`, an italic line at the top of the list and
+in the empty state). The now-unused `LibraryTabs.kt`,
+`showPageTabs` / `getItemCountForCategory` plumbing and the
+`lastUpdated` parameter are removed. The `showCategoryTabs` setting
+itself is left in place (it no longer drives anything on the Library
+page).
+
 ## Theme mode TabRow: match the card background (2026-11-13)
 
 The theme mode TabRow （系統 / 淺色 / 深色） in Settings → Appearance

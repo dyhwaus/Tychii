@@ -842,13 +842,12 @@ class LibraryViewModel(
             val categoryName = category.let {
                 if (it.isSystemCategory) defaultCategoryTitle else it.name
             }
-            val title = if (showCategoryTabs) defaultTitle else categoryName
-            val count = when {
-                !showMangaCount -> null
-                !showCategoryTabs -> getItemCountForCategory(category)
-                // Whole library count
-                else -> libraryData.favorites.size
-            }
+            // No category tabs above the grid any more, so the title
+            // always names the category being viewed (otherwise there
+            // would be no way to tell which one it is), and the count is
+            // that category's count.
+            val title = categoryName
+            val count = if (showMangaCount) getItemCountForCategory(category) else null
             return LibraryToolbarTitle(title, count)
         }
     }

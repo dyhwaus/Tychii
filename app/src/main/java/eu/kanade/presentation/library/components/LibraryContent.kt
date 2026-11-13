@@ -48,7 +48,6 @@ fun LibraryContent(
     contentPadding: PaddingValues,
     currentPage: Int,
     hasActiveFilters: Boolean,
-    showPageTabs: Boolean,
     onChangeCurrentPage: (Int) -> Unit,
     onClickManga: (Long) -> Unit,
     onContinueReadingClicked: ((LibraryManga) -> Unit)?,
@@ -56,7 +55,6 @@ fun LibraryContent(
     onToggleRangeSelection: (Category, LibraryManga) -> Unit,
     onRefresh: suspend () -> Boolean,
     onGlobalSearchClicked: () -> Unit,
-    getItemCountForCategory: (Category) -> Int?,
     getDisplayMode: (Int) -> PreferenceMutableState<LibraryDisplayMode>,
     getColumnsForOrientation: (Boolean) -> PreferenceMutableState<Int>,
     getItemsForCategory: (Category) -> List<LibraryItem>,
@@ -146,24 +144,6 @@ fun LibraryContent(
                     ),
                 )
             }
-        }
-
-        if (showPageTabs && categories.isNotEmpty() && (categories.size > 1 || !categories.first().isSystemCategory)) {
-            LaunchedEffect(categories) {
-                if (categories.size <= pagerState.currentPage) {
-                    pagerState.scrollToPage(categories.size - 1)
-                }
-            }
-            LibraryTabs(
-                categories = categories,
-                pagerState = pagerState,
-                getItemCountForCategory = getItemCountForCategory,
-                onTabItemClick = {
-                    scope.launch {
-                        pagerState.animateScrollToPage(it)
-                    }
-                },
-            )
         }
 
         PullRefresh(
