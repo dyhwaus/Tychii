@@ -38,7 +38,6 @@ import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.components.material.PullRefresh
 import tachiyomi.presentation.core.i18n.stringResource
 import tachiyomi.presentation.core.theme.active
-import tachiyomi.presentation.core.util.plus
 import kotlin.time.Duration.Companion.seconds
 
 @Composable
@@ -184,13 +183,14 @@ fun LibraryContent(
                 state = pagerState,
                 // Empty space below the last row so it clears the
                 // floating bar (HomeScreen no longer insets the whole
-                // content for it). Added to the Scaffold's own padding
-                // rather than replacing it: building a fresh PaddingValues
-                // with only the bottom used to drop the 64.dp toolbar
-                // band, so the first row slid under it. No extra top gap:
-                // the band alone leaves enough room, and an added gap only
-                // read as blank space above the first row.
-                contentPadding = contentPadding + PaddingValues(bottom = LiquidNavBarClearance),
+                // content for it). Only the bottom: the Column above
+                // already applied the Scaffold's top/start/end padding
+                // (the 64.dp toolbar band), so adding it here again
+                // counted the band twice and pushed the first row much
+                // lower than the other pages' first item.
+                contentPadding = PaddingValues(
+                    bottom = contentPadding.calculateBottomPadding() + LiquidNavBarClearance,
+                ),
                 hasActiveFilters = hasActiveFilters,
                 selection = selection,
                 searchQuery = searchQuery,

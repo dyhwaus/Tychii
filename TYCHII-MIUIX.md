@@ -681,6 +681,16 @@ now sizes its box from its measured width (`BoxWithConstraints`,
 height = width / 2/3), so the cells are true 2:3 and the covers
 show in full.
 
+One more top-spacing fix (2026-11-13): the Library counted the
+64.dp toolbar band twice — its root Column pads the top by the
+Scaffold's padding, and the grid added the same padding again — so
+its first row sat much lower than the other pages' first item. The
+grid now takes only the bottom clearance (plus the Scaffold's
+bottom, for the selection menu); the Column already places it below
+the band. History, Updates, Browse and More were already at the
+band (64.dp): their lists are direct Scaffold content, so they add
+the Scaffold's padding once.
+
 ## Floating action capsule (2026-11-13)
 
 The search/sort/display/filter icons (and each tab's own actions)
