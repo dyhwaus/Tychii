@@ -628,6 +628,25 @@ ViewModels on entry now (they used to live on the Browse tab and
 survive tab switches); the lists are reactive Flows, so entry is
 just a re-subscription.
 
+## Library view options as small icons (2026-11-13)
+
+The Library page's sort / display-mode / filter options are back as
+small icons. They used to live in the top bar, but the centered
+title capsule sits over that band on phones, so they moved to the
+end of the category tab row (`LibraryViewOptions`, pinned right;
+when there are no tabs the icons stand alone on the same row):
+- Sort (sort icon) opens a Miuix dropdown with the same sort list
+  as the settings sheet (tracker score only when a tracker is
+  logged in). The selected row carries an up/down arrow for the
+  direction, and tapping the active type flips it — the same rule
+  as the sheet.
+- Display mode (icon shows the current mode: grid / comfortable
+  grid / list) opens a dropdown with the four modes.
+- Filter opens the settings sheet; its icon takes the accent tint
+  while filters are active.
+The settings sheet itself is unchanged (still the full sort /
+display / filter pages). The top-bar actions stay tablet-only.
+
 ## Remaining pages: updates, history, download, category, stats, upcoming, misc (2026-11-12)
 
 The second half of the browse batch: the main-tab list items and

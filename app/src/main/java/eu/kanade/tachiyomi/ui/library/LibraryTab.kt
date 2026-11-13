@@ -11,6 +11,7 @@ import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -54,6 +55,7 @@ import mihon.icons.materialsymbols.automirroredrounded.Help
 import tachiyomi.core.common.i18n.stringResource
 import tachiyomi.domain.category.model.Category
 import tachiyomi.domain.library.model.LibraryManga
+import tachiyomi.domain.library.model.sort
 import tachiyomi.domain.manga.model.Manga
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.components.material.Scaffold
@@ -91,6 +93,10 @@ data object LibraryTab : Tab {
         val viewModel = metroViewModel<LibraryViewModel>()
         val settingsViewModel = metroViewModel<LibrarySettingsViewModel>()
         val state by viewModel.state.collectAsStateWithLifecycle()
+        val trackers by settingsViewModel.trackersFlow.collectAsState()
+        // The display mode is one global preference; hold its state
+        // wrapper once instead of recreating it per page.
+        val displayMode by remember { viewModel.getDisplayMode() }
 
         // The title capsule follows the active category: the default
         // category shows just "书架", any other category shows
@@ -242,6 +248,14 @@ data object LibraryTab : Tab {
                         getDisplayMode = { viewModel.getDisplayMode() },
                         getColumnsForOrientation = { viewModel.getColumnsForOrientation(it) },
                         getItemsForCategory = { state.getItemsForCategory(it) },
+                        sort = state.activeCategory.sort,
+                        hasTrackers = trackers.isNotEmpty(),
+                        onSetSort = { mode, direction ->
+                            settingsViewModel.setSort(state.activeCategory, mode, direction)
+                        },
+                        displayMode = displayMode,
+                        onDisplayModeSelected = settingsViewModel::setDisplayMode,
+                        onClickFilter = viewModel::showSettingsDialog,
                     )
                 }
             }
