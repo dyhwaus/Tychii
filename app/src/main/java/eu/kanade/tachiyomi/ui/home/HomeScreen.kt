@@ -368,7 +368,9 @@ object HomeScreen : Screen() {
                             exit = fadeOut() + slideOutHorizontally(targetOffsetX = { it }),
                             modifier = Modifier
                                 .align(Alignment.CenterEnd)
-                                .padding(end = 12.dp),
+                                // Clear of the right edge: 12.dp left the
+                                // capsule hugging the screen edge.
+                                .padding(end = 20.dp),
                         ) {
                             MiuixFloatingCapsule(
                                 actions = capsuleActions,

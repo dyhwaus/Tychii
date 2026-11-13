@@ -737,6 +737,12 @@ grid, which share `MangaCompactGridItem`; the comfortable grid was
 already title-below. The Miuix floating bar, title capsule and
 Neko theme are untouched — only the card layout follows PiliPlus.
 
+## Floating action capsule: clear of the right edge (2026-11-13)
+
+The floating action capsule (search / sort / display / filter) sat
+12.dp from the right edge, hugging the screen edge. Its end padding
+is now 20.dp, so it floats clear of the edge.
+
 ## Library and Updates: no containers above the content (2026-11-13)
 
 The containers above the Library and Updates pages are gone, leaving
