@@ -870,6 +870,13 @@ from the GitHub ZIP.
   inferred `() -> Boolean` and the three section call sites
   rejected it (expected `() -> Unit`). The val is now typed
   explicitly `() -> Unit`, which coerces the Boolean result.
+- 2026-11-13 — the floating capsule's `showSearchIcon` was folded
+  into SearchToolbar's magnifier branch as
+  `searchQuery == null && showSearchIcon`, which broke the smart
+  cast: the next branch (`searchQuery.isNotEmpty()`) no longer knew
+  `searchQuery` was non-null, so the compiler rejected it as
+  UNSAFE_CALL. The branch is back to the bare null check, with
+  `showSearchIcon` gating the magnifier inside it (219b4790).
 
 ## Build
 
