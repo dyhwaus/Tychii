@@ -1,9 +1,7 @@
 package eu.kanade.presentation.reader.settings
 
 import androidx.compose.foundation.layout.ColumnScope
-import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.core.graphics.alpha
@@ -105,10 +103,10 @@ internal fun ColumnScope.ColorFilterPage(viewModel: ReaderSettingsViewModel) {
         val colorFilterMode by viewModel.preferences.colorFilterMode.collectAsState()
         SettingsChipRow(MR.strings.pref_color_filter_mode) {
             ColorFilterMode.mapIndexed { index, it ->
-                FilterChip(
+                ReaderFilterChip(
                     selected = colorFilterMode == index,
                     onClick = { viewModel.preferences.colorFilterMode.set(index) },
-                    label = { Text(stringResource(it.first)) },
+                    label = stringResource(it.first),
                 )
             }
         }

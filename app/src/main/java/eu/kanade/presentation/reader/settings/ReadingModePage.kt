@@ -1,9 +1,7 @@
 package eu.kanade.presentation.reader.settings
 
 import androidx.compose.foundation.layout.ColumnScope
-import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -37,10 +35,10 @@ internal fun ColumnScope.ReadingModePage(viewModel: ReaderSettingsViewModel) {
     val readingMode = remember(manga) { ReadingMode.fromPreference(manga?.readingMode?.toInt()) }
     SettingsChipRow(MR.strings.pref_category_reading_mode) {
         ReadingMode.entries.map {
-            FilterChip(
+            ReaderFilterChip(
                 selected = it == readingMode,
                 onClick = { viewModel.setReadingMode(it) },
-                label = { Text(stringResource(it.stringRes)) },
+                label = stringResource(it.stringRes),
             )
         }
     }
@@ -48,10 +46,10 @@ internal fun ColumnScope.ReadingModePage(viewModel: ReaderSettingsViewModel) {
     val orientation = remember(manga) { ReaderOrientation.fromPreference(manga?.readerOrientation?.toInt()) }
     SettingsChipRow(MR.strings.rotation_type) {
         ReaderOrientation.entries.map {
-            FilterChip(
+            ReaderFilterChip(
                 selected = it == orientation,
                 onClick = { viewModel.setOrientation(it) },
-                label = { Text(stringResource(it.stringRes)) },
+                label = stringResource(it.stringRes),
             )
         }
     }
@@ -80,10 +78,10 @@ private fun ColumnScope.PagerViewerSettings(viewModel: ReaderSettingsViewModel) 
     val imageScaleType by viewModel.preferences.imageScaleType.collectAsState()
     SettingsChipRow(MR.strings.pref_image_scale_type) {
         ReaderPreferences.ImageScaleType.mapIndexed { index, it ->
-            FilterChip(
+            ReaderFilterChip(
                 selected = imageScaleType == index + 1,
                 onClick = { viewModel.preferences.imageScaleType.set(index + 1) },
-                label = { Text(stringResource(it)) },
+                label = stringResource(it),
             )
         }
     }
@@ -91,10 +89,10 @@ private fun ColumnScope.PagerViewerSettings(viewModel: ReaderSettingsViewModel) 
     val zoomStart by viewModel.preferences.zoomStart.collectAsState()
     SettingsChipRow(MR.strings.pref_zoom_start) {
         ReaderPreferences.ZoomStart.mapIndexed { index, it ->
-            FilterChip(
+            ReaderFilterChip(
                 selected = zoomStart == index + 1,
                 onClick = { viewModel.preferences.zoomStart.set(index + 1) },
-                label = { Text(stringResource(it)) },
+                label = stringResource(it),
             )
         }
     }
@@ -218,10 +216,10 @@ internal fun TapZonesItems(
 ) {
     SettingsChipRow(MR.strings.pref_viewer_nav) {
         ReaderPreferences.TapZones.mapIndexed { index, it ->
-            FilterChip(
+            ReaderFilterChip(
                 selected = selected == index,
                 onClick = { onSelect(index) },
-                label = { Text(stringResource(it)) },
+                label = stringResource(it),
             )
         }
     }
@@ -229,10 +227,10 @@ internal fun TapZonesItems(
     if (selected != 5) {
         SettingsChipRow(MR.strings.pref_read_with_tapping_inverted) {
             ReaderPreferences.TappingInvertMode.entries.map {
-                FilterChip(
+                ReaderFilterChip(
                     selected = it == invertMode,
                     onClick = { onSelectInvertMode(it) },
-                    label = { Text(stringResource(it.titleRes)) },
+                    label = stringResource(it.titleRes),
                 )
             }
         }

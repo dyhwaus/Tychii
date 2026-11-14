@@ -2,9 +2,7 @@ package eu.kanade.presentation.reader.settings
 
 import androidx.activity.compose.LocalActivity
 import androidx.compose.foundation.layout.ColumnScope
-import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import eu.kanade.tachiyomi.ui.reader.setting.ReaderPreferences
@@ -49,10 +47,10 @@ internal fun ColumnScope.GeneralPage(viewModel: ReaderSettingsViewModel) {
 
     SettingsChipRow(MR.strings.pref_reader_theme) {
         themes.map { (labelRes, value) ->
-            FilterChip(
+            ReaderFilterChip(
                 selected = readerTheme == value,
                 onClick = { viewModel.preferences.readerTheme.set(value) },
-                label = { Text(stringResource(labelRes)) },
+                label = stringResource(labelRes),
             )
         }
     }
@@ -66,7 +64,7 @@ internal fun ColumnScope.GeneralPage(viewModel: ReaderSettingsViewModel) {
 
     SettingsChipRow(MR.strings.pref_vertical_navigator) {
         ReadingMode.entries.filter { it != ReadingMode.DEFAULT }.forEach { mode ->
-            FilterChip(
+            ReaderFilterChip(
                 selected = verticalNavigatorModes.contains(mode),
                 onClick = {
                     val newModes = if (verticalNavigatorModes.contains(mode)) {
@@ -76,7 +74,7 @@ internal fun ColumnScope.GeneralPage(viewModel: ReaderSettingsViewModel) {
                     }
                     viewModel.preferences.verticalNavigator.set(newModes)
                 },
-                label = { Text(stringResource(mode.stringRes)) },
+                label = stringResource(mode.stringRes),
             )
         }
     }
@@ -157,10 +155,10 @@ internal fun ColumnScope.GeneralPage(viewModel: ReaderSettingsViewModel) {
         )
         SettingsChipRow(MR.strings.pref_flash_with) {
             flashColors.map { (labelRes, value) ->
-                FilterChip(
+                ReaderFilterChip(
                     selected = flashColor == value,
                     onClick = { flashColorPref.set(value) },
-                    label = { Text(stringResource(labelRes)) },
+                    label = stringResource(labelRes),
                 )
             }
         }
