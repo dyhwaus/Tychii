@@ -89,7 +89,7 @@ fun MangaCompactGridItem(
     ) {
         Column(
             modifier = Modifier
-                .clip(RoundedCornerShape(12.dp))
+                .clip(RoundedCornerShape(8.dp))
                 .background(MiuixTheme.colorScheme.surfaceContainer),
         ) {
             MangaGridCover(
@@ -104,9 +104,9 @@ fun MangaCompactGridItem(
                         // Cover-only has no title below, so it keeps the
                         // full rounding.
                         shape = if (title != null) {
-                            RoundedCornerShape(topStart = 12.dp, topEnd = 12.dp)
+                            RoundedCornerShape(topStart = 8.dp, topEnd = 8.dp)
                         } else {
-                            RoundedCornerShape(12.dp)
+                            RoundedCornerShape(8.dp)
                         },
                     )
                 },
