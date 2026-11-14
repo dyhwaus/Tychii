@@ -737,6 +737,16 @@ grid, which share `MangaCompactGridItem`; the comfortable grid was
 already title-below. The Miuix floating bar, title capsule and
 Neko theme are untouched — only the card layout follows PiliPlus.
 
+## Chip rows: vertical gap between wrapped rows (2026-11-14)
+
+When a `SettingsChipRow` wrapped to two rows (e.g. the reader's
+screen-orientation options), the rows sat directly on each other
+with no gap — the shared `FlowRow` only had a horizontal
+`Arrangement.spacedBy`, no `verticalArrangement`. It now uses the
+same spacing vertically as horizontally, so wrapped chip rows
+breathe. This is the shared component, so every chip row benefits
+(reader settings, library settings, web-GPU viewer settings).
+
 ## TabbedDialog TabRow seam (2026-11-14)
 
 The reader settings dialog's three tabs (reading mode / general /
