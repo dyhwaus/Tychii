@@ -996,6 +996,28 @@ gone at rest on all three pages:
   capsule). Only the Popular / Latest / Filter chips stay at the
   top.
 
+## Extensions: trust dialog unreachable under the floating bar (2026-11-14)
+
+Tapping 信任 on an untrusted self-installed extension did
+nothing. The trust chain itself is fine — the dialog, the
+ViewModel, `TrustExtension` and the reload on the preference
+change, and upstream #4071 only refactored where the store list
+comes from without changing the trust key. The cause is
+z-order: a bottom-attached dialog's buttons sit ~36–76.dp
+above the screen bottom, and the floating bar covers the same
+band (8–72.dp) while sitting above the dialog; the bar's
+background has an empty clickable that swallows the tap, so the
+信任 button never receives it.
+
+`ExtensionContent` now hides the bar while the not-loaded
+dialog is open (`LaunchedEffect(notLoadedState)` calling
+`HomeScreen.showBottomNav`, the channel Library/Updates use
+for selection mode) and shows it again on dismiss. Both
+dialogs on the page share the trigger, so the fix covers the
+trust dialog and the not-loaded dialog. The same overlap
+exists for bottom-attached dialogs on other tab pages; they
+need the same treatment when reported.
+
 ## Build fixes
 
 - 2026-11-14: the Explore capsule called `stringResource(...)` for the
