@@ -390,6 +390,10 @@ fun SettingsChipRow(labelRes: StringResource, content: @Composable FlowRowScope.
                 bottom = SettingsItemsPaddings.Vertical,
             ),
             horizontalArrangement = Arrangement.spacedBy(MaterialTheme.padding.small),
+            // Without this, wrapped rows of chips sit directly on each
+            // other with no gap (e.g. the reader's screen-orientation
+            // options). Same spacing as the horizontal gap.
+            verticalArrangement = Arrangement.spacedBy(MaterialTheme.padding.small),
             content = content,
         )
     }
