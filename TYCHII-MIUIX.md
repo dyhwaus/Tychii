@@ -737,6 +737,24 @@ grid, which share `MangaCompactGridItem`; the comfortable grid was
 already title-below. The Miuix floating bar, title capsule and
 Neko theme are untouched — only the card layout follows PiliPlus.
 
+## TabbedDialog TabRow seam (2026-11-14)
+
+The reader settings dialog's three tabs (reading mode / general /
+filter) showed the same seam as the theme-mode TabRow: the
+TabRow's default row background is Miuix `surface` (#F7F7F7 in
+light mode, measured 247 in the user's screenshot), but the sheet
+it sits on is `surfaceContainerHigh` (#E8E8E8, measured 232), so a
+mismatched band showed behind the tab pills. Fixed in
+`TabbedDialog` itself (it always renders inside an
+`AdaptiveSheet`, so this fixes the same seam in every dialog that
+uses it — library settings, updates filter, upcoming): the TabRow
+now takes `surfaceContainerHigh` as its row background. The
+selected pill is one shade up from the sheet — white
+(`surfaceContainer`) in light mode, `surfaceContainerHighest` in
+dark mode, where `surfaceContainer` equals the sheet and would
+vanish into it. The selected pill in the screenshot was already
+white, so its light-mode look is unchanged.
+
 ## Reader chrome to Miuix (2026-11-14)
 
 First pass on the reader, scoped to its chrome — the page viewer,
