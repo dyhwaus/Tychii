@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
@@ -40,6 +41,7 @@ import tachiyomi.presentation.core.i18n.stringResource
 import tachiyomi.presentation.core.util.selectedBackground
 import top.yukonga.miuix.kmp.basic.HorizontalDivider
 import top.yukonga.miuix.kmp.basic.IconButton
+import top.yukonga.miuix.kmp.theme.MiuixTheme
 import tachiyomi.domain.manga.model.MangaCover as MangaCoverModel
 
 object CommonMangaItemDefaults {
@@ -85,12 +87,11 @@ fun MangaCompactGridItem(
         onClick = onClick,
         onLongClick = onLongClick,
     ) {
-        // No card background: the cover floats on the page background
-        // and the title sits below it, so the grid reads lighter and
-        // the covers are the focus. The cover keeps its default full
-        // 12.dp rounding (all four corners) now that there is no card
-        // for its bottom edge to flow into.
-        Column {
+        Column(
+            modifier = Modifier
+                .clip(RoundedCornerShape(12.dp))
+                .background(MiuixTheme.colorScheme.surfaceContainer),
+        ) {
             MangaGridCover(
                 cover = {
                     MangaCover.Book(
@@ -98,6 +99,15 @@ fun MangaCompactGridItem(
                             .fillMaxWidth()
                             .alpha(if (isSelected) GRID_SELECTED_COVER_ALPHA else coverAlpha),
                         data = coverData,
+                        // Top corners rounded to meet the card; the bottom
+                        // is square so the cover flows into the title area.
+                        // Cover-only has no title below, so it keeps the
+                        // full rounding.
+                        shape = if (title != null) {
+                            RoundedCornerShape(topStart = 12.dp, topEnd = 12.dp)
+                        } else {
+                            RoundedCornerShape(12.dp)
+                        },
                     )
                 },
                 badgesStart = coverBadgeStart,

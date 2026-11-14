@@ -115,15 +115,27 @@ fun LibraryContent(
             } else {
                 HomeScreen.setCapsuleActions(
                     listOf(
+                        // The two dropdowns share their open state: opening
+                        // one closes the other, and opening search or the
+                        // filter sheet closes both. Without this, tapping
+                        // a second capsule action left the first dropdown
+                        // open underneath it.
                         CapsuleAction(
                             icon = MaterialSymbols.Rounded.Search,
                             contentDescription = searchDescription,
-                            onClick = onClickSearch,
+                            onClick = {
+                                selectingSort = false
+                                selectingDisplayMode = false
+                                onClickSearch()
+                            },
                         ),
                         CapsuleAction(
                             icon = MaterialSymbols.AutoMirroredRounded.Sort,
                             contentDescription = sortDescription,
-                            onClick = { selectingSort = true },
+                            onClick = {
+                                selectingSort = true
+                                selectingDisplayMode = false
+                            },
                         ),
                         CapsuleAction(
                             icon = when (displayMode) {
@@ -134,12 +146,19 @@ fun LibraryContent(
                                 -> MaterialSymbols.RoundedFilled.ViewCompact
                             },
                             contentDescription = displayDescription,
-                            onClick = { selectingDisplayMode = true },
+                            onClick = {
+                                selectingDisplayMode = true
+                                selectingSort = false
+                            },
                         ),
                         CapsuleAction(
                             icon = MaterialSymbols.Rounded.FilterList,
                             contentDescription = filterDescription,
-                            onClick = onClickFilter,
+                            onClick = {
+                                selectingSort = false
+                                selectingDisplayMode = false
+                                onClickFilter()
+                            },
                             tint = if (hasActiveFilters) activeColor else null,
                         ),
                     ),

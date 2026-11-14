@@ -170,10 +170,16 @@ data class BrowseSourceScreen(
             } else {
                 HomeScreen.setCapsuleActions(
                     listOf(
+                        // Opening search closes the display dropdown,
+                        // like the Library page closes its dropdowns
+                        // when another capsule action is tapped.
                         CapsuleAction(
                             icon = MaterialSymbols.Rounded.Search,
                             contentDescription = searchDescription,
-                            onClick = { viewModel.setToolbarQuery("") },
+                            onClick = {
+                                selectingDisplayMode = false
+                                viewModel.setToolbarQuery("")
+                            },
                         ),
                         CapsuleAction(
                             icon = when (viewModel.displayMode) {
