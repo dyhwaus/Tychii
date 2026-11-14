@@ -143,10 +143,15 @@ data class BrowseSourceScreen(
                             .horizontalScroll(rememberScrollState())
                             // Breathing room above and below the chips: they
                             // used to sit flush against the toolbar above
-                            // and the divider below.
+                            // and the divider below. The 20.dp top padding
+                            // keeps the chips clear of the status bar,
+                            // matching the title capsule's clearance (8.dp
+                            // extra padding + centering in its 64.dp band).
                             .padding(
-                                horizontal = MaterialTheme.padding.small,
-                                vertical = 8.dp,
+                                start = MaterialTheme.padding.small,
+                                top = 20.dp,
+                                end = MaterialTheme.padding.small,
+                                bottom = 8.dp,
                             ),
                         horizontalArrangement = Arrangement.spacedBy(MaterialTheme.padding.small),
                     ) {
