@@ -752,13 +752,33 @@ The Library capsule's sort and display-mode dropdowns were two
 independent booleans, so tapping Display while Sort was open left
 both dropdowns up. The capsule actions now close the other dropdown
 when one opens (Sort closes Display, Display closes Sort), and
-opening search or the filter sheet closes both. The Explore page had
-the same shape of bug with its single display dropdown: opening
-search while it was up left it open, so the Search action now closes
-it first. Checked the other pages: Updates (filter sheet +
-Upcoming navigation + refresh) and History (search hides the capsule,
-clear-history is a dialog) have no two popups that can be open at
-once, so they needed no change.
+opening search closes both. The Explore page had the same shape of
+bug with its single display dropdown: opening search while it was up
+left it open, so the Search action now closes it first. Checked the
+other pages: Updates (filter + Upcoming navigation + refresh) and
+History (search hides the capsule, clear-history is a dialog) have
+no two popups that can be open at once, so they needed no change.
+The Library capsule's filter is now a third dropdown (see below),
+and the same mutual-exclusion covers it.
+
+## Filter: capsule dropdown instead of the bottom sheet (2026-11-14)
+
+The Library and Updates capsule Filter buttons opened Mihon's
+bottom-sheet settings dialogs (LibrarySettingsDialog's Filter tab,
+UpdatesFilterDialog's Filter/Categories tabs). They now expand from
+the capsule as dropdowns, like Sort and Display. The Library
+dropdown holds the tri-state filters (downloaded, unread, started,
+bookmarked, completed, tracker); the Updates dropdown holds its
+four tri-state filters, the excluded-scanlators switch, and one row
+per category. Tapping a row cycles any -> only -> exclude; "only"
+shows as the selected row (checkmark), "exclude" as the block icon,
+any as plain. The dropdowns stay open so several filters can be set
+in one go, and close by tapping outside. The Updates filter dialog
+is deleted — the capsule was its only entry point. The Library
+settings dialog stays: tablets have no capsule (the toolbar's
+Filter button opens it there) and re-tapping the Library tab opens
+it, so the display settings (columns, badges) remain reachable that
+way.
 
 ## Explore capsule hidden by stale scroll state (2026-11-14)
 
