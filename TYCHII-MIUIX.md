@@ -737,6 +737,17 @@ grid, which share `MangaCompactGridItem`; the comfortable grid was
 already title-below. The Miuix floating bar, title capsule and
 Neko theme are untouched — only the card layout follows PiliPlus.
 
+## Manga detail: backdrop fades into the page (2026-11-14)
+
+The detail header's cover-color wash was a solid 0.25-alpha
+rectangle, so where the header ended and the action row below
+began there was a hard line. The wash now fades out over the
+bottom 30% of the header (solid for the top 70%, then to
+transparent), so the backdrop blends into the page background
+instead of ending in a cut. The blurred cover image already had
+a vertical gradient fading it into the background; only the wash
+was solid.
+
 ## Capsule clear of the status bar; version 0.2.0 (2026-11-14)
 
 The title capsule is one HomeScreen overlay, so this fixes every
