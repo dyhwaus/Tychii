@@ -1,6 +1,7 @@
 package eu.kanade.presentation.components
 
 import androidx.compose.animation.animateContentSize
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
@@ -28,6 +29,8 @@ import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.i18n.stringResource
 import top.yukonga.miuix.kmp.basic.IconButton
 import top.yukonga.miuix.kmp.basic.TabRow
+import top.yukonga.miuix.kmp.basic.TabRowDefaults
+import top.yukonga.miuix.kmp.theme.MiuixTheme
 
 object TabbedDialogPaddings {
     val Horizontal = 24.dp
@@ -48,6 +51,7 @@ fun TabbedDialog(
         onDismissRequest = onDismissRequest,
     ) {
         val scope = rememberCoroutineScope()
+        val isDark = isSystemInDarkTheme()
 
         Column {
             Row(
@@ -59,6 +63,22 @@ fun TabbedDialog(
                     selectedTabIndex = pagerState.currentPage,
                     onTabSelected = { scope.launch { pagerState.animateScrollToPage(it) } },
                     modifier = Modifier.weight(1f),
+                    // The row sits on the sheet (surfaceContainerHigh);
+                    // its default row background is surface, which reads
+                    // as a mismatched band — the same seam the theme-mode
+                    // TabRow had. The selected pill is one shade up from
+                    // the sheet: white in light mode, and
+                    // surfaceContainerHighest in dark mode (where
+                    // surfaceContainer equals the sheet, so it would
+                    // vanish into it).
+                    colors = TabRowDefaults.tabRowColors(
+                        backgroundColor = MiuixTheme.colorScheme.surfaceContainerHigh,
+                        selectedBackgroundColor = if (isDark) {
+                            MiuixTheme.colorScheme.surfaceContainerHighest
+                        } else {
+                            MiuixTheme.colorScheme.surfaceContainer
+                        },
+                    ),
                 )
 
                 tabOverflowMenuContent?.let { MoreMenu(it) }
