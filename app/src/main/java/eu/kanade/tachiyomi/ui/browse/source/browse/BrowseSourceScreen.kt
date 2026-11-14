@@ -152,6 +152,14 @@ data class BrowseSourceScreen(
             HomeScreen.showTitleCapsule(false)
         }
 
+        // The floating bar sits above the bottom-attached remove
+        // dialog and swallows taps on its buttons. Only the remove
+        // dialog is covered: the other dialogs can push a new
+        // screen while open, which would leave the bar hidden.
+        LaunchedEffect(state.dialog is BrowseSourceViewModel.Dialog.RemoveManga) {
+            HomeScreen.showBottomNav(state.dialog !is BrowseSourceViewModel.Dialog.RemoveManga)
+        }
+
         // Floating action capsule, like the Library page: search and
         // cover layout. Search opens the search field in the top bar
         // (it appears while toolbarQuery is set); display opens a
