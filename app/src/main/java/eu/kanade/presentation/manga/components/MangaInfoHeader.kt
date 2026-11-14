@@ -166,12 +166,23 @@ fun MangaInfoBox(
                 .alpha(0.2f),
         )
         // A faint wash of the cover color over the backdrop. Kept at a
-        // low alpha on purpose: the page stays close to the theme.
+        // low alpha on purpose: the page stays close to the theme. It
+        // fades out over the bottom of the header, so the backdrop
+        // blends into the page background instead of ending in a hard
+        // line where the action row below begins.
         if (themeColor != null) {
             Box(
                 modifier = Modifier
                     .matchParentSize()
-                    .background(themeColor.copy(alpha = 0.25f)),
+                    .background(
+                        Brush.verticalGradient(
+                            colorStops = arrayOf(
+                                0f to themeColor.copy(alpha = 0.25f),
+                                0.7f to themeColor.copy(alpha = 0.25f),
+                                1f to Color.Transparent,
+                            ),
+                        ),
+                    ),
             )
         }
 
