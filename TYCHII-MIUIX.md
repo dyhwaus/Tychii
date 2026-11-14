@@ -737,19 +737,28 @@ grid, which share `MangaCompactGridItem`; the comfortable grid was
 already title-below. The Miuix floating bar, title capsule and
 Neko theme are untouched — only the card layout follows PiliPlus.
 
-## Cover cards: card background removed, covers float (2026-11-14)
+## Cover cards: card background removed, then reverted (2026-11-14)
 
 The compact-grid manga card (`MangaCompactGridItem`) wrapped the cover
-and title in a `surfaceContainer` card with 12.dp rounding, which read
-as a heavy box in the two-column grid. The background (and the outer
-clip) are now gone: the cover floats directly on the page background
-and the title sits below it, so the grid is lighter and the covers are
-the focus. The cover keeps its default full 12.dp rounding on all
-four corners (it used to be top-only, so its bottom edge flowed into
-the card — there is no card any more). The comfortable-grid item
-already had this floating form (no card background), so the two grid
-modes now read the same way. Affects the Library compact grid and the
-Browse source compact grid (the only two callers).
+and title in a `surfaceContainer` card with 12.dp rounding. The
+background was briefly removed (commit 6ebee96a) so the cover floated
+on the page background, but the user asked to revert it the same day —
+the card background is back (top-only cover rounding, full 12.dp when
+cover-only), i.e. the state before 6ebee96a.
+
+## Capsule dropdowns: opening one closes the other (2026-11-14)
+
+The Library capsule's sort and display-mode dropdowns were two
+independent booleans, so tapping Display while Sort was open left
+both dropdowns up. The capsule actions now close the other dropdown
+when one opens (Sort closes Display, Display closes Sort), and
+opening search or the filter sheet closes both. The Explore page had
+the same shape of bug with its single display dropdown: opening
+search while it was up left it open, so the Search action now closes
+it first. Checked the other pages: Updates (filter sheet +
+Upcoming navigation + refresh) and History (search hides the capsule,
+clear-history is a dialog) have no two popups that can be open at
+once, so they needed no change.
 
 ## Explore capsule hidden by stale scroll state (2026-11-14)
 
