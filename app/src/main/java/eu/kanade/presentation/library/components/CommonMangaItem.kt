@@ -26,6 +26,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -90,7 +94,19 @@ fun MangaCompactGridItem(
         Column(
             modifier = Modifier
                 .clip(RoundedCornerShape(8.dp))
-                .background(MiuixTheme.colorScheme.surfaceContainer),
+                .background(MiuixTheme.colorScheme.surfaceContainer)
+                // A 1.dp highlight along the top edge, like light
+                // catching the card's rim; the round rect follows
+                // the card's corners.
+                .drawWithContent {
+                    drawContent()
+                    drawRoundRect(
+                        color = Color.White.copy(alpha = 0.3f),
+                        topLeft = Offset.Zero,
+                        size = Size(size.width, 1.dp.toPx()),
+                        cornerRadius = CornerRadius(8.dp.toPx(), 8.dp.toPx()),
+                    )
+                },
         ) {
             MangaGridCover(
                 cover = {
