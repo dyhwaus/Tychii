@@ -44,7 +44,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
-import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -74,17 +73,13 @@ import top.yukonga.miuix.kmp.theme.LocalContentColor
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import kotlin.math.sign
 
-/** Tab 内容的缩放系数（按压时由底栏下发，例如 1.2 倍）。 */
-internal val LocalFloatingBottomBarTabScale = staticCompositionLocalOf { { 1f } }
-
-/** 单个 Tab：撑满高度、均分宽度，并按 [LocalFloatingBottomBarTabScale] 缩放。 */
+/** 单个 Tab：撑满高度、均分宽度。 */
 @Composable
 internal fun RowScope.FloatingBottomBarItem(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     content: @Composable ColumnScope.() -> Unit,
 ) {
-    val scale = LocalFloatingBottomBarTabScale.current
     Column(
         modifier = modifier
             .clickable(
@@ -94,12 +89,7 @@ internal fun RowScope.FloatingBottomBarItem(
                 onClick = onClick,
             )
             .fillMaxHeight()
-            .weight(1f)
-            .graphicsLayer {
-                val currentScale = scale()
-                scaleX = currentScale
-                scaleY = currentScale
-            },
+            .weight(1f),
         verticalArrangement = Arrangement.spacedBy(1.dp, Alignment.CenterVertically),
         horizontalAlignment = Alignment.CenterHorizontally,
         content = content,

@@ -111,7 +111,6 @@ class LibraryViewModel(
     private val activeCategoryIndex = MutableStateFlow(libraryPreferences.lastUsedCategory.get())
 
     private val displayPreferences = combine(
-        libraryPreferences.categoryTabs.changes(),
         libraryPreferences.categoryNumberOfItems.changes(),
         libraryPreferences.showContinueReadingButton.changes(),
         ::DisplayPreferences,
@@ -195,7 +194,6 @@ class LibraryViewModel(
             searchQuery = searchQuery,
             selection = selection,
             hasActiveFilters = hasActiveFilters,
-            showCategoryTabs = display.showCategoryTabs,
             showMangaCount = display.showMangaCount,
             showMangaContinueButton = display.showMangaContinueButton,
             dialog = dialog,
@@ -207,7 +205,6 @@ class LibraryViewModel(
         .stateIn(viewModelScope + subscriberGate, subscriberGate.whileSubscribed(5.seconds), State())
 
     private data class DisplayPreferences(
-        val showCategoryTabs: Boolean,
         val showMangaCount: Boolean,
         val showMangaContinueButton: Boolean,
     )
@@ -796,7 +793,6 @@ class LibraryViewModel(
         val searchQuery: String? = null,
         val selection: Set</* Manga */ Long> = setOf(),
         val hasActiveFilters: Boolean = false,
-        val showCategoryTabs: Boolean = false,
         val showMangaCount: Boolean = false,
         val showMangaContinueButton: Boolean = false,
         val dialog: Dialog? = null,
