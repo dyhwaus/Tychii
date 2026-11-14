@@ -17,8 +17,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
@@ -30,7 +32,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import top.yukonga.miuix.kmp.basic.Button
 import top.yukonga.miuix.kmp.basic.ButtonDefaults
+import top.yukonga.miuix.kmp.basic.DropdownDefaults
+import top.yukonga.miuix.kmp.basic.DropdownEntry
+import top.yukonga.miuix.kmp.basic.DropdownItem
 import top.yukonga.miuix.kmp.basic.HorizontalDivider
+import top.yukonga.miuix.kmp.popup.OverlayDropdownPopup
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
@@ -39,7 +45,9 @@ import eu.kanade.presentation.browse.BrowseSourceContent
 import eu.kanade.presentation.browse.MissingSourceScreen
 import eu.kanade.presentation.browse.components.RemoveMangaDialog
 import eu.kanade.presentation.category.components.ChangeCategoryDialog
+import eu.kanade.presentation.components.SearchToolbar
 import eu.kanade.presentation.manga.DuplicateMangaDialog
+import eu.kanade.presentation.miuix.CapsuleAction
 import eu.kanade.presentation.util.AssistContentScreen
 import eu.kanade.presentation.util.Screen
 import eu.kanade.tachiyomi.source.online.HttpSource
@@ -60,6 +68,7 @@ import mihon.icons.materialsymbols.rounded.Verified
 import mihon.icons.materialsymbols.roundedfilled.Favorite
 import mihon.presentation.core.util.collectAsLazyPagingItems
 import tachiyomi.core.common.Constants
+import tachiyomi.domain.library.model.LibraryDisplayMode
 import tachiyomi.domain.source.model.StubSource
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.components.material.Scaffold
@@ -131,74 +140,122 @@ data class BrowseSourceScreen(
         // The source name is the page title now (in the top bar below),
         // so the floating title capsule is hidden here — it would sit
         // over the source name. Returning to the Browse menu restores
-        // it (the menu reports showTitleCapsule(true)).
+        // it (the menu reports showTitleCapsule(true)). The floating
+        // action capsule still shows: it no longer follows the title
+        // capsule (see HomeScreen), it follows the actions reported
+        // here, which are empty while searching.
         LaunchedEffect(Unit) {
             HomeScreen.showTitleCapsule(false)
+        }
+
+        // Floating action capsule, like the Library page: search and
+        // cover layout. Search opens the search field in the top bar
+        // (it appears while toolbarQuery is set); display opens a
+        // dropdown with the four layouts. Empty while searching, so
+        // the capsule hides while the search field is open.
+        var selectingDisplayMode by remember { mutableStateOf(false) }
+        LaunchedEffect(state.toolbarQuery, viewModel.displayMode) {
+            if (state.toolbarQuery != null) {
+                HomeScreen.setCapsuleActions(emptyList())
+            } else {
+                HomeScreen.setCapsuleActions(
+                    listOf(
+                        CapsuleAction(
+                            icon = MaterialSymbols.Rounded.Search,
+                            contentDescription = stringResource(MR.strings.action_search),
+                            onClick = { viewModel.setToolbarQuery("") },
+                        ),
+                        CapsuleAction(
+                            icon = when (viewModel.displayMode) {
+                                LibraryDisplayMode.List -> MaterialSymbols.AutoMirroredRoundedFilled.ViewList
+                                LibraryDisplayMode.ComfortableGrid -> MaterialSymbols.RoundedFilled.ViewModule
+                                LibraryDisplayMode.CompactGrid,
+                                LibraryDisplayMode.CoverOnlyGrid,
+                                -> MaterialSymbols.RoundedFilled.ViewCompact
+                            },
+                            contentDescription = stringResource(MR.strings.action_display_mode),
+                            onClick = { selectingDisplayMode = true },
+                        ),
+                    ),
+                )
+            }
         }
 
         Scaffold(
             // The top bar holds the source name and, below it, the
             // filter chips. Back goes through the system back gesture.
+            // While searching, the search field takes the top bar's
+            // place instead.
             topBar = {
-                Column(
-                    modifier = Modifier
-                        .background(MiuixTheme.colorScheme.surface)
-                        .pointerInput(Unit) {},
-                ) {
-                    // Source name at the top left, with clearance from
-                    // the status bar. The filter chips sit below it.
-                    Text(
-                        text = source.name,
-                        style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.Bold,
-                        modifier = Modifier.padding(
-                            start = 16.dp,
-                            top = 40.dp,
-                            end = 16.dp,
-                            bottom = 4.dp,
-                        ),
+                if (state.toolbarQuery != null) {
+                    SearchToolbar(
+                        searchQuery = state.toolbarQuery,
+                        onChangeSearchQuery = viewModel::setToolbarQuery,
+                        backgroundColor = MaterialTheme.colorScheme.background,
+                        navigateUp = navigateUp,
+                        onSearch = { viewModel.search(it) },
                     )
-                    Row(
+                } else {
+                    Column(
                         modifier = Modifier
-                            .horizontalScroll(rememberScrollState())
-                            // Breathing room above and below the chips.
-                            .padding(
-                                horizontal = MaterialTheme.padding.small,
-                                vertical = 8.dp,
-                            ),
-                        horizontalArrangement = Arrangement.spacedBy(MaterialTheme.padding.small),
+                            .background(MiuixTheme.colorScheme.surface)
+                            .pointerInput(Unit) {},
                     ) {
-                        FilterButton(
-                            selected = state.listing == Listing.Popular,
-                            onClick = {
-                                viewModel.resetFilters()
-                                viewModel.setListing(Listing.Popular)
-                            },
-                            icon = MaterialSymbols.RoundedFilled.Favorite,
-                            label = stringResource(MR.strings.popular),
+                        // Source name at the top left, with clearance from
+                        // the status bar. The filter chips sit below it.
+                        Text(
+                            text = source.name,
+                            style = MaterialTheme.typography.titleLarge,
+                            fontWeight = FontWeight.Bold,
+                            modifier = Modifier.padding(
+                                start = 16.dp,
+                                top = 40.dp,
+                                end = 16.dp,
+                                bottom = 4.dp,
+                            ),
                         )
-                        if (source.supportsLatest) {
+                        Row(
+                            modifier = Modifier
+                                .horizontalScroll(rememberScrollState())
+                                // Breathing room above and below the chips.
+                                .padding(
+                                    horizontal = MaterialTheme.padding.small,
+                                    vertical = 8.dp,
+                                ),
+                            horizontalArrangement = Arrangement.spacedBy(MaterialTheme.padding.small),
+                        ) {
                             FilterButton(
-                                selected = state.listing == Listing.Latest,
+                                selected = state.listing == Listing.Popular,
                                 onClick = {
                                     viewModel.resetFilters()
-                                    viewModel.setListing(Listing.Latest)
+                                    viewModel.setListing(Listing.Popular)
                                 },
-                                icon = MaterialSymbols.Rounded.Verified,
-                                label = stringResource(MR.strings.latest),
+                                icon = MaterialSymbols.RoundedFilled.Favorite,
+                                label = stringResource(MR.strings.popular),
                             )
+                            if (source.supportsLatest) {
+                                FilterButton(
+                                    selected = state.listing == Listing.Latest,
+                                    onClick = {
+                                        viewModel.resetFilters()
+                                        viewModel.setListing(Listing.Latest)
+                                    },
+                                    icon = MaterialSymbols.Rounded.Verified,
+                                    label = stringResource(MR.strings.latest),
+                                )
+                            }
+                            if (state.filters.isNotEmpty()) {
+                                FilterButton(
+                                    selected = state.listing is Listing.Search,
+                                    onClick = viewModel::openFilterSheet,
+                                    icon = MaterialSymbols.Rounded.FilterList,
+                                    label = stringResource(MR.strings.action_filter),
+                                )
+                            }
                         }
-                        if (state.filters.isNotEmpty()) {
-                            FilterButton(
-                                selected = state.listing is Listing.Search,
-                                onClick = viewModel::openFilterSheet,
-                                icon = MaterialSymbols.Rounded.FilterList,
-                                label = stringResource(MR.strings.action_filter),
-                            )
-                        }
-                    }
 
-                    HorizontalDivider()
+                        HorizontalDivider()
+                    }
                 }
             },
             snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
@@ -229,6 +286,37 @@ data class BrowseSourceScreen(
                 },
             )
         }
+
+        // Cover layout dropdown for the floating action capsule's
+        // display button, mirroring the Library page's.
+        OverlayDropdownPopup(
+            entries = listOf(
+                DropdownEntry(
+                    items = listOf(
+                        MR.strings.action_display_grid to LibraryDisplayMode.CompactGrid,
+                        MR.strings.action_display_comfortable_grid to LibraryDisplayMode.ComfortableGrid,
+                        MR.strings.action_display_cover_only_grid to LibraryDisplayMode.CoverOnlyGrid,
+                        MR.strings.action_display_list to LibraryDisplayMode.List,
+                    ).map { (titleRes, mode) ->
+                        DropdownItem(
+                            text = stringResource(titleRes),
+                            selected = viewModel.displayMode == mode,
+                            onClick = {
+                                selectingDisplayMode = false
+                                viewModel.displayMode = mode
+                            },
+                        )
+                    },
+                ),
+            ),
+            show = selectingDisplayMode,
+            onDismiss = { selectingDisplayMode = false },
+            onDismissFinished = {},
+            maxHeight = null,
+            dropdownColors = DropdownDefaults.dropdownColors(),
+            renderInRootScaffold = true,
+            collapseOnSelection = true,
+        )
 
         val onDismissRequest = { viewModel.setDialog(null) }
         when (val dialog = state.dialog) {

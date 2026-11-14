@@ -365,11 +365,16 @@ object HomeScreen : Screen() {
                         // two). No layer behind it — it floats over the
                         // covers with only a 12.dp gap from the screen
                         // edge, covering part of the content while shown.
-                        // Hidden while searching or selecting (the title
-                        // capsule hides then too), while scrolling down,
-                        // and when the tab reports no actions.
+                        // Hidden while scrolling down, and when the tab
+                        // reports no actions. It does NOT follow the
+                        // title capsule: a tab hides the title capsule
+                        // while searching or selecting by reporting no
+                        // actions then, and a page may hide the title
+                        // capsule for its own reason (the Explore page
+                        // shows the source name as its title) while still
+                        // offering actions.
                         AnimatedVisibility(
-                            visible = showTitleCapsule && capsuleScrollVisible && capsuleActions.isNotEmpty(),
+                            visible = capsuleScrollVisible && capsuleActions.isNotEmpty(),
                             enter = fadeIn() + slideInHorizontally(initialOffsetX = { it }),
                             exit = fadeOut() + slideOutHorizontally(targetOffsetX = { it }),
                             modifier = Modifier
