@@ -1065,6 +1065,23 @@ trust dialog and the not-loaded dialog. The same overlap
 exists for bottom-attached dialogs on other tab pages; they
 need the same treatment when reported.
 
+## Explore: long-press remove unreachable under the floating bar (2026-11-14)
+
+Long-pressing a manga on the per-source Explore page could
+add it to the library, but not remove it. The long-press
+itself is fine (a library manga still opens the remove
+dialog); the same z-order bug as the trust dialog is the
+cause — the dialog's 移除 button sits under the floating
+bar, whose background swallows the tap.
+
+`BrowseSourceScreen` now hides the bar while the remove
+dialog is open (`LaunchedEffect(state.dialog is
+Dialog.RemoveManga)` calling `HomeScreen.showBottomNav`)
+and shows it again on dismiss. Only the remove dialog is
+covered: the other dialogs on this page (Filter, duplicate,
+migrate, category) can push a new screen while open, which
+would leave the bar hidden on that screen.
+
 ## Build fixes
 
 - 2026-11-14: the Explore capsule called `stringResource(...)` for the
