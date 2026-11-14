@@ -737,6 +737,22 @@ grid, which share `MangaCompactGridItem`; the comfortable grid was
 already title-below. The Miuix floating bar, title capsule and
 Neko theme are untouched — only the card layout follows PiliPlus.
 
+## Explore: floating action capsule like the Library page (2026-11-14)
+
+The per-source Explore page now has the same floating action
+capsule as the Library page, on the right edge: search and cover
+layout. Search opens the search field in the top bar (it takes
+the top bar's place while a query is set, like the Library page's
+toolbar does when searching); the layout button opens a dropdown
+with the four layouts (compact / comfortable / cover-only / list),
+its icon following the current layout. The capsule hides while
+searching. This needed one HomeScreen change: the action capsule
+no longer follows the title capsule's visibility — a tab hides
+the action capsule while searching or selecting by reporting no
+actions then, and a page may hide the title capsule for its own
+reason (Explore shows the source name as its title) while still
+offering actions.
+
 ## Explore: source name header above the chips (2026-11-14)
 
 The per-source Explore page's top bar now holds the source name
