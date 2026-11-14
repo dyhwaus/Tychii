@@ -740,9 +740,9 @@ Neko theme are untouched — only the card layout follows PiliPlus.
 ## Explore: source name header above the chips (2026-11-14)
 
 The per-source Explore page's top bar now holds the source name
-at the top left (titleLarge, bold, 28.dp of clearance from the
-status bar — the earlier 20.dp on the chips alone was still too
-tight), with the filter chips below it. The floating title
+at the top left (titleLarge, bold, 40.dp of clearance from the
+status bar — 28.dp was still too tight), with the filter chips
+below it. The floating title
 capsule is hidden on this page, since the source name is the
 title now and the capsule would sit over it; returning to the
 Browse menu restores it.
