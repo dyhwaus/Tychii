@@ -26,6 +26,7 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.LocalUriHandler
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import top.yukonga.miuix.kmp.basic.Button
 import top.yukonga.miuix.kmp.basic.ButtonDefaults
@@ -44,6 +45,7 @@ import eu.kanade.presentation.util.Screen
 import eu.kanade.tachiyomi.source.online.HttpSource
 import eu.kanade.tachiyomi.ui.browse.source.browse.BrowseSourceViewModel.Listing
 import eu.kanade.tachiyomi.ui.category.CategoryScreen
+import eu.kanade.tachiyomi.ui.home.HomeScreen
 import eu.kanade.tachiyomi.ui.manga.MangaScreen
 import eu.kanade.tachiyomi.ui.webview.WebViewScreen
 import kotlinx.coroutines.Dispatchers
@@ -126,32 +128,43 @@ data class BrowseSourceScreen(
             assistUrl = (source as? HttpSource)?.getHomeUrl()
         }
 
+        // The source name is the page title now (in the top bar below),
+        // so the floating title capsule is hidden here — it would sit
+        // over the source name. Returning to the Browse menu restores
+        // it (the menu reports showTitleCapsule(true)).
+        LaunchedEffect(Unit) {
+            HomeScreen.showTitleCapsule(false)
+        }
+
         Scaffold(
-            // No toolbar at the top: the toolbar is an original Mihon
-            // container whose band sits above the covers and cuts them
-            // off. Only the filter chips stay, as the top element.
-            // Back goes through the system back gesture; the source
-            // title lives in the floating capsule.
+            // The top bar holds the source name and, below it, the
+            // filter chips. Back goes through the system back gesture.
             topBar = {
                 Column(
                     modifier = Modifier
                         .background(MiuixTheme.colorScheme.surface)
                         .pointerInput(Unit) {},
                 ) {
+                    // Source name at the top left, with clearance from
+                    // the status bar. The filter chips sit below it.
+                    Text(
+                        text = source.name,
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.padding(
+                            start = 16.dp,
+                            top = 28.dp,
+                            end = 16.dp,
+                            bottom = 4.dp,
+                        ),
+                    )
                     Row(
                         modifier = Modifier
                             .horizontalScroll(rememberScrollState())
-                            // Breathing room above and below the chips: they
-                            // used to sit flush against the toolbar above
-                            // and the divider below. The 20.dp top padding
-                            // keeps the chips clear of the status bar,
-                            // matching the title capsule's clearance (8.dp
-                            // extra padding + centering in its 64.dp band).
+                            // Breathing room above and below the chips.
                             .padding(
-                                start = MaterialTheme.padding.small,
-                                top = 20.dp,
-                                end = MaterialTheme.padding.small,
-                                bottom = 8.dp,
+                                horizontal = MaterialTheme.padding.small,
+                                vertical = 8.dp,
                             ),
                         horizontalArrangement = Arrangement.spacedBy(MaterialTheme.padding.small),
                     ) {
