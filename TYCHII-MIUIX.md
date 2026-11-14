@@ -737,6 +737,21 @@ grid, which share `MangaCompactGridItem`; the comfortable grid was
 already title-below. The Miuix floating bar, title capsule and
 Neko theme are untouched — only the card layout follows PiliPlus.
 
+## Explore capsule hidden by stale scroll state (2026-11-14)
+
+The Explore page's floating capsule (search + cover layout) was not
+showing even though the page reported its actions correctly. Root
+cause: the capsule's scroll-hide state (`capsuleScrollVisible`) lives
+in HomeScreen and only reset on a *tab* switch. Opening a source
+means scrolling down the Sources list to find it, which hid the
+capsule — and pushing the Explore page does not change the tab, so
+the state never reset, leaving the capsule hidden on the new page
+even though that page starts at the top. Fix (HomeScreen.kt): when
+the collector receives a fresh non-empty actions report (i.e. a
+screen just became current or re-reported), it resets the
+scroll-hide state to visible. A screen that reports no actions still
+hides the capsule, and scrolling down still hides it again.
+
 ## Reader settings: Miuix card grouping for hierarchy (2026-11-14)
 
 The reader settings were a flat list — section headings, then chips /
