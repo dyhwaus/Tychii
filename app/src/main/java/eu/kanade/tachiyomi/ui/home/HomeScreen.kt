@@ -181,14 +181,6 @@ object HomeScreen : Screen() {
                 LaunchedEffect(Unit) {
                     capsuleTitleEvent.receiveAsFlow().collectLatest { libraryCapsuleTitle = it }
                 }
-                // The floating capsule's actions, reported by the current
-                // tab (each tab re-reports when the state its actions
-                // depend on changes; a tab with no actions reports an
-                // empty list, hiding the capsule).
-                var capsuleActions by remember { mutableStateOf<List<CapsuleAction>>(emptyList()) }
-                LaunchedEffect(Unit) {
-                    capsuleActionsEvent.receiveAsFlow().collectLatest { capsuleActions = it }
-                }
                 // The capsule hides once the user has scrolled down past
                 // a threshold, and comes back on any upward scroll. The
                 // connection only observes (it consumes nothing), so
@@ -213,6 +205,26 @@ object HomeScreen : Screen() {
                                 capsuleScrollVisible = true
                             }
                             return Offset.Zero
+                        }
+                    }
+                }
+                // The floating capsule's actions, reported by the current
+                // tab (each tab re-reports when the state its actions
+                // depend on changes; a tab with no actions reports an
+                // empty list, hiding the capsule). A fresh report also
+                // resets the scroll-hide state: a page that just opened
+                // starts at the top, so the capsule should show. Without
+                // this, scrolling down one page (e.g. the Sources list,
+                // to find a source) left the capsule hidden on the next
+                // page, which starts at the top but never reset the
+                // scroll state because the tab didn't change.
+                var capsuleActions by remember { mutableStateOf<List<CapsuleAction>>(emptyList()) }
+                LaunchedEffect(Unit) {
+                    capsuleActionsEvent.receiveAsFlow().collectLatest {
+                        capsuleActions = it
+                        if (it.isNotEmpty()) {
+                            capsuleScrollVisible = true
+                            capsuleScrolledDown = 0f
                         }
                     }
                 }
