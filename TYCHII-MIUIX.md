@@ -996,6 +996,37 @@ gone at rest on all three pages:
   capsule). Only the Popular / Latest / Filter chips stay at the
   top.
 
+## Dead code removed (2026-11-14)
+
+Seven leftovers from the Miuix refactor, all verified
+unreferenced before removal (delete 95b9e2fc, code 6f1d5e7b):
+
+- `TabbedScreen` — the old tabbed Browse page, no callers
+  since Browse became a first-level menu. Only the
+  composable was removed; `TabContent` in the same file is
+  still used by the Browse sections.
+- `LibraryTabs.kt` — the old Library category tabs, removed
+  remotely earlier; the local file was a leftover, now
+  deleted locally too.
+- `BrowseSourceToolbar.kt` — the per-source top bar;
+  BrowseSourceScreen builds its own top bar inline now.
+- `LibraryViewModel.State.showCategoryTabs` and its
+  plumbing — the `DisplayPreferences` field, the combine
+  source and the assignment; nothing read the state. The
+  `categoryTabs` preference itself stays (it is live in the
+  Library display settings).
+- `UpdatesViewModel.lastUpdated` — the property, left over
+  after its screen argument was removed.
+  `LibraryPreferences.lastUpdatedTimestamp` stays: it is
+  still written by the update worker and may be part of
+  backup/restore.
+- `LocalFloatingBottomBarTabScale` — never provided
+  anywhere, always the default 1f; the declaration, the
+  read and the scaleX/scaleY lines are gone.
+  Behaviour-neutral.
+- The commented-out `SDK_INT < P` check in
+  `AppUpdateChecker`, with its comment.
+
 ## Extensions: trust dialog unreachable under the floating bar (2026-11-14)
 
 Tapping 信任 on an untrusted self-installed extension did
