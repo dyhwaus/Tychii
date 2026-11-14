@@ -45,121 +45,131 @@ internal fun ColumnScope.GeneralPage(viewModel: ReaderSettingsViewModel) {
     val flashColorPref = viewModel.preferences.flashColor
     val flashColor by flashColorPref.collectAsState()
 
-    SettingsChipRow(MR.strings.pref_reader_theme) {
-        themes.map { (labelRes, value) ->
-            ReaderFilterChip(
-                selected = readerTheme == value,
-                onClick = { viewModel.preferences.readerTheme.set(value) },
-                label = stringResource(labelRes),
-            )
-        }
-    }
-
-    CheckboxItem(
-        label = stringResource(MR.strings.pref_show_page_number),
-        pref = viewModel.preferences.showPageNumber,
-    )
-
     val verticalNavigatorModes by viewModel.preferences.verticalNavigator.collectAsState()
-
-    SettingsChipRow(MR.strings.pref_vertical_navigator) {
-        ReadingMode.entries.filter { it != ReadingMode.DEFAULT }.forEach { mode ->
-            ReaderFilterChip(
-                selected = verticalNavigatorModes.contains(mode),
-                onClick = {
-                    val newModes = if (verticalNavigatorModes.contains(mode)) {
-                        verticalNavigatorModes - mode
-                    } else {
-                        verticalNavigatorModes + mode
-                    }
-                    viewModel.preferences.verticalNavigator.set(newModes)
-                },
-                label = stringResource(mode.stringRes),
-            )
-        }
-    }
-
-    if (verticalNavigatorModes.isNotEmpty()) {
-        val verticalNavigatorHeightPref = viewModel.preferences.verticalNavigatorHeight
-        val verticalNavigatorHeight by verticalNavigatorHeightPref.collectAsState()
-
-        CheckboxItem(
-            label = stringResource(MR.strings.pref_webtoon_vertical_navigator_on_left),
-            pref = viewModel.preferences.verticalNavigatorOnLeft,
-        )
-
-        SliderItem(
-            label = stringResource(MR.strings.pref_vertical_navigator_height),
-            value = verticalNavigatorHeight,
-            valueRange = 65..100,
-            steps = 6,
-            onChange = { verticalNavigatorHeightPref.set(it) },
-        )
-    }
-
-    CheckboxItem(
-        label = stringResource(MR.strings.pref_fullscreen),
-        pref = viewModel.preferences.fullscreen,
-    )
+    val verticalNavigatorHeightPref = viewModel.preferences.verticalNavigatorHeight
+    val verticalNavigatorHeight by verticalNavigatorHeightPref.collectAsState()
 
     val isFullscreen by viewModel.preferences.fullscreen.collectAsState()
-    if (LocalActivity.current?.hasDisplayCutout() == true && isFullscreen) {
+
+    ReaderSettingsCard {
+        SettingsChipRow(MR.strings.pref_reader_theme) {
+            themes.map { (labelRes, value) ->
+                ReaderFilterChip(
+                    selected = readerTheme == value,
+                    onClick = { viewModel.preferences.readerTheme.set(value) },
+                    label = stringResource(labelRes),
+                )
+            }
+        }
+
         CheckboxItem(
-            label = stringResource(MR.strings.pref_cutout_short),
-            pref = viewModel.preferences.drawUnderCutout,
+            label = stringResource(MR.strings.pref_show_page_number),
+            pref = viewModel.preferences.showPageNumber,
         )
     }
 
-    CheckboxItem(
-        label = stringResource(MR.strings.pref_keep_screen_on),
-        pref = viewModel.preferences.keepScreenOn,
-    )
+    ReaderSettingsSectionGap()
 
-    CheckboxItem(
-        label = stringResource(MR.strings.pref_read_with_long_tap),
-        pref = viewModel.preferences.readWithLongTap,
-    )
-
-    CheckboxItem(
-        label = stringResource(MR.strings.pref_always_show_chapter_transition),
-        pref = viewModel.preferences.alwaysShowChapterTransition,
-    )
-
-    CheckboxItem(
-        label = stringResource(MR.strings.pref_page_transitions),
-        pref = viewModel.preferences.pageTransitions,
-    )
-
-    CheckboxItem(
-        label = stringResource(MR.strings.pref_flash_page),
-        pref = viewModel.preferences.flashOnPageChange,
-    )
-    if (flashPageState) {
-        SliderItem(
-            value = flashMillis / ReaderPreferences.MILLI_CONVERSION,
-            valueRange = 1..15,
-            label = stringResource(MR.strings.pref_flash_duration),
-            valueString = stringResource(MR.strings.pref_flash_duration_summary, flashMillis),
-            onChange = { flashMillisPref.set(it * ReaderPreferences.MILLI_CONVERSION) },
-            pillColor = MaterialTheme.colorScheme.surfaceContainerHighest,
-        )
-        SliderItem(
-            value = flashInterval,
-            valueRange = 1..10,
-            label = stringResource(MR.strings.pref_flash_page_interval),
-            valueString = pluralStringResource(MR.plurals.pref_pages, flashInterval, flashInterval),
-            onChange = {
-                flashIntervalPref.set(it)
-            },
-            pillColor = MaterialTheme.colorScheme.surfaceContainerHighest,
-        )
-        SettingsChipRow(MR.strings.pref_flash_with) {
-            flashColors.map { (labelRes, value) ->
+    ReaderSettingsCard {
+        SettingsChipRow(MR.strings.pref_vertical_navigator) {
+            ReadingMode.entries.filter { it != ReadingMode.DEFAULT }.forEach { mode ->
                 ReaderFilterChip(
-                    selected = flashColor == value,
-                    onClick = { flashColorPref.set(value) },
-                    label = stringResource(labelRes),
+                    selected = verticalNavigatorModes.contains(mode),
+                    onClick = {
+                        val newModes = if (verticalNavigatorModes.contains(mode)) {
+                            verticalNavigatorModes - mode
+                        } else {
+                            verticalNavigatorModes + mode
+                        }
+                        viewModel.preferences.verticalNavigator.set(newModes)
+                    },
+                    label = stringResource(mode.stringRes),
                 )
+            }
+        }
+
+        if (verticalNavigatorModes.isNotEmpty()) {
+            CheckboxItem(
+                label = stringResource(MR.strings.pref_webtoon_vertical_navigator_on_left),
+                pref = viewModel.preferences.verticalNavigatorOnLeft,
+            )
+
+            SliderItem(
+                label = stringResource(MR.strings.pref_vertical_navigator_height),
+                value = verticalNavigatorHeight,
+                valueRange = 65..100,
+                steps = 6,
+                onChange = { verticalNavigatorHeightPref.set(it) },
+            )
+        }
+    }
+
+    ReaderSettingsSectionGap()
+
+    ReaderSettingsCard {
+        CheckboxItem(
+            label = stringResource(MR.strings.pref_fullscreen),
+            pref = viewModel.preferences.fullscreen,
+        )
+
+        if (LocalActivity.current?.hasDisplayCutout() == true && isFullscreen) {
+            CheckboxItem(
+                label = stringResource(MR.strings.pref_cutout_short),
+                pref = viewModel.preferences.drawUnderCutout,
+            )
+        }
+
+        CheckboxItem(
+            label = stringResource(MR.strings.pref_keep_screen_on),
+            pref = viewModel.preferences.keepScreenOn,
+        )
+
+        CheckboxItem(
+            label = stringResource(MR.strings.pref_read_with_long_tap),
+            pref = viewModel.preferences.readWithLongTap,
+        )
+
+        CheckboxItem(
+            label = stringResource(MR.strings.pref_always_show_chapter_transition),
+            pref = viewModel.preferences.alwaysShowChapterTransition,
+        )
+
+        CheckboxItem(
+            label = stringResource(MR.strings.pref_page_transitions),
+            pref = viewModel.preferences.pageTransitions,
+        )
+
+        CheckboxItem(
+            label = stringResource(MR.strings.pref_flash_page),
+            pref = viewModel.preferences.flashOnPageChange,
+        )
+        if (flashPageState) {
+            SliderItem(
+                value = flashMillis / ReaderPreferences.MILLI_CONVERSION,
+                valueRange = 1..15,
+                label = stringResource(MR.strings.pref_flash_duration),
+                valueString = stringResource(MR.strings.pref_flash_duration_summary, flashMillis),
+                onChange = { flashMillisPref.set(it * ReaderPreferences.MILLI_CONVERSION) },
+                pillColor = MaterialTheme.colorScheme.surfaceContainerHighest,
+            )
+            SliderItem(
+                value = flashInterval,
+                valueRange = 1..10,
+                label = stringResource(MR.strings.pref_flash_page_interval),
+                valueString = pluralStringResource(MR.plurals.pref_pages, flashInterval, flashInterval),
+                onChange = {
+                    flashIntervalPref.set(it)
+                },
+                pillColor = MaterialTheme.colorScheme.surfaceContainerHighest,
+            )
+            SettingsChipRow(MR.strings.pref_flash_with) {
+                flashColors.map { (labelRes, value) ->
+                    ReaderFilterChip(
+                        selected = flashColor == value,
+                        onClick = { flashColorPref.set(value) },
+                        label = stringResource(labelRes),
+                    )
+                }
             }
         }
     }
