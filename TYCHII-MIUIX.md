@@ -1090,7 +1090,11 @@ over the list, using the same bar style preference and
 `rememberLayerBackdrop` handle (the Box records the layer
 when glass is enabled). The dead `HomeScreen` calls on
 this page are gone (title capsule, bar hide, action
-report).
+report). Build fix: the first push missed the
+`tachiyomi.presentation.core.util.collectAsState` import —
+`barStyle` is a Preference, so the runtime `collectAsState`
+(Flow/StateFlow only) could not resolve it; the same gotcha
+as LibraryTab/UpdatesTab.
 
 The long-press remove fix (6b54b411) is ineffective on
 this page for the same reason: there is no floating bar
