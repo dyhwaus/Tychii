@@ -1,10 +1,17 @@
 package eu.kanade.tachiyomi.ui.browse.source.browse
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.foundation.background
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
@@ -17,15 +24,23 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
+import androidx.compose.ui.input.nestedscroll.NestedScrollSource
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.text.font.FontWeight
@@ -36,11 +51,14 @@ import top.yukonga.miuix.kmp.basic.DropdownDefaults
 import top.yukonga.miuix.kmp.basic.DropdownEntry
 import top.yukonga.miuix.kmp.basic.DropdownItem
 import top.yukonga.miuix.kmp.basic.HorizontalDivider
+import top.yukonga.miuix.kmp.blur.layerBackdrop
+import top.yukonga.miuix.kmp.blur.rememberLayerBackdrop
 import top.yukonga.miuix.kmp.popup.OverlayDropdownPopup
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import dev.zacsweers.metrox.viewmodel.assistedMetroViewModel
+import eu.kanade.domain.ui.model.BarStyle
 import eu.kanade.presentation.browse.BrowseSourceContent
 import eu.kanade.presentation.browse.MissingSourceScreen
 import eu.kanade.presentation.browse.components.RemoveMangaDialog
@@ -48,12 +66,13 @@ import eu.kanade.presentation.category.components.ChangeCategoryDialog
 import eu.kanade.presentation.components.SearchToolbar
 import eu.kanade.presentation.manga.DuplicateMangaDialog
 import eu.kanade.presentation.miuix.CapsuleAction
+import eu.kanade.presentation.miuix.MiuixFloatingCapsule
+import eu.kanade.presentation.theme.isMiuixGlassSupported
 import eu.kanade.presentation.util.AssistContentScreen
 import eu.kanade.presentation.util.Screen
 import eu.kanade.tachiyomi.source.online.HttpSource
 import eu.kanade.tachiyomi.ui.browse.source.browse.BrowseSourceViewModel.Listing
 import eu.kanade.tachiyomi.ui.category.CategoryScreen
-import eu.kanade.tachiyomi.ui.home.HomeScreen
 import eu.kanade.tachiyomi.ui.manga.MangaScreen
 import eu.kanade.tachiyomi.ui.webview.WebViewScreen
 import kotlinx.coroutines.Dispatchers
@@ -61,6 +80,7 @@ import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
+import mihon.app.di.appGraph
 import mihon.feature.migration.dialog.MigrateMangaDialog
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.automirroredroundedfilled.ViewList
@@ -141,23 +161,56 @@ data class BrowseSourceScreen(
             assistUrl = (source as? HttpSource)?.getHomeUrl()
         }
 
-        // The source name is the page title now (in the top bar below),
-        // so the floating title capsule is hidden here — it would sit
-        // over the source name. Returning to the Browse menu restores
-        // it (the menu reports showTitleCapsule(true)). The floating
-        // action capsule still shows: it no longer follows the title
-        // capsule (see HomeScreen), it follows the actions reported
-        // here, which are empty while searching.
-        LaunchedEffect(Unit) {
-            HomeScreen.showTitleCapsule(false)
+        // This page is pushed onto the main navigator, outside
+        // HomeScreen, so HomeScreen's overlays (bottom bar, title
+        // capsule, action capsule) do not exist here — reporting
+        // actions to HomeScreen can never show them. The source
+        // name in the top bar is the title, and this page owns
+        // its own action capsule below.
+        val context = LocalContext.current
+        val barStyle by remember {
+            context.appGraph.uiPreferences.barStyle
+        }.collectAsState()
+        // One style for the capsule: liquid glass only runs on
+        // API 32+; below that it behaves like translucent.
+        val effectiveBarStyle = if (barStyle == BarStyle.LIQUID_GLASS && !isMiuixGlassSupported) {
+            BarStyle.TRANSLUCENT
+        } else {
+            barStyle
         }
+        val glassEnabled = effectiveBarStyle == BarStyle.LIQUID_GLASS
+        // The blur source. Created unconditionally (it is only a
+        // handle); it is only *applied* to the content layer when
+        // glass is enabled.
+        val backdrop = rememberLayerBackdrop()
 
-        // The floating bar sits above the bottom-attached remove
-        // dialog and swallows taps on its buttons. Only the remove
-        // dialog is covered: the other dialogs can push a new
-        // screen while open, which would leave the bar hidden.
-        LaunchedEffect(state.dialog is BrowseSourceViewModel.Dialog.RemoveManga) {
-            HomeScreen.showBottomNav(state.dialog !is BrowseSourceViewModel.Dialog.RemoveManga)
+        // The capsule hides once the user has scrolled down past
+        // a threshold, and comes back on any upward scroll — the
+        // same behaviour as HomeScreen's capsule. The connection
+        // only observes (it consumes nothing), so scrolling is
+        // unaffected.
+        val capsuleHideThresholdPx = with(LocalDensity.current) { 120.dp.toPx() }
+        var capsuleScrollVisible by remember { mutableStateOf(true) }
+        var capsuleScrolledDown by remember { mutableFloatStateOf(0f) }
+        val capsuleScrollConnection = remember(capsuleHideThresholdPx) {
+            object : NestedScrollConnection {
+                override fun onPostScroll(
+                    consumed: Offset,
+                    available: Offset,
+                    source: NestedScrollSource,
+                ): Offset {
+                    if (consumed.y < 0f) {
+                        capsuleScrolledDown += -consumed.y
+                        if (capsuleScrolledDown > capsuleHideThresholdPx) {
+                            capsuleScrollVisible = false
+                        }
+                    } else if (consumed.y > 0f) {
+                        capsuleScrolledDown = 0f
+                        capsuleScrollVisible = true
+                    }
+                    return Offset.Zero
+                }
+            }
         }
 
         // Floating action capsule, like the Library page: search and
@@ -166,43 +219,35 @@ data class BrowseSourceScreen(
         // dropdown with the four layouts. Empty while searching, so
         // the capsule hides while the search field is open.
         var selectingDisplayMode by remember { mutableStateOf(false) }
-        // The descriptions are read here, in the composable body —
-        // stringResource is a @Composable call and cannot run inside
-        // the LaunchedEffect below (a suspend block, not a composable
-        // context). The Library page hoists them the same way.
         val searchDescription = stringResource(MR.strings.action_search)
         val displayDescription = stringResource(MR.strings.action_display_mode)
-        LaunchedEffect(state.toolbarQuery, viewModel.displayMode) {
-            if (state.toolbarQuery != null) {
-                HomeScreen.setCapsuleActions(emptyList())
-            } else {
-                HomeScreen.setCapsuleActions(
-                    listOf(
-                        // Opening search closes the display dropdown,
-                        // like the Library page closes its dropdowns
-                        // when another capsule action is tapped.
-                        CapsuleAction(
-                            icon = MaterialSymbols.Rounded.Search,
-                            contentDescription = searchDescription,
-                            onClick = {
-                                selectingDisplayMode = false
-                                viewModel.setToolbarQuery("")
-                            },
-                        ),
-                        CapsuleAction(
-                            icon = when (viewModel.displayMode) {
-                                LibraryDisplayMode.List -> MaterialSymbols.AutoMirroredRoundedFilled.ViewList
-                                LibraryDisplayMode.ComfortableGrid -> MaterialSymbols.RoundedFilled.ViewModule
-                                LibraryDisplayMode.CompactGrid,
-                                LibraryDisplayMode.CoverOnlyGrid,
-                                -> MaterialSymbols.RoundedFilled.ViewCompact
-                            },
-                            contentDescription = displayDescription,
-                            onClick = { selectingDisplayMode = true },
-                        ),
-                    ),
-                )
-            }
+        val capsuleActions = if (state.toolbarQuery != null) {
+            emptyList()
+        } else {
+            listOf(
+                // Opening search closes the display dropdown, like
+                // the Library page closes its dropdowns when another
+                // capsule action is tapped.
+                CapsuleAction(
+                    icon = MaterialSymbols.Rounded.Search,
+                    contentDescription = searchDescription,
+                    onClick = {
+                        selectingDisplayMode = false
+                        viewModel.setToolbarQuery("")
+                    },
+                ),
+                CapsuleAction(
+                    icon = when (viewModel.displayMode) {
+                        LibraryDisplayMode.List -> MaterialSymbols.AutoMirroredRoundedFilled.ViewList
+                        LibraryDisplayMode.ComfortableGrid -> MaterialSymbols.RoundedFilled.ViewModule
+                        LibraryDisplayMode.CompactGrid,
+                        LibraryDisplayMode.CoverOnlyGrid,
+                        -> MaterialSymbols.RoundedFilled.ViewCompact
+                    },
+                    contentDescription = displayDescription,
+                    onClick = { selectingDisplayMode = true },
+                ),
+            )
         }
 
         Scaffold(
@@ -284,31 +329,54 @@ data class BrowseSourceScreen(
             },
             snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
         ) { paddingValues ->
-            BrowseSourceContent(
-                source = source,
-                mangaList = viewModel.mangaPagerFlowFlow.collectAsLazyPagingItems(),
-                columns = viewModel.getColumnsPreference(LocalConfiguration.current.orientation),
-                displayMode = viewModel.displayMode,
-                snackbarHostState = snackbarHostState,
-                contentPadding = paddingValues,
-                onWebViewClick = onWebViewClick,
-                onHelpClick = { uriHandler.openUri(Constants.URL_HELP) },
-                onLocalSourceHelpClick = onHelpClick,
-                onMangaClick = { navigator.push((MangaScreen(it.id, true))) },
-                onMangaLongClick = { manga ->
-                    scope.launch(Dispatchers.IO) {
-                        val duplicates = viewModel.getDuplicateLibraryManga(manga)
-                        when {
-                            manga.favorite -> viewModel.setDialog(BrowseSourceViewModel.Dialog.RemoveManga(manga))
-                            duplicates.isNotEmpty() -> viewModel.setDialog(
-                                BrowseSourceViewModel.Dialog.AddDuplicateManga(manga, duplicates),
-                            )
-                            else -> viewModel.addFavorite(manga)
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .nestedScroll(capsuleScrollConnection)
+                    .then(if (glassEnabled) Modifier.layerBackdrop(backdrop) else Modifier),
+            ) {
+                BrowseSourceContent(
+                    source = source,
+                    mangaList = viewModel.mangaPagerFlowFlow.collectAsLazyPagingItems(),
+                    columns = viewModel.getColumnsPreference(LocalConfiguration.current.orientation),
+                    displayMode = viewModel.displayMode,
+                    snackbarHostState = snackbarHostState,
+                    contentPadding = paddingValues,
+                    onWebViewClick = onWebViewClick,
+                    onHelpClick = { uriHandler.openUri(Constants.URL_HELP) },
+                    onLocalSourceHelpClick = onHelpClick,
+                    onMangaClick = { navigator.push((MangaScreen(it.id, true))) },
+                    onMangaLongClick = { manga ->
+                        scope.launch(Dispatchers.IO) {
+                            val duplicates = viewModel.getDuplicateLibraryManga(manga)
+                            when {
+                                manga.favorite -> viewModel.setDialog(BrowseSourceViewModel.Dialog.RemoveManga(manga))
+                                duplicates.isNotEmpty() -> viewModel.setDialog(
+                                    BrowseSourceViewModel.Dialog.AddDuplicateManga(manga, duplicates),
+                                )
+                                else -> viewModel.addFavorite(manga)
+                            }
+                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                         }
-                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                    }
-                },
-            )
+                    },
+                )
+                // The action capsule, on the right edge over the
+                // list — the same glass as HomeScreen's capsule.
+                AnimatedVisibility(
+                    visible = capsuleScrollVisible && capsuleActions.isNotEmpty(),
+                    enter = fadeIn() + slideInHorizontally(initialOffsetX = { it }),
+                    exit = fadeOut() + slideOutHorizontally(targetOffsetX = { it }),
+                    modifier = Modifier
+                        .align(Alignment.CenterEnd)
+                        .padding(end = 20.dp),
+                ) {
+                    MiuixFloatingCapsule(
+                        actions = capsuleActions,
+                        barStyle = effectiveBarStyle,
+                        backdrop = backdrop,
+                    )
+                }
+            }
         }
 
         // Cover layout dropdown for the floating action capsule's
