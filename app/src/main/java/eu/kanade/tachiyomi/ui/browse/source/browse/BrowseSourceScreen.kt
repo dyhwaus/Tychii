@@ -158,6 +158,12 @@ data class BrowseSourceScreen(
         // dropdown with the four layouts. Empty while searching, so
         // the capsule hides while the search field is open.
         var selectingDisplayMode by remember { mutableStateOf(false) }
+        // The descriptions are read here, in the composable body —
+        // stringResource is a @Composable call and cannot run inside
+        // the LaunchedEffect below (a suspend block, not a composable
+        // context). The Library page hoists them the same way.
+        val searchDescription = stringResource(MR.strings.action_search)
+        val displayDescription = stringResource(MR.strings.action_display_mode)
         LaunchedEffect(state.toolbarQuery, viewModel.displayMode) {
             if (state.toolbarQuery != null) {
                 HomeScreen.setCapsuleActions(emptyList())
@@ -166,7 +172,7 @@ data class BrowseSourceScreen(
                     listOf(
                         CapsuleAction(
                             icon = MaterialSymbols.Rounded.Search,
-                            contentDescription = stringResource(MR.strings.action_search),
+                            contentDescription = searchDescription,
                             onClick = { viewModel.setToolbarQuery("") },
                         ),
                         CapsuleAction(
@@ -177,7 +183,7 @@ data class BrowseSourceScreen(
                                 LibraryDisplayMode.CoverOnlyGrid,
                                 -> MaterialSymbols.RoundedFilled.ViewCompact
                             },
-                            contentDescription = stringResource(MR.strings.action_display_mode),
+                            contentDescription = displayDescription,
                             onClick = { selectingDisplayMode = true },
                         ),
                     ),
