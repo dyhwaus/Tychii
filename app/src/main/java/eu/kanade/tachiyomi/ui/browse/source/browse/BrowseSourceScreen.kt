@@ -153,7 +153,7 @@ data class BrowseSourceScreen(
                         fontWeight = FontWeight.Bold,
                         modifier = Modifier.padding(
                             start = 16.dp,
-                            top = 28.dp,
+                            top = 40.dp,
                             end = 16.dp,
                             bottom = 4.dp,
                         ),
