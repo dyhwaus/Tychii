@@ -827,6 +827,17 @@ gone at rest on all three pages:
 
 ## Build fixes
 
+- 2026-11-14: the Explore capsule called `stringResource(...)` for the
+  two `contentDescription`s directly inside the `LaunchedEffect` that
+  reports the actions — but `stringResource` is @Composable and a
+  `LaunchedEffect` block is a suspend lambda, not a composable context,
+  so both calls failed with "@Composable invocations can only happen
+  from the context of a @Composable function". Fixed by hoisting the
+  two strings out of the effect (read in the composable body, like the
+  Library page does with its capsule descriptions) and using the plain
+  `String` values inside.
+
+
 - 2026-11-14: the Explore capsule used `MaterialSymbols.Rounded.Search`,
   `RoundedFilled.ViewCompact`, `RoundedFilled.ViewModule` and
   `AutoMirroredRoundedFilled.ViewList`, but BrowseSourceScreen.kt did
