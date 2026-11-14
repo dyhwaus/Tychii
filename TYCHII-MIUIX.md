@@ -737,6 +737,27 @@ grid, which share `MangaCompactGridItem`; the comfortable grid was
 already title-below. The Miuix floating bar, title capsule and
 Neko theme are untouched — only the card layout follows PiliPlus.
 
+## Reader chrome to Miuix (2026-11-14)
+
+First pass on the reader, scoped to its chrome — the page viewer,
+gestures, tap zones and fullscreen behaviour are untouched. The
+top and bottom bars' background went from Material3
+`surfaceColorAtElevation(3.dp)` to Miuix `surfaceContainer`, same
+translucency (0.9 alpha dark / 0.95 light) so the manga page still
+shows through slightly (`ReaderAppBars`, and the chapter
+navigator's pill and prev/next buttons follow the same colour in
+`ChapterNavigator`). The bottom bar's four action icons are now
+Miuix `IconButton`s. The reader settings dialog's chip rows (theme,
+reading mode, orientation, image scale, zoom start, tap zones and
+their invert mode, flash colour, colour-filter mode) are now Miuix
+buttons via a shared `ReaderFilterChip` (primary when selected),
+mirroring the Explore page's `FilterButton`. The settings dialog
+itself (`TabbedDialog`) was already Miuix. Deliberately left alone
+for now: the page indicator pill, the page-actions dialog, and the
+reading-mode / orientation select dialogs (Material3
+`AlertDialog` / `Surface` / `FilledTonalButton`), and the
+`Slider`/`VerticalSlider` in the chapter navigator.
+
 ## Package name is com.tychii.dev (2026-11-14)
 
 The application id changed from `app.mihon` to `com.tychii.dev`,
