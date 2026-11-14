@@ -737,6 +737,21 @@ grid, which share `MangaCompactGridItem`; the comfortable grid was
 already title-below. The Miuix floating bar, title capsule and
 Neko theme are untouched — only the card layout follows PiliPlus.
 
+## Navigation-bar area transparent (2026-11-14)
+
+The strip at the very bottom of the screen, around the gesture
+bar, was a solid band of the app background: the HomeScreen
+MiuixScaffold used the default `contentWindowInsets`
+(`systemBars` + `displayCutout`), so its content was padded up
+by the bottom navigation-bar inset and the covers never drew
+there. The Scaffold now takes `systemBars` limited to the top
+and horizontal sides, unioned with `displayCutout` — the content
+extends to the very bottom edge, behind the gesture bar, and the
+covers show through while scrolling. The floating bar keeps its
+own `navigationBarsPadding`, and each tab list still pads its
+bottom by `LiquidNavBarClearance`, so the last item still clears
+the bar.
+
 ## Explore: floating action capsule like the Library page (2026-11-14)
 
 The per-source Explore page now has the same floating action
