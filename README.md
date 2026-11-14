@@ -36,7 +36,7 @@ Requires Android 8.0 or higher (minSdk 26). JDK 21, Android SDK API 37:
 ./gradlew :app:assembleDebug
 ```
 
-Current version: **v0.1.2**. Package name is unchanged (`app.mihon`).
+Current version: **v0.2.0**. Package name is `com.tychii.dev`.
 
 ## License
 

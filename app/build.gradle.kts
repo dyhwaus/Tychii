@@ -35,7 +35,7 @@ android {
     namespace = "eu.kanade.tachiyomi"
 
     defaultConfig {
-        applicationId = "app.mihon"
+        applicationId = "com.tychii.dev"
 
         versionCode = 42
         versionName = "0.2.0"
@@ -70,7 +70,9 @@ android {
 
     buildTypes {
         val debug = getByName("debug") {
-            applicationIdSuffix = ".dev"
+            // No applicationIdSuffix: the base id already ends in
+            // ".dev", so a ".dev" suffix here would make debug
+            // "com.tychii.dev.dev" instead of "com.tychii.dev".
             isPseudoLocalesEnabled = true
         }
         val release = getByName("release") {
