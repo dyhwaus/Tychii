@@ -737,6 +737,27 @@ grid, which share `MangaCompactGridItem`; the comfortable grid was
 already title-below. The Miuix floating bar, title capsule and
 Neko theme are untouched — only the card layout follows PiliPlus.
 
+## Package name is com.tychii.dev (2026-11-14)
+
+The application id changed from `app.mihon` to `com.tychii.dev`,
+so the app installs as its own app and no longer collides with
+Mihon. The code packages stay `eu.kanade.tachiyomi` (renaming them
+would touch every file; the id is the app's identity, the code
+package is just organisation). Changes: `applicationId` in
+`app/build.gradle.kts`; the debug build type lost its `.dev`
+suffix (the base id already ends in `.dev`, so keeping it would
+have made debug `com.tychii.dev.dev`); the Comick deep-link scheme
+in the manifest and its `REDIRECT_URI` in `ComickApi.kt` (they must
+match each other); the two `package_name` entries in
+`google-services.json`. Deliberately untouched: the `mihon://`
+deep-link schemes (not the package name), and `TelemetryConfig`'s
+`MIHON_PACKAGES` — that set gates Mihon's own crash reporting to
+official builds, and Tychii is not one, so telemetry correctly
+stays off. Telemetry is off by default in local builds anyway
+(`include-telemetry` flag unset), so `google-services.json` is not
+read at build time; the Firebase project there is still Mihon's,
+and would need its own project for telemetry to work.
+
 ## Navigation-bar area transparent (2026-11-14)
 
 The strip at the very bottom of the screen, around the gesture
