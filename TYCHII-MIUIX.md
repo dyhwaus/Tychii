@@ -1027,20 +1027,21 @@ unreferenced before removal (delete 95b9e2fc, code 6f1d5e7b):
 - The commented-out `SDK_INT < P` check in
   `AppUpdateChecker`, with its comment.
 
-## Cover cards: smaller corner radius (2026-11-14)
+## Cover cards: smaller radius, tonal step for depth (2026-11-14)
 
 The compact-grid card (Library and Browse source grids)
 and its cover went from 12.dp to 8.dp — the card clip, the
 cover's top corners, and the cover-only full rounding, so
 the two grid modes stay consistent. The comfortable-grid
 cover keeps its own 12.dp default from `MangaCover.Book`,
-and the card background, title and outline are unchanged.
+and the card title and outline are unchanged.
 
-A 1.dp highlight now runs along the card's top edge, like
-light catching the rim: the card Column draws a white
-0.3-alpha round rect (8.dp corners, so it follows the
-card's outline) over the cover's top edge, after the
-content, so it sits on the photo rather than under it.
+For depth, the card background is now
+`surfaceContainerHighest` instead of `surfaceContainer` —
+one tonal step above the page, so the card reads as a
+raised layer (lighter in dark mode; a light-grey tile in
+light mode). A 1.dp top highlight was tried first
+(7aa97f03) and replaced by this.
 
 ## Extensions: trust dialog unreachable under the floating bar (2026-11-14)
 
