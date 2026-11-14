@@ -737,6 +737,14 @@ grid, which share `MangaCompactGridItem`; the comfortable grid was
 already title-below. The Miuix floating bar, title capsule and
 Neko theme are untouched — only the card layout follows PiliPlus.
 
+## Explore chips clear of the status bar (2026-11-14)
+
+The per-source Explore page's filter chips sat only 8.dp below
+the status bar and read as touching it, like the title capsule
+did before its fix. The chips row's top padding is now 20.dp,
+matching the capsule's clearance, so the chips sit clearly
+below the status bar. The bottom padding stays 8.dp.
+
 ## Manga detail: backdrop fades into the page (2026-11-14)
 
 The detail header's cover-color wash was a solid 0.25-alpha
