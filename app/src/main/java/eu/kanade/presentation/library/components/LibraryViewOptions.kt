@@ -6,6 +6,8 @@ import dev.icerock.moko.resources.StringResource
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.rounded.ArrowDownward
 import mihon.icons.materialsymbols.rounded.ArrowUpward
+import mihon.icons.materialsymbols.rounded.Block
+import tachiyomi.core.common.preference.TriState
 import tachiyomi.domain.library.model.LibraryDisplayMode
 import tachiyomi.domain.library.model.LibrarySort
 import tachiyomi.i18n.MR
@@ -15,10 +17,65 @@ import top.yukonga.miuix.kmp.basic.DropdownEntry
 import top.yukonga.miuix.kmp.basic.DropdownItem
 import top.yukonga.miuix.kmp.popup.OverlayDropdownPopup
 
-// The Library page's sort and display-mode dropdowns. Their buttons
-// live in the floating capsule (HomeScreen); this only renders the
-// dropdowns, which pop up from the root scaffold. (The filter button
-// opens the settings sheet, so it needs no dropdown.)
+// The Library page's sort, display-mode and filter dropdowns. Their
+// buttons live in the floating capsule (HomeScreen); this only renders
+// the dropdowns, which pop up from the root scaffold.
+
+// One tri-state filter row in the filter dropdown. Tapping cycles
+// any -> only -> exclude, the same as the TriStateItem rows in the
+// old settings sheet.
+data class LibraryFilterOption(
+    val label: String,
+    val state: TriState,
+    val enabled: Boolean = true,
+    val onToggle: () -> Unit,
+)
+
+@Composable
+fun LibraryFilterDropdown(
+    options: List<LibraryFilterOption>,
+    selectingFilter: Boolean,
+    onSelectingFilterChange: (Boolean) -> Unit,
+) {
+    OverlayDropdownPopup(
+        entries = listOf(
+            DropdownEntry(
+                items = options.map { option ->
+                    DropdownItem(
+                        text = option.label,
+                        enabled = option.enabled,
+                        // "Only" is the selected row (checkmark);
+                        // "exclude" keeps the row unselected but shows
+                        // the block icon, so the three states read
+                        // differently at a glance.
+                        selected = option.state == TriState.ENABLED_IS,
+                        icon = if (option.state == TriState.ENABLED_NOT) {
+                            { modifier ->
+                                Icon(
+                                    imageVector = MaterialSymbols.Rounded.Block,
+                                    contentDescription = null,
+                                    modifier = modifier,
+                                )
+                            }
+                        } else {
+                            null
+                        },
+                        onClick = option.onToggle,
+                    )
+                },
+            ),
+        ),
+        show = selectingFilter,
+        onDismiss = { onSelectingFilterChange(false) },
+        onDismissFinished = {},
+        maxHeight = null,
+        dropdownColors = DropdownDefaults.dropdownColors(),
+        renderInRootScaffold = true,
+        // Stays open so several filters can be set in one go;
+        // dismissed by tapping outside, like the other dropdowns.
+        collapseOnSelection = false,
+    )
+}
 @Composable
 fun LibraryViewOptionsDropdowns(
     sort: LibrarySort,

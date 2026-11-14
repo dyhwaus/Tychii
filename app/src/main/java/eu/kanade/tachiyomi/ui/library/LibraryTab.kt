@@ -32,6 +32,7 @@ import eu.kanade.presentation.category.components.ChangeCategoryDialog
 import eu.kanade.presentation.library.DeleteLibraryMangaDialog
 import eu.kanade.presentation.library.LibrarySettingsDialog
 import eu.kanade.presentation.library.components.LibraryContent
+import eu.kanade.presentation.library.components.LibraryFilterOption
 import eu.kanade.presentation.library.components.LibraryToolbar
 import eu.kanade.presentation.manga.components.LibraryBottomActionMenu
 import eu.kanade.presentation.more.onboarding.GETTING_STARTED_URL
@@ -44,20 +45,26 @@ import eu.kanade.tachiyomi.ui.home.HomeScreen
 import eu.kanade.tachiyomi.ui.main.MainActivity
 import eu.kanade.tachiyomi.ui.manga.MangaScreen
 import eu.kanade.tachiyomi.ui.reader.ReaderActivity
+import eu.kanade.tachiyomi.util.system.isReleaseBuildType
 import eu.kanade.tachiyomi.util.system.workManager
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
 import mihon.feature.migration.config.MigrationConfigScreen
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.automirroredrounded.Help
 import tachiyomi.core.common.i18n.stringResource
+import tachiyomi.core.common.preference.TriState
 import tachiyomi.domain.category.model.Category
 import tachiyomi.domain.library.model.LibraryManga
 import tachiyomi.domain.library.model.sort
+import tachiyomi.domain.library.service.LibraryPreferences
 import tachiyomi.domain.manga.model.Manga
 import tachiyomi.i18n.MR
+import tachiyomi.presentation.core.util.collectAsState
 import tachiyomi.presentation.core.components.material.Scaffold
 import tachiyomi.presentation.core.i18n.stringResource
 import eu.kanade.presentation.components.QuietEmptyScreen
@@ -97,6 +104,107 @@ data object LibraryTab : Tab {
         // The display mode is one global preference; hold its state
         // wrapper once instead of recreating it per page.
         val displayMode by remember { viewModel.getDisplayMode() }
+
+        // Tri-state filters for the capsule's Filter dropdown. They are
+        // the old settings sheet's Filter tab, now expanding from the
+        // capsule instead of sliding up from below. Tablets keep the
+        // sheet (no capsule there), so the dialog stays for them.
+        val filterDownloaded by settingsViewModel.libraryPreferences.filterDownloaded.collectAsState()
+        val downloadedOnly by settingsViewModel.preferences.downloadedOnly.collectAsState()
+        val filterUnread by settingsViewModel.libraryPreferences.filterUnread.collectAsState()
+        val filterStarted by settingsViewModel.libraryPreferences.filterStarted.collectAsState()
+        val filterBookmarked by settingsViewModel.libraryPreferences.filterBookmarked.collectAsState()
+        val filterCompleted by settingsViewModel.libraryPreferences.filterCompleted.collectAsState()
+        val filterIntervalCustom by settingsViewModel.libraryPreferences.filterIntervalCustom.collectAsState()
+        val autoUpdateMangaRestrictions by settingsViewModel.libraryPreferences.autoUpdateMangaRestrictions.collectAsState()
+        // One combined flow for the (variable) tracker filters, so the
+        // number of collected states doesn't depend on the list size.
+        val trackerFilterStates by remember(trackers) {
+            if (trackers.isEmpty()) {
+                flowOf(emptyList<TriState>())
+            } else {
+                combine(
+                    trackers.map { service ->
+                        settingsViewModel.libraryPreferences.filterTracking(service.id.toInt()).changes()
+                    },
+                ) { states -> states.toList() }
+            }
+        }.collectAsState(
+            initial = trackers.map { service ->
+                settingsViewModel.libraryPreferences.filterTracking(service.id.toInt()).get()
+            },
+        )
+        val filterOptions = buildList {
+            add(
+                LibraryFilterOption(
+                    label = context.stringResource(MR.strings.label_downloaded),
+                    state = if (downloadedOnly) TriState.ENABLED_IS else filterDownloaded,
+                    enabled = !downloadedOnly,
+                    onToggle = { settingsViewModel.toggleFilter(LibraryPreferences::filterDownloaded) },
+                ),
+            )
+            add(
+                LibraryFilterOption(
+                    label = context.stringResource(MR.strings.action_filter_unread),
+                    state = filterUnread,
+                    onToggle = { settingsViewModel.toggleFilter(LibraryPreferences::filterUnread) },
+                ),
+            )
+            add(
+                LibraryFilterOption(
+                    label = context.stringResource(MR.strings.label_started),
+                    state = filterStarted,
+                    onToggle = { settingsViewModel.toggleFilter(LibraryPreferences::filterStarted) },
+                ),
+            )
+            add(
+                LibraryFilterOption(
+                    label = context.stringResource(MR.strings.action_filter_bookmarked),
+                    state = filterBookmarked,
+                    onToggle = { settingsViewModel.toggleFilter(LibraryPreferences::filterBookmarked) },
+                ),
+            )
+            add(
+                LibraryFilterOption(
+                    label = context.stringResource(MR.strings.completed),
+                    state = filterCompleted,
+                    onToggle = { settingsViewModel.toggleFilter(LibraryPreferences::filterCompleted) },
+                ),
+            )
+            if ((!isReleaseBuildType) && LibraryPreferences.MANGA_OUTSIDE_RELEASE_PERIOD in autoUpdateMangaRestrictions) {
+                add(
+                    LibraryFilterOption(
+                        label = context.stringResource(MR.strings.action_filter_interval_custom),
+                        state = filterIntervalCustom,
+                        onToggle = { settingsViewModel.toggleFilter(LibraryPreferences::filterIntervalCustom) },
+                    ),
+                )
+            }
+            when (trackers.size) {
+                0 -> {}
+                1 -> {
+                    val service = trackers[0]
+                    add(
+                        LibraryFilterOption(
+                            label = context.stringResource(MR.strings.action_filter_tracked),
+                            state = trackerFilterStates.getOrNull(0) ?: TriState.DISABLED,
+                            onToggle = { settingsViewModel.toggleTracker(service.id.toInt()) },
+                        ),
+                    )
+                }
+                else -> {
+                    trackers.forEachIndexed { idx, service ->
+                        add(
+                            LibraryFilterOption(
+                                label = service.name,
+                                state = trackerFilterStates.getOrNull(idx) ?: TriState.DISABLED,
+                                onToggle = { settingsViewModel.toggleTracker(service.id.toInt()) },
+                            ),
+                        )
+                    }
+                }
+            }
+        }
 
         // The title capsule follows the active category: the default
         // category shows just "书架", any other category shows
@@ -261,7 +369,7 @@ data object LibraryTab : Tab {
                         },
                         displayMode = displayMode,
                         onDisplayModeSelected = settingsViewModel::setDisplayMode,
-                        onClickFilter = viewModel::showSettingsDialog,
+                        filterOptions = filterOptions,
                         onClickSearch = { viewModel.search("") },
                     )
                 }

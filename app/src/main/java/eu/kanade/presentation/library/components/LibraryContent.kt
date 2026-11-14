@@ -64,7 +64,7 @@ fun LibraryContent(
     onSetSort: (LibrarySort.Type, LibrarySort.Direction) -> Unit,
     displayMode: LibraryDisplayMode,
     onDisplayModeSelected: (LibraryDisplayMode) -> Unit,
-    onClickFilter: () -> Unit,
+    filterOptions: List<LibraryFilterOption>,
     onClickSearch: () -> Unit,
 ) {
     Column(
@@ -79,11 +79,12 @@ fun LibraryContent(
         val scope = rememberCoroutineScope()
         var isRefreshing by remember(pagerState.currentPage) { mutableStateOf(false) }
 
-        // The sort/display dropdowns are opened from the floating
-        // capsule (HomeScreen); their buttons live there, the popups
-        // render here from the root scaffold.
+        // The sort/display/filter dropdowns are opened from the
+        // floating capsule (HomeScreen); their buttons live there, the
+        // popups render here from the root scaffold.
         var selectingSort by remember { mutableStateOf(false) }
         var selectingDisplayMode by remember { mutableStateOf(false) }
+        var selectingFilter by remember { mutableStateOf(false) }
         LibraryViewOptionsDropdowns(
             sort = sort,
             hasTrackers = hasTrackers,
@@ -94,6 +95,11 @@ fun LibraryContent(
             onSelectingSortChange = { selectingSort = it },
             selectingDisplayMode = selectingDisplayMode,
             onSelectingDisplayModeChange = { selectingDisplayMode = it },
+        )
+        LibraryFilterDropdown(
+            options = filterOptions,
+            selectingFilter = selectingFilter,
+            onSelectingFilterChange = { selectingFilter = it },
         )
 
         // The tab's actions for the floating capsule (HomeScreen): the
@@ -115,9 +121,9 @@ fun LibraryContent(
             } else {
                 HomeScreen.setCapsuleActions(
                     listOf(
-                        // The two dropdowns share their open state: opening
-                        // one closes the other, and opening search or the
-                        // filter sheet closes both. Without this, tapping
+                        // The three dropdowns share their open state:
+                        // opening one closes the others, and opening
+                        // search closes all three. Without this, tapping
                         // a second capsule action left the first dropdown
                         // open underneath it.
                         CapsuleAction(
@@ -126,6 +132,7 @@ fun LibraryContent(
                             onClick = {
                                 selectingSort = false
                                 selectingDisplayMode = false
+                                selectingFilter = false
                                 onClickSearch()
                             },
                         ),
@@ -135,6 +142,7 @@ fun LibraryContent(
                             onClick = {
                                 selectingSort = true
                                 selectingDisplayMode = false
+                                selectingFilter = false
                             },
                         ),
                         CapsuleAction(
@@ -149,15 +157,16 @@ fun LibraryContent(
                             onClick = {
                                 selectingDisplayMode = true
                                 selectingSort = false
+                                selectingFilter = false
                             },
                         ),
                         CapsuleAction(
                             icon = MaterialSymbols.Rounded.FilterList,
                             contentDescription = filterDescription,
                             onClick = {
+                                selectingFilter = true
                                 selectingSort = false
                                 selectingDisplayMode = false
-                                onClickFilter()
                             },
                             tint = if (hasActiveFilters) activeColor else null,
                         ),

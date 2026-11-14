@@ -71,7 +71,7 @@ fun UpdateScreen(
     onMultiDeleteClicked: (List<UpdatesItem>) -> Unit,
     onUpdateSelected: (UpdatesItem, Boolean, Boolean) -> Unit,
     onOpenChapter: (UpdatesItem) -> Unit,
-    onFilterClicked: () -> Unit,
+    filterOptions: List<UpdatesFilterOption>,
     hasActiveFilters: Boolean,
 ) {
     BackHandler(enabled = state.selectionMode) {
@@ -79,6 +79,15 @@ fun UpdateScreen(
     }
 
     val scope = rememberCoroutineScope()
+
+    // The filter dropdown expands from the floating capsule, like the
+    // Library page's dropdowns, instead of sliding up from below.
+    var selectingFilter by remember { mutableStateOf(false) }
+    UpdatesFilterDropdown(
+        options = filterOptions,
+        selectingFilter = selectingFilter,
+        onSelectingFilterChange = { selectingFilter = it },
+    )
 
     // The tab's actions for the floating capsule (HomeScreen): the
     // filter/upcoming/refresh icons live there now, not in the top bar.
@@ -98,18 +107,24 @@ fun UpdateScreen(
                     CapsuleAction(
                         icon = MaterialSymbols.Rounded.FilterList,
                         contentDescription = filterDescription,
-                        onClick = onFilterClicked,
+                        onClick = { selectingFilter = true },
                         tint = if (hasActiveFilters) activeColor else null,
                     ),
                     CapsuleAction(
                         icon = MaterialSymbols.Rounded.CalendarMonth,
                         contentDescription = upcomingDescription,
-                        onClick = onCalendarClicked,
+                        onClick = {
+                            selectingFilter = false
+                            onCalendarClicked()
+                        },
                     ),
                     CapsuleAction(
                         icon = MaterialSymbols.Rounded.Refresh,
                         contentDescription = refreshDescription,
-                        onClick = { scope.launch { onUpdateLibrary() } },
+                        onClick = {
+                            selectingFilter = false
+                            scope.launch { onUpdateLibrary() }
+                        },
                     ),
                 ),
             )
@@ -133,7 +148,7 @@ fun UpdateScreen(
                 UpdatesAppBar(
                     onCalendarClicked = { onCalendarClicked() },
                     onUpdateLibrary = { scope.launch { onUpdateLibrary() } },
-                    onFilterClicked = { onFilterClicked() },
+                    onFilterClicked = { selectingFilter = true },
                     hasFilters = hasActiveFilters,
                     actionModeCounter = state.selected.size,
                     onSelectAll = { onSelectAll(true) },

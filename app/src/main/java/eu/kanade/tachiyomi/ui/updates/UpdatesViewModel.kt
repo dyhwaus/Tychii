@@ -480,10 +480,6 @@ class UpdatesViewModel(
         }
     }
 
-    fun showFilterDialog() {
-        dialog.update { Dialog.FilterSheet }
-    }
-
     @Immutable
     private data class ItemPreferences(
         val filterDownloaded: TriState,
@@ -522,7 +518,6 @@ class UpdatesViewModel(
 
     sealed interface Dialog {
         data class DeleteConfirmation(val toDelete: List<UpdatesItem>) : Dialog
-        data object FilterSheet : Dialog
     }
 
     sealed interface Event {

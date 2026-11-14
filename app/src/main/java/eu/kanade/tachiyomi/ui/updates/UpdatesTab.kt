@@ -6,6 +6,7 @@ import androidx.compose.animation.graphics.vector.AnimatedImageVector
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -15,9 +16,10 @@ import cafe.adriel.voyager.navigator.currentOrThrow
 import cafe.adriel.voyager.navigator.tab.LocalTabNavigator
 import cafe.adriel.voyager.navigator.tab.TabOptions
 import dev.zacsweers.metrox.viewmodel.metroViewModel
+import eu.kanade.presentation.category.visualName
 import eu.kanade.presentation.updates.UpdateScreen
 import eu.kanade.presentation.updates.UpdatesDeleteConfirmationDialog
-import eu.kanade.presentation.updates.UpdatesFilterDialog
+import eu.kanade.presentation.updates.UpdatesFilterOption
 import eu.kanade.presentation.util.Tab
 import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.ui.download.DownloadQueueScreen
@@ -29,8 +31,12 @@ import eu.kanade.tachiyomi.ui.updates.UpdatesViewModel.Event
 import kotlinx.coroutines.flow.collectLatest
 import mihon.feature.upcoming.UpcomingScreen
 import tachiyomi.core.common.i18n.stringResource
+import tachiyomi.core.common.preference.TriState
+import tachiyomi.core.common.preference.getAndSet
+import tachiyomi.domain.updates.service.UpdatesPreferences
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.i18n.stringResource
+import tachiyomi.presentation.core.util.collectAsState
 
 data object UpdatesTab : Tab {
 
@@ -58,6 +64,71 @@ data object UpdatesTab : Tab {
         val settingsViewModel = metroViewModel<UpdatesSettingsViewModel>()
         val state by viewModel.state.collectAsStateWithLifecycle()
 
+        // Tri-state filters for the capsule's Filter dropdown. They are
+        // the old settings sheet's Filter and Categories tabs, now
+        // expanding from the capsule instead of sliding up from below.
+        val filterDownloaded by settingsViewModel.updatesPreferences.filterDownloaded.collectAsState()
+        val filterUnread by settingsViewModel.updatesPreferences.filterUnread.collectAsState()
+        val filterStarted by settingsViewModel.updatesPreferences.filterStarted.collectAsState()
+        val filterBookmarked by settingsViewModel.updatesPreferences.filterBookmarked.collectAsState()
+        val filterExcludedScanlators by settingsViewModel.updatesPreferences.filterExcludedScanlators.collectAsState()
+        val includedCategories by settingsViewModel.includedCategories.collectAsState()
+        val excludedCategories by settingsViewModel.excludedCategories.collectAsState()
+        val allCategories by settingsViewModel.getCategories.subscribe().collectAsState(initial = emptyList())
+        val filterOptions = buildList {
+            add(
+                UpdatesFilterOption(
+                    label = context.stringResource(MR.strings.label_downloaded),
+                    state = filterDownloaded,
+                    onToggle = { settingsViewModel.toggleFilter(UpdatesPreferences::filterDownloaded) },
+                ),
+            )
+            add(
+                UpdatesFilterOption(
+                    label = context.stringResource(MR.strings.action_filter_unread),
+                    state = filterUnread,
+                    onToggle = { settingsViewModel.toggleFilter(UpdatesPreferences::filterUnread) },
+                ),
+            )
+            add(
+                UpdatesFilterOption(
+                    label = context.stringResource(MR.strings.label_started),
+                    state = filterStarted,
+                    onToggle = { settingsViewModel.toggleFilter(UpdatesPreferences::filterStarted) },
+                ),
+            )
+            add(
+                UpdatesFilterOption(
+                    label = context.stringResource(MR.strings.action_filter_bookmarked),
+                    state = filterBookmarked,
+                    onToggle = { settingsViewModel.toggleFilter(UpdatesPreferences::filterBookmarked) },
+                ),
+            )
+            add(
+                UpdatesFilterOption(
+                    label = context.stringResource(MR.strings.action_filter_excluded_scanlators),
+                    state = if (filterExcludedScanlators) TriState.ENABLED_IS else TriState.DISABLED,
+                    onToggle = {
+                        settingsViewModel.updatesPreferences.filterExcludedScanlators.getAndSet { !it }
+                    },
+                ),
+            )
+            allCategories.forEach { category ->
+                val filterState = when (category.id) {
+                    in includedCategories -> TriState.ENABLED_IS
+                    in excludedCategories -> TriState.ENABLED_NOT
+                    else -> TriState.DISABLED
+                }
+                add(
+                    UpdatesFilterOption(
+                        label = category.visualName,
+                        state = filterState,
+                        onToggle = { settingsViewModel.cycleCategory(category) },
+                    ),
+                )
+            }
+        }
+
         UpdateScreen(
             state = state,
             snackbarHostState = viewModel.snackbarHostState,
@@ -75,7 +146,7 @@ data object UpdatesTab : Tab {
                 context.startActivity(intent)
             },
             onCalendarClicked = { navigator.push(UpcomingScreen()) },
-            onFilterClicked = viewModel::showFilterDialog,
+            filterOptions = filterOptions,
             hasActiveFilters = state.hasActiveFilters,
         )
 
@@ -85,12 +156,6 @@ data object UpdatesTab : Tab {
                 UpdatesDeleteConfirmationDialog(
                     onDismissRequest = onDismissDialog,
                     onConfirm = { viewModel.deleteChapters(dialog.toDelete) },
-                )
-            }
-            is UpdatesViewModel.Dialog.FilterSheet -> {
-                UpdatesFilterDialog(
-                    onDismissRequest = onDismissDialog,
-                    viewModel = settingsViewModel,
                 )
             }
             null -> {}
