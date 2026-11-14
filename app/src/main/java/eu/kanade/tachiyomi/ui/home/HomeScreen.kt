@@ -12,12 +12,18 @@ import androidx.compose.animation.slideOutVertically
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.WindowInsetsSides
+import androidx.compose.foundation.layout.displayCutout
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.layout.systemBars
+import androidx.compose.foundation.layout.union
 import androidx.compose.material3.Badge
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -263,6 +269,18 @@ object HomeScreen : Screen() {
                             // mismatch showed as a visible seam behind the
                             // floating bar in dark mode.
                             containerColor = MaterialTheme.colorScheme.background,
+                            // No bottom navigation-bar inset: the content
+                            // extends to the very bottom edge, behind the
+                            // gesture bar, so the strip around it is
+                            // transparent and the covers show through while
+                            // scrolling instead of a solid background band.
+                            // The floating bar keeps its own
+                            // navigationBarsPadding, and each tab list still
+                            // pads its bottom by LiquidNavBarClearance, so
+                            // the last item still clears the bar.
+                            contentWindowInsets = WindowInsets.systemBars
+                                .only(WindowInsetsSides.Top + WindowInsetsSides.Horizontal)
+                                .union(WindowInsets.displayCutout),
                         ) { paddingValues ->
                             // No bottom clearance and no background of its
                             // own here: the content used to end 96.dp above
