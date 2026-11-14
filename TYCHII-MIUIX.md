@@ -1036,6 +1036,12 @@ the two grid modes stay consistent. The comfortable-grid
 cover keeps its own 12.dp default from `MangaCover.Book`,
 and the card background, title and outline are unchanged.
 
+A 1.dp highlight now runs along the card's top edge, like
+light catching the rim: the card Column draws a white
+0.3-alpha round rect (8.dp corners, so it follows the
+card's outline) over the cover's top edge, after the
+content, so it sits on the photo rather than under it.
+
 ## Extensions: trust dialog unreachable under the floating bar (2026-11-14)
 
 Tapping 信任 on an untrusted self-installed extension did
