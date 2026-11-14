@@ -18,6 +18,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -42,6 +43,7 @@ import eu.kanade.tachiyomi.extension.model.Extension
 import eu.kanade.tachiyomi.extension.model.InstallStep
 import eu.kanade.tachiyomi.ui.browse.extension.ExtensionUiModel
 import eu.kanade.tachiyomi.ui.browse.extension.ExtensionsViewModel
+import eu.kanade.tachiyomi.ui.home.HomeScreen
 import eu.kanade.tachiyomi.util.system.LocaleHelper
 import eu.kanade.tachiyomi.util.system.copyToClipboard
 import eu.kanade.tachiyomi.util.system.launchRequestPackageInstallsPermission
@@ -149,6 +151,11 @@ private fun ExtensionContent(
 ) {
     val context = LocalContext.current
     var notLoadedState by remember { mutableStateOf<Extension.NotLoaded?>(null) }
+    // The floating bar sits above bottom-attached dialogs and its background
+    // swallows taps, so the dialog's buttons are unreachable while it is shown.
+    LaunchedEffect(notLoadedState) {
+        HomeScreen.showBottomNav(notLoadedState == null)
+    }
     val installGranted = rememberRequestPackageInstallsPermissionState(initialValue = true)
 
     FastScrollLazyColumn(
