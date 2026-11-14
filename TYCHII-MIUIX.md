@@ -737,6 +737,34 @@ grid, which share `MangaCompactGridItem`; the comfortable grid was
 already title-below. The Miuix floating bar, title capsule and
 Neko theme are untouched — only the card layout follows PiliPlus.
 
+## Reader settings: Miuix card grouping for hierarchy (2026-11-14)
+
+The reader settings were a flat list — section headings, then chips /
+checkboxes / sliders with no visual container, so there was no sense
+of layers. Now the sections are grouped into Miuix `Card`s, exactly
+like the main settings (`PreferenceScreen`): each section's items sit
+in one card (`surfaceContainer` on the sheet's `surfaceContainerHigh`),
+sections are separated by a 12.dp gap, and the section headings stay
+above their card. New shared helper `ReaderSettingsCard`
+(`presentation/reader/settings/ReaderSettingsCard.kt`) + a
+`ReaderSettingsSectionGap()`.
+
+- `ReadingModePage`: per-series card (reading mode + orientation
+  chips); the pager and webtoon viewer settings each get their own
+  card (only one shows at a time).
+- `GeneralSettingsPage`: three cards — theme + show page number;
+  vertical navigator (chips + the conditional left-side checkbox and
+  height slider); the general checkboxes incl. the flash-page
+  controls (sliders + colour chips appear inside the card when
+  flash is on).
+- `ColorFilterPage`: three cards — custom brightness; colour filter
+  (RGBA sliders + mode chips when on); grayscale + inverted.
+- `WebGpuViewerSettings` (the WebGPU viewer path): its 9 remaining
+  Material3 `FilterChip`s are now `ReaderFilterChip` too, so no bare
+  `FilterChip` is left in the reader settings. Its shader lists and
+  reorder UI are deliberately left alone — a specialised screen, not
+  a plain settings list.
+
 ## Chip rows: vertical gap between wrapped rows (2026-11-14)
 
 When a `SettingsChipRow` wrapped to two rows (e.g. the reader's
