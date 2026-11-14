@@ -1065,22 +1065,39 @@ trust dialog and the not-loaded dialog. The same overlap
 exists for bottom-attached dialogs on other tab pages; they
 need the same treatment when reported.
 
-## Explore: long-press remove unreachable under the floating bar (2026-11-14)
+## Explore: the page sits outside HomeScreen — no capsule, no bar (2026-11-14)
 
-Long-pressing a manga on the per-source Explore page could
-add it to the library, but not remove it. The long-press
-itself is fine (a library manga still opens the remove
-dialog); the same z-order bug as the trust dialog is the
-cause — the dialog's 移除 button sits under the floating
-bar, whose background swallows the tap.
+The Explore page (and the whole Browse section flow) is
+pushed onto the main navigator, not a per-tab navigator —
+tabs have no Navigator of their own, and MainActivity's
+root Navigator shows only its top screen. So when the user
+opens a source page, HomeScreen leaves the composition
+entirely: its bottom bar, title capsule and action capsule
+do not exist on that page at all. That is also why the
+bottom bar is absent in the screenshot, and why reporting
+capsule actions to HomeScreen (`setCapsuleActions`) could
+never show a capsule here, no matter the scroll state —
+the earlier scroll explanation and the collector reset
+(4a283c80) were aimed at the wrong mechanism.
 
-`BrowseSourceScreen` now hides the bar while the remove
-dialog is open (`LaunchedEffect(state.dialog is
-Dialog.RemoveManga)` calling `HomeScreen.showBottomNav`)
-and shows it again on dismiss. Only the remove dialog is
-covered: the other dialogs on this page (Filter, duplicate,
-migrate, category) can push a new screen while open, which
-would leave the bar hidden on that screen.
+`BrowseSourceScreen` now owns its capsule locally: the
+actions are computed in the composable body (search +
+cover layout, empty while searching, exactly what it used
+to report), with a local scroll-hide connection (120.dp,
+same as HomeScreen's) on a Box wrapping the content and
+the capsule rendered as an `AnimatedVisibility` sibling
+over the list, using the same bar style preference and
+`rememberLayerBackdrop` handle (the Box records the layer
+when glass is enabled). The dead `HomeScreen` calls on
+this page are gone (title capsule, bar hide, action
+report).
+
+The long-press remove fix (6b54b411) is ineffective on
+this page for the same reason: there is no floating bar
+here to hide, so the 移除 button was never covered by it.
+Whether removing works now, and whether the remove dialog
+even opens, is still open — it needs the user to test
+after rebuilding.
 
 ## Build fixes
 
