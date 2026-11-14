@@ -827,6 +827,17 @@ gone at rest on all three pages:
 
 ## Build fixes
 
+- 2026-11-14: the Explore capsule used `MaterialSymbols.Rounded.Search`,
+  `RoundedFilled.ViewCompact`, `RoundedFilled.ViewModule` and
+  `AutoMirroredRoundedFilled.ViewList`, but BrowseSourceScreen.kt did
+  not import those icon files — Tychii's icon library needs a direct
+  import per icon (the `MaterialSymbols` base import alone does not
+  resolve them), so all four were "Unresolved reference", cascading
+  into "@Composable invocations" errors on the `stringResource` calls
+  in the same `CapsuleAction` calls. Fixed by adding the four imports
+  (the same ones LibraryContent.kt already has).
+
+
 - 2026-11-13: the waterfall `items` calls in UpdatesUiItem.kt and
   HistoryScreen.kt passed `span = { _, item -> ... }`, but the
   `List<T>` overload's `span` takes only the item, not (index,
