@@ -1027,6 +1027,15 @@ unreferenced before removal (delete 95b9e2fc, code 6f1d5e7b):
 - The commented-out `SDK_INT < P` check in
   `AppUpdateChecker`, with its comment.
 
+## Cover cards: smaller corner radius (2026-11-14)
+
+The compact-grid card (Library and Browse source grids)
+and its cover went from 12.dp to 8.dp — the card clip, the
+cover's top corners, and the cover-only full rounding, so
+the two grid modes stay consistent. The comfortable-grid
+cover keeps its own 12.dp default from `MangaCover.Book`,
+and the card background, title and outline are unchanged.
+
 ## Extensions: trust dialog unreachable under the floating bar (2026-11-14)
 
 Tapping 信任 on an untrusted self-installed extension did
