@@ -1212,6 +1212,19 @@ reader's bars:
   corners = fully rounded). Top pills in Library/Updates, both
   bottom menus. The reader's bars and the floating action capsule
   stay at 24.dp.
+- 2026-11-15 (ff90a8b9): the Library bottom bar no longer expands
+  from its own top edge — it slides down from the cover that was
+  pressed. The three Library item composables report their cover's
+  vertical centre in window coordinates (`reportCoverCenterY`, a
+  no-op when no listener is attached, so Browse grids pay nothing);
+  LibraryContent keeps the latest positions in a plain map and sets
+  the anchor before toggling selection, so the anchor is known in
+  the same recomposition that shows the bar; the bar's enter is
+  `slideInVertically` from the cover plus a fade (350 ms), its exit
+  slides back up to the cover (250 ms). The slide distance is the
+  window height minus the bar height minus the anchor, so the bar's
+  top edge starts exactly on the cover's centre. The chapter menu
+  keeps the old bottom-expand (no anchor there).
 
 ## Remaining dialogs migrated (2026-11-15)
 
