@@ -1352,6 +1352,25 @@ Scaffold shares its parent's root dialog states
 outer wrapper's popup host renders. Untested — needs a rebuild
 and a real unfavorite tap to confirm.
 
+## Manga detail: start button as a nav-bar pill (2026-11-15)
+
+The 开始/继续 button was still the blue Material3
+`SmallExtendedFloatingActionButton` (c4b2156a). It is now a
+`MangaStartButton` pill in exactly the floating capsule's
+material, in both the phone and tablet layouts: surfaceContainer,
+0.75 alpha when the bar style is translucent, and 0.4 alpha +
+the same vibrancy + 4.dp blur + tilt highlight when it is liquid
+glass. The bar style is read once in `MangaScreen` (with the
+usual glass-unsupported fallback to translucent) and passed to
+both implementations with one shared `LayerBackdrop`; the
+`PullRefresh` content records the layer in glass mode, so the
+pill blurs the chapter list behind it while the button itself
+stays outside the recorded layer. Behaviour is unchanged: the
+show/hide animation, the expand-to-icon-only collapse while
+scrolling, the 56.dp height the list's bottom clearance is
+measured from, and the onSurface play icon + label. Untested —
+needs a rebuild and a visual check.
+
 ## Build fixes
 
 - 2026-11-14: the Explore capsule called `stringResource(...)` for the
