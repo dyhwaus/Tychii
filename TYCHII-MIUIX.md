@@ -1490,6 +1490,13 @@ from the GitHub ZIP.
   file never used `Modifier` before, so the import was missing —
   `Unresolved reference 'Modifier'` at line 58. Import added; the
   other two files in the same batch already imported it.
+- 2026-11-15 (c67e1190): the selection-pill change removed the
+  `AppBar` import from `LibraryToolbar` after checking only for
+  `AppBar(` call sites — but the regular toolbar still uses the
+  nested `AppBar.Action` / `AppBar.OverflowAction` types (lines
+  127/133/137/141), so all four errored. Import restored. Same
+  lesson as the `Color` case (9e1ea10a): grep the bare type name when
+  cleaning imports.
 
 - 2026-11-12 — `MangaViewModel` was missing the
   `kotlinx.coroutines.flow.asStateFlow` import, so the build failed
