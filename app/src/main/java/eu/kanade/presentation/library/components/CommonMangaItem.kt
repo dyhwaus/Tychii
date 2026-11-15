@@ -26,6 +26,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
@@ -96,6 +97,7 @@ fun MangaCompactGridItem(
         Box(
             modifier = Modifier
                 .fillMaxWidth()
+                .shadow(2.dp, RoundedCornerShape(8.dp))
                 .clip(RoundedCornerShape(8.dp)),
         ) {
             MangaGridCover(
@@ -150,6 +152,7 @@ fun MangaComfortableGridItem(
         Box(
             modifier = Modifier
                 .fillMaxWidth()
+                .shadow(2.dp, RoundedCornerShape(12.dp))
                 .clip(RoundedCornerShape(12.dp)),
         ) {
             MangaGridCover(
