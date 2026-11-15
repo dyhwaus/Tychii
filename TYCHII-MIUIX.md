@@ -1171,6 +1171,36 @@ is still M3), the inner `SetCoverDialog` in
 the outer AdaptiveSheet was already Miuix), and
 `MigrationExitDialog`. Six `AlertDialog`s remain.
 
+## Library selection bars as floating pills (2026-11-15)
+
+Selecting manga used to call up two Mihon bars: the top selection
+`AppBar` (full-width band, count + select-all/invert) and the bottom
+`LibraryBottomActionMenu` (edge-attached `Surface`, long-press to
+reveal labels). Both are floating pills now (b9649f49), like the
+reader's bars:
+
+- Top: `LibrarySelectionToolbar` builds its own 64.dp pill —
+  12.dp side margins, 8.dp clear of the status bar, 24.dp corners,
+  `surfaceContainer` at the reader's translucency (0.9 dark /
+  0.95 light). Miuix `IconButton`s for cancel (Close) / select-all /
+  invert, count in Miuix `Text` (`textStyles.title2`). The
+  `statusBarsPadding` is kept: the old `AppBar` had it, so the pill
+  sits where the band sat. Search toolbar untouched.
+- Bottom: `LibraryBottomActionMenu` is a Miuix `Surface` pill
+  (24.dp corners, `surfaceContainerHigh`, 12.dp margins, 8.dp bottom
+  clearance, nav-bar inset outside the pill). The shared `Button`
+  uses Miuix `Icon` + `Text` (`textStyles.footnote1`); its
+  `combinedClickable` + Material `ripple` stay, as the chapter menu's
+  comment already documents (Miuix `IconButton` has no long-click).
+  The "more" overflow (migrate/delete) is an `OverlayDropdownPopup`
+  now, same pattern as the capsule dropdowns. The download button's
+  `DownloadDropdownMenu` stays (shared flyout, out of scope).
+- The same pill treatment went to the chapter menu
+  (`MangaBottomActionMenu`, same file, same `Button`): it is used on
+  manga detail and Updates, and leaving it edge-attached would have
+  looked inconsistent. Its callers pass a width fraction on tablets,
+  which the outer `Box` keeps; the Library menu stays full-width.
+
 ## Build fixes
 
 - 2026-11-14: the Explore capsule called `stringResource(...)` for the
