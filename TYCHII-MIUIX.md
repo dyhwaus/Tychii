@@ -1455,6 +1455,12 @@ class, push, verify HEAD). Compilation is unverified in the cloud
 (the Gradle daemon fails to start there); the user builds locally
 from the GitHub ZIP.
 
+- 2026-11-15 (4c7793e9): the dialog migration added a `Row` using
+  `Modifier.fillMaxWidth()` to `DeleteLibraryMangaDialog`, but the
+  file never used `Modifier` before, so the import was missing —
+  `Unresolved reference 'Modifier'` at line 58. Import added; the
+  other two files in the same batch already imported it.
+
 - 2026-11-12 — `MangaViewModel` was missing the
   `kotlinx.coroutines.flow.asStateFlow` import, so the build failed
   with "Unresolved reference 'asStateFlow'" at the `vibrantColor`
