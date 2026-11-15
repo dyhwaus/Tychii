@@ -1266,6 +1266,33 @@ reader's bars:
   the display-mode pickers (capsule dropdown + settings dialog)
   and the capsule display icons lost the comfortable entry, and
   the global search row now uses the compact item.
+- 2026-11-15 (b1df9064): the Explore page's filter, capsule and
+  chips. The page is pushed onto the main navigator, outside
+  HomeScreen, so it has no Miuix Scaffold ancestor — and Miuix
+  overlays (dialogs, dropdowns) only render inside one, which is
+  why the remove dialog silently never opened there (the
+  long-press remove issue) and the display dropdown never
+  appeared either. The whole page is now wrapped in a Miuix
+  Scaffold (zero insets, the page background, layout-neutral),
+  which hosts the overlays — this also revives the remove dialog.
+  The filter is no longer a bottom sheet: the Filter action moved
+  from the chips row into the capsule, and its panel is an
+  `OverlayListPopup` from the capsule (320.dp wide, at most 70%
+  of the screen height, Reset + Filter header, the same
+  `FilterItem` form in a scrolling list; `FilterItem` is now
+  internal and shared with `SourceFilterDialog`, which the
+  migration search screen still uses as a sheet). The capsule
+  keeps only the search tools (Search + Filter, with the accent
+  tint on Filter while a search listing is active) — the cover
+  layout action and its dropdown are gone, so the Explore page's
+  layout stays on the stored mode. The Popular/Latest chips
+  dropped the physical-button gradient for the capsule's
+  material: a flat surfaceContainer pill (solid when opaque,
+  0.75 alpha otherwise — in glass mode too, because the chips
+  sit on the header's opaque surface with no page content behind
+  them to blur, so the glass alpha would make the pill vanish),
+  the active chip marked with the accent tint like the nav bar's
+  active tab. The capsule hides while the filter panel is open.
 
 ## Remaining dialogs migrated (2026-11-15)
 
