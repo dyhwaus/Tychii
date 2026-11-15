@@ -1574,6 +1574,26 @@ unchanged. Untested — needs a rebuild and a long-press select
 in glass mode; the 0.4 veil is a first guess, say if it should
 be milkier or clearer.
 
+## Side action capsules get the bar's lens refraction (2026-11-15)
+
+The side capsules (Library/Updates/History tabs and Explore —
+both are `MiuixFloatingCapsule`) already matched the title
+capsule exactly (blur 4.dp + vibrancy + tilt highlight +
+surfaceContainer 0.4), but the bottom bar has one more thing:
+the `lens()` refraction that bends the content behind it at the
+edges — the part that reads as "liquid" rather than plain
+frosted blur (b0545123). The capsule now adds the same lens
+(refraction 24.dp / 24.dp, as the bar), so all three floating
+pieces share one material. The capsule's 24.dp rounded shape is
+a CornerBasedShape, which the lens needs; the icons draw on top
+of the refracted backdrop, so they stay undistorted. The bar's
+drop shadow and the selected-tab pill's inner shadow were not
+copied — those are shadows, not the glass itself, and the title
+capsule has neither. Untested — needs a rebuild and a look at a
+side capsule over covers in glass mode; on the narrow capsule
+the 24.dp refraction may read stronger than on the wide bar,
+say if it should be gentler.
+
 ## Build fixes
 
 - 2026-11-14: the Explore capsule called `stringResource(...)` for the
