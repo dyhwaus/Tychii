@@ -1447,6 +1447,22 @@ it was the wrong fix (no bar exists on a pushed page) and its
 LaunchedEffect + HomeScreen import are gone. Untested — the user
 must rebuild and try trusting a self-installed extension.
 
+## Unfavorite directly, no confirm dialog (2026-11-15)
+
+Tapping favourite a second time used to open the remove
+confirmation dialog (14fac64a). Now the tap calls
+`toggleFavorite()` straight away and the manga leaves the
+library at once. The now-dead pieces went with it:
+`showRemoveFromLibraryDialog()`, the `Dialog.RemoveFromLibrary`
+entry and its branch in the dialog `when`, and the
+`RemoveMangaDialog` import in ui MangaScreen. The
+`RemoveMangaDialog` component itself stays — the Explore page
+still uses it for long-press remove. One thing to know: if the
+manga has downloaded chapters, removing it still shows the
+existing snackbar asking whether to delete the downloads; that
+is about the files, not a second confirmation of the removal.
+Untested — needs a rebuild and a tap test.
+
 ## Build fixes
 
 - 2026-11-14: the Explore capsule called `stringResource(...)` for the
