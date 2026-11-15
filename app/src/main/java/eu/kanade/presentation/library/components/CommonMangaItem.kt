@@ -81,6 +81,10 @@ fun MangaCompactGridItem(
     isSelected: Boolean = false,
     title: String? = null,
     onClickContinueReading: (() -> Unit)? = null,
+    // A tap on the cover itself, separate from the card tap — the
+    // Updates page opens the manga from the cover and the chapter
+    // from the card. Null means the cover is not separately clickable.
+    onClickCover: (() -> Unit)? = null,
     coverAlpha: Float = 1f,
     coverBadgeStart: @Composable (RowScope.() -> Unit)? = null,
     coverBadgeEnd: @Composable (RowScope.() -> Unit)? = null,
@@ -109,6 +113,7 @@ fun MangaCompactGridItem(
                             .reportCoverCenterY(onCoverPositioned),
                         data = coverData,
                         shape = RoundedCornerShape(8.dp),
+                        onClick = onClickCover,
                     )
                 },
                 badgesStart = coverBadgeStart,
