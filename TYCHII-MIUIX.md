@@ -1200,6 +1200,13 @@ reader's bars:
   manga detail and Updates, and leaving it edge-attached would have
   looked inconsistent. Its callers pass a width fraction on tablets,
   which the outer `Box` keeps; the Library menu stays full-width.
+- Updates followed (0b110595): `UpdatesAppBar` only ever renders in
+  selection mode (the top bar is empty at rest), so its whole body
+  became the same 64.dp pill, and its regular branch — tablet title
+  plus filter/upcoming/refresh actions — was dead code and went away
+  with the four parameters that fed it. Filter/upcoming/refresh
+  already live in the floating action capsule. Its bottom menu was
+  already the pill via `MangaBottomActionMenu`.
 
 ## Build fixes
 
