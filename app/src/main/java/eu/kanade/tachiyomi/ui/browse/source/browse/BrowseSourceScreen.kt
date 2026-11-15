@@ -421,7 +421,7 @@ data class BrowseSourceScreen(
                                 viewModel.search(filters = state.filters)
                                 onDismissRequest()
                             },
-                            colors = ButtonDefaults.buttonColorsPrimary(),
+                            colors = ButtonDefaults.buttonColors(),
                         ) {
                             Text(stringResource(MR.strings.action_filter))
                         }

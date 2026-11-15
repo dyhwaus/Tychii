@@ -60,7 +60,7 @@ fun SourceFilterDialog(
                             onFilter()
                             onDismissRequest()
                         },
-                        colors = ButtonDefaults.buttonColorsPrimary(),
+                        colors = ButtonDefaults.buttonColors(),
                     ) {
                         Text(stringResource(MR.strings.action_filter))
                     }
