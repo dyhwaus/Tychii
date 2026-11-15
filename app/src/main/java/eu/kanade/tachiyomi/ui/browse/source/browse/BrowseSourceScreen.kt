@@ -75,6 +75,7 @@ import eu.kanade.presentation.manga.DuplicateMangaDialog
 import eu.kanade.presentation.miuix.CapsuleAction
 import eu.kanade.presentation.miuix.FloatMotion
 import eu.kanade.presentation.miuix.MiuixFloatingCapsule
+import eu.kanade.presentation.miuix.TopFadeBlur
 import eu.kanade.presentation.theme.isMiuixGlassSupported
 import eu.kanade.presentation.util.AssistContentScreen
 import eu.kanade.presentation.util.Screen
@@ -333,36 +334,54 @@ data class BrowseSourceScreen(
                 },
                 snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
             ) { paddingValues ->
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .nestedScroll(capsuleScrollConnection)
-                        .then(if (glassEnabled) Modifier.layerBackdrop(backdrop) else Modifier),
-                ) {
-                    BrowseSourceContent(
-                        source = source,
-                        mangaList = viewModel.mangaPagerFlowFlow.collectAsLazyPagingItems(),
-                        columns = viewModel.getColumnsPreference(LocalConfiguration.current.orientation),
-                        displayMode = viewModel.displayMode,
-                        snackbarHostState = snackbarHostState,
-                        contentPadding = paddingValues,
-                        onWebViewClick = onWebViewClick,
-                        onHelpClick = { uriHandler.openUri(Constants.URL_HELP) },
-                        onLocalSourceHelpClick = onHelpClick,
-                        onMangaClick = { navigator.push((MangaScreen(it.id, true))) },
-                        onMangaLongClick = { manga ->
-                            scope.launch(Dispatchers.IO) {
-                                val duplicates = viewModel.getDuplicateLibraryManga(manga)
-                                when {
-                                    manga.favorite -> viewModel.changeMangaFavorite(manga)
-                                    duplicates.isNotEmpty() -> viewModel.setDialog(
-                                        BrowseSourceViewModel.Dialog.AddDuplicateManga(manga, duplicates),
-                                    )
-                                    else -> viewModel.addFavorite(manga)
+                // The capsule floats over the list, so — like HomeScreen's
+                // bar and capsules — it must stay OUTSIDE the layer
+                // recorded by layerBackdrop: it blurs that layer, and
+                // inside it it would blur itself and crash hwui
+                // (infinite recursion in RenderNode::prepareTreeImpl).
+                Box(modifier = Modifier.fillMaxSize()) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .nestedScroll(capsuleScrollConnection)
+                            .then(if (glassEnabled) Modifier.layerBackdrop(backdrop) else Modifier),
+                    ) {
+                        BrowseSourceContent(
+                            source = source,
+                            mangaList = viewModel.mangaPagerFlowFlow.collectAsLazyPagingItems(),
+                            columns = viewModel.getColumnsPreference(LocalConfiguration.current.orientation),
+                            displayMode = viewModel.displayMode,
+                            snackbarHostState = snackbarHostState,
+                            contentPadding = paddingValues,
+                            onWebViewClick = onWebViewClick,
+                            onHelpClick = { uriHandler.openUri(Constants.URL_HELP) },
+                            onLocalSourceHelpClick = onHelpClick,
+                            onMangaClick = { navigator.push((MangaScreen(it.id, true))) },
+                            onMangaLongClick = { manga ->
+                                scope.launch(Dispatchers.IO) {
+                                    val duplicates = viewModel.getDuplicateLibraryManga(manga)
+                                    when {
+                                        manga.favorite -> viewModel.changeMangaFavorite(manga)
+                                        duplicates.isNotEmpty() -> viewModel.setDialog(
+                                            BrowseSourceViewModel.Dialog.AddDuplicateManga(manga, duplicates),
+                                        )
+                                        else -> viewModel.addFavorite(manga)
+                                    }
+                                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                                 }
-                                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                            }
-                        },
+                            },
+                        )
+                    }
+                    // Top edge fade: content scrolling up under the
+                    // top bar dissolves instead of being cut off at the
+                    // bar's bottom edge. The veil matches the top bar's
+                    // surface colour.
+                    TopFadeBlur(
+                        height = 48.dp,
+                        color = MiuixTheme.colorScheme.surface,
+                        barStyle = effectiveBarStyle,
+                        backdrop = backdrop,
+                        modifier = Modifier.align(Alignment.TopCenter),
                     )
                     // The action capsule, on the right edge over the
                     // list — the same glass as HomeScreen's capsule.
