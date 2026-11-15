@@ -1245,6 +1245,14 @@ reader's bars:
   on purpose: a bigger elevation would be clipped by the
   interaction layer's 4.dp padding, and the ask was a little
   shadow. The list rows are not cards and got none.
+- 2026-11-15 (baaf1a24): on the per-source Explore page, the
+  source name's top padding went from 40.dp to 75.dp, and the
+  Popular/Latest/Filter chips became physical push buttons
+  (`FilterButton`): a raised vertical gradient with a 1.dp white
+  rim light and a 2.dp shadow when up, pressed into a flat darker
+  face with a dark inset top edge and no shadow when down — the
+  blue primary selected state is gone, the pressed-in look is the
+  active state now. 12.dp corners, 18.dp icon, same labels.
 
 ## Remaining dialogs migrated (2026-11-15)
 
