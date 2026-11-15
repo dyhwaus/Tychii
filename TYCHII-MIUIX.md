@@ -1406,6 +1406,34 @@ reading, like the old card's body click. Long-press does
 nothing on history cards — there is no selection mode there.
 Untested — needs a rebuild and a visual check.
 
+## Floating UI: one motion language (2026-11-15)
+
+Every floating element used its own timing: the title capsule and
+the action capsules faded on AnimatedVisibility's defaults, the
+bottom bar slid on a spring, the reader bars used their own
+200/150 ms linear tweens, the Library bottom bar slid on 350/250
+ms tweens and fell back to an expand with a 300 ms delay, and the
+selection pills at the top popped in with no animation at all
+(1d963c9b). A new shared `FloatMotion` object
+(`presentation/miuix/FloatMotion.kt`) holds the one language:
+enter 300 ms, exit 250 ms, FastOutSlowIn easing, with Fade,
+Slide (IntOffset) and Size (IntSize) specs. Everything floating
+now uses it: the title capsule, the bottom bar and the action
+capsule on HomeScreen; the Explore page's local capsule; the
+reader's top bar, bottom bar and chapter navigator (their
+private readerBars specs are gone); the chapter menu and the
+Library bottom bar (the cover slide is 300 ms in now, and the
+no-anchor fallback expands immediately instead of waiting
+300 ms); the long-press label reveal in the bottom menus; and
+the Library/Updates selection pills, which now slide down from
+the status bar and fade in when selection starts (their top
+bar unmounts when selection ends, so only the enter plays).
+Deliberately unchanged: the manga detail start button, whose
+M3 animateFloatingActionButton keeps the layout measured while
+hidden — the list's bottom clearance depends on that — and the
+tab switch fade-through (200 ms), which is navigation, not
+floating UI. Untested — needs a rebuild and a feel check.
+
 ## Build fixes
 
 - 2026-11-14: the Explore capsule called `stringResource(...)` for the
