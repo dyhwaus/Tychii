@@ -1317,6 +1317,18 @@ and so the soft keyboard can be forced visible through the dialog
 window; Miuix's `OverlayDialog` is an overlay popup, not a platform
 window, so it cannot host either.
 
+## Filter button: neutral instead of primary blue (2026-11-15)
+
+The filter confirmation button was still blue on both filter pages
+(9926f72d): the Explore filter panel (`BrowseSourceScreen`, the
+`OverlayListPopup` from the capsule) and the filter sheet
+(`SourceFilterDialog`, used by the migration search screen) both
+used `ButtonDefaults.buttonColorsPrimary()` for 筛选. Both now use
+`buttonColors()` — the neutral `secondaryVariant` fill, in line with
+the chips losing their blue primary state. The button stays a filled
+button, so it still reads as the confirm action next to the Reset
+`TextButton`.
+
 ## Build fixes
 
 - 2026-11-14: the Explore capsule called `stringResource(...)` for the
