@@ -8,16 +8,18 @@ import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
@@ -37,10 +39,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
@@ -54,13 +53,15 @@ import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import top.yukonga.miuix.kmp.basic.DropdownDefaults
-import top.yukonga.miuix.kmp.basic.DropdownEntry
-import top.yukonga.miuix.kmp.basic.DropdownItem
+import top.yukonga.miuix.kmp.basic.Button
+import top.yukonga.miuix.kmp.basic.ButtonDefaults
 import top.yukonga.miuix.kmp.basic.HorizontalDivider
+import top.yukonga.miuix.kmp.basic.PopupPositionProvider
+import top.yukonga.miuix.kmp.basic.Scaffold as MiuixScaffold
+import top.yukonga.miuix.kmp.basic.TextButton
 import top.yukonga.miuix.kmp.blur.layerBackdrop
 import top.yukonga.miuix.kmp.blur.rememberLayerBackdrop
-import top.yukonga.miuix.kmp.popup.OverlayDropdownPopup
+import top.yukonga.miuix.kmp.overlay.OverlayListPopup
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
@@ -90,21 +91,19 @@ import kotlinx.coroutines.launch
 import mihon.app.di.appGraph
 import mihon.feature.migration.dialog.MigrateMangaDialog
 import mihon.icons.materialsymbols.MaterialSymbols
-import mihon.icons.materialsymbols.automirroredroundedfilled.ViewList
 import mihon.icons.materialsymbols.rounded.FilterList
 import mihon.icons.materialsymbols.rounded.Search
 import mihon.icons.materialsymbols.rounded.Verified
 import mihon.icons.materialsymbols.roundedfilled.Favorite
-import mihon.icons.materialsymbols.roundedfilled.ViewCompact
 import mihon.presentation.core.util.collectAsLazyPagingItems
 import tachiyomi.core.common.Constants
-import tachiyomi.domain.library.model.LibraryDisplayMode
 import tachiyomi.domain.source.model.StubSource
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.components.material.Scaffold
 import tachiyomi.presentation.core.components.material.padding
 import tachiyomi.presentation.core.i18n.stringResource
 import tachiyomi.presentation.core.screens.LoadingScreen
+import tachiyomi.presentation.core.theme.active
 import tachiyomi.presentation.core.util.collectAsState
 import tachiyomi.source.local.LocalSource
 
@@ -220,262 +219,278 @@ data class BrowseSourceScreen(
             }
         }
 
-        // Floating action capsule, like the Library page: search and
-        // cover layout. Search opens the search field in the top bar
-        // (it appears while toolbarQuery is set); display opens a
-        // dropdown with the four layouts. Empty while searching, so
-        // the capsule hides while the search field is open.
-        var selectingDisplayMode by remember { mutableStateOf(false) }
+        // Floating action capsule, like the Library page: only the
+        // search tools. Search opens the search field in the top
+        // bar (it appears while toolbarQuery is set); filter opens
+        // the source filters as a dropdown from the capsule. Empty
+        // while searching, so the capsule hides while the search
+        // field is open.
         val searchDescription = stringResource(MR.strings.action_search)
-        val displayDescription = stringResource(MR.strings.action_display_mode)
+        val filterDescription = stringResource(MR.strings.action_filter)
         val capsuleActions = if (state.toolbarQuery != null) {
             emptyList()
         } else {
             listOf(
-                // Opening search closes the display dropdown, like
-                // the Library page closes its dropdowns when another
-                // capsule action is tapped.
                 CapsuleAction(
                     icon = MaterialSymbols.Rounded.Search,
                     contentDescription = searchDescription,
-                    onClick = {
-                        selectingDisplayMode = false
-                        viewModel.setToolbarQuery("")
-                    },
+                    onClick = { viewModel.setToolbarQuery("") },
                 ),
                 CapsuleAction(
-                    icon = when (viewModel.displayMode) {
-                        LibraryDisplayMode.List -> MaterialSymbols.AutoMirroredRoundedFilled.ViewList
-                        LibraryDisplayMode.CompactGrid,
-                        LibraryDisplayMode.CoverOnlyGrid,
-                        -> MaterialSymbols.RoundedFilled.ViewCompact
+                    icon = MaterialSymbols.Rounded.FilterList,
+                    contentDescription = filterDescription,
+                    tint = if (state.listing is Listing.Search) {
+                        MaterialTheme.colorScheme.active
+                    } else {
+                        null
                     },
-                    contentDescription = displayDescription,
-                    onClick = { selectingDisplayMode = true },
+                    onClick = viewModel::openFilterSheet,
                 ),
             )
         }
 
-        Scaffold(
-            // The top bar holds the source name and, below it, the
-            // filter chips. Back goes through the system back gesture.
-            // While searching, the search field takes the top bar's
-            // place instead.
-            topBar = {
-                if (state.toolbarQuery != null) {
-                    SearchToolbar(
-                        searchQuery = state.toolbarQuery,
-                        onChangeSearchQuery = viewModel::setToolbarQuery,
-                        backgroundColor = MaterialTheme.colorScheme.background,
-                        navigateUp = navigateUp,
-                        onSearch = { viewModel.search(it) },
-                    )
-                } else {
-                    Column(
-                        modifier = Modifier
-                            .background(MiuixTheme.colorScheme.surface)
-                            .pointerInput(Unit) {},
-                    ) {
-                        // Source name at the top left, with clearance from
-                        // the status bar. The filter chips sit below it.
-                        Text(
-                            text = source.name,
-                            style = MaterialTheme.typography.titleLarge,
-                            fontWeight = FontWeight.Bold,
-                            modifier = Modifier.padding(
-                                start = 16.dp,
-                                top = 75.dp,
-                                end = 16.dp,
-                                bottom = 4.dp,
-                            ),
+        // This page is pushed onto the main navigator, outside
+        // HomeScreen, so it has no Miuix Scaffold ancestor — and
+        // Miuix overlays (dialogs, dropdowns) only render inside
+        // one. The wrapper hosts them, so the filter dropdown and
+        // the dialogs actually appear here; it also revives the
+        // remove dialog, which silently never opened on this page.
+        // It is layout-neutral: zero insets, the page background.
+        MiuixScaffold(
+            containerColor = MaterialTheme.colorScheme.background,
+            contentWindowInsets = WindowInsets(0, 0, 0, 0),
+        ) {
+            Scaffold(
+                // The top bar holds the source name and, below it, the
+                // filter chips. Back goes through the system back gesture.
+                // While searching, the search field takes the top bar's
+                // place instead.
+                topBar = {
+                    if (state.toolbarQuery != null) {
+                        SearchToolbar(
+                            searchQuery = state.toolbarQuery,
+                            onChangeSearchQuery = viewModel::setToolbarQuery,
+                            backgroundColor = MaterialTheme.colorScheme.background,
+                            navigateUp = navigateUp,
+                            onSearch = { viewModel.search(it) },
                         )
-                        Row(
+                    } else {
+                        Column(
                             modifier = Modifier
-                                .horizontalScroll(rememberScrollState())
-                                // Breathing room above and below the chips.
-                                .padding(
-                                    horizontal = MaterialTheme.padding.small,
-                                    vertical = 8.dp,
-                                ),
-                            horizontalArrangement = Arrangement.spacedBy(MaterialTheme.padding.small),
+                                .background(MiuixTheme.colorScheme.surface)
+                                .pointerInput(Unit) {},
                         ) {
-                            FilterButton(
-                                selected = state.listing == Listing.Popular,
-                                onClick = {
-                                    viewModel.resetFilters()
-                                    viewModel.setListing(Listing.Popular)
-                                },
-                                icon = MaterialSymbols.RoundedFilled.Favorite,
-                                label = stringResource(MR.strings.popular),
+                            // Source name at the top left, with clearance from
+                            // the status bar. The filter chips sit below it.
+                            Text(
+                                text = source.name,
+                                style = MaterialTheme.typography.titleLarge,
+                                fontWeight = FontWeight.Bold,
+                                modifier = Modifier.padding(
+                                    start = 16.dp,
+                                    top = 75.dp,
+                                    end = 16.dp,
+                                    bottom = 4.dp,
+                                ),
                             )
-                            if (source.supportsLatest) {
+                            Row(
+                                modifier = Modifier
+                                    .horizontalScroll(rememberScrollState())
+                                    // Breathing room above and below the chips.
+                                    .padding(
+                                        horizontal = MaterialTheme.padding.small,
+                                        vertical = 8.dp,
+                                    ),
+                                horizontalArrangement = Arrangement.spacedBy(MaterialTheme.padding.small),
+                            ) {
                                 FilterButton(
-                                    selected = state.listing == Listing.Latest,
+                                    selected = state.listing == Listing.Popular,
                                     onClick = {
                                         viewModel.resetFilters()
-                                        viewModel.setListing(Listing.Latest)
+                                        viewModel.setListing(Listing.Popular)
                                     },
-                                    icon = MaterialSymbols.Rounded.Verified,
-                                    label = stringResource(MR.strings.latest),
+                                    icon = MaterialSymbols.RoundedFilled.Favorite,
+                                    label = stringResource(MR.strings.popular),
+                                    barStyle = effectiveBarStyle,
                                 )
+                                if (source.supportsLatest) {
+                                    FilterButton(
+                                        selected = state.listing == Listing.Latest,
+                                        onClick = {
+                                            viewModel.resetFilters()
+                                            viewModel.setListing(Listing.Latest)
+                                        },
+                                        icon = MaterialSymbols.Rounded.Verified,
+                                        label = stringResource(MR.strings.latest),
+                                        barStyle = effectiveBarStyle,
+                                    )
+                                }
                             }
-                            if (state.filters.isNotEmpty()) {
-                                FilterButton(
-                                    selected = state.listing is Listing.Search,
-                                    onClick = viewModel::openFilterSheet,
-                                    icon = MaterialSymbols.Rounded.FilterList,
-                                    label = stringResource(MR.strings.action_filter),
-                                )
-                            }
-                        }
 
-                        HorizontalDivider()
+                            HorizontalDivider()
+                        }
+                    }
+                },
+                snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
+            ) { paddingValues ->
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .nestedScroll(capsuleScrollConnection)
+                        .then(if (glassEnabled) Modifier.layerBackdrop(backdrop) else Modifier),
+                ) {
+                    BrowseSourceContent(
+                        source = source,
+                        mangaList = viewModel.mangaPagerFlowFlow.collectAsLazyPagingItems(),
+                        columns = viewModel.getColumnsPreference(LocalConfiguration.current.orientation),
+                        displayMode = viewModel.displayMode,
+                        snackbarHostState = snackbarHostState,
+                        contentPadding = paddingValues,
+                        onWebViewClick = onWebViewClick,
+                        onHelpClick = { uriHandler.openUri(Constants.URL_HELP) },
+                        onLocalSourceHelpClick = onHelpClick,
+                        onMangaClick = { navigator.push((MangaScreen(it.id, true))) },
+                        onMangaLongClick = { manga ->
+                            scope.launch(Dispatchers.IO) {
+                                val duplicates = viewModel.getDuplicateLibraryManga(manga)
+                                when {
+                                    manga.favorite -> viewModel.setDialog(BrowseSourceViewModel.Dialog.RemoveManga(manga))
+                                    duplicates.isNotEmpty() -> viewModel.setDialog(
+                                        BrowseSourceViewModel.Dialog.AddDuplicateManga(manga, duplicates),
+                                    )
+                                    else -> viewModel.addFavorite(manga)
+                                }
+                                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                            }
+                        },
+                    )
+                    // The action capsule, on the right edge over the
+                    // list — the same glass as HomeScreen's capsule.
+                    // Hidden while the filter panel is open (it sits
+                    // over the capsule's spot).
+                    AnimatedVisibility(
+                        visible = capsuleScrollVisible && capsuleActions.isNotEmpty() &&
+                            state.dialog !is BrowseSourceViewModel.Dialog.Filter,
+                        enter = fadeIn() + slideInHorizontally(initialOffsetX = { it }),
+                        exit = fadeOut() + slideOutHorizontally(targetOffsetX = { it }),
+                        modifier = Modifier
+                            .align(Alignment.CenterEnd)
+                            .padding(end = 20.dp),
+                    ) {
+                        MiuixFloatingCapsule(
+                            actions = capsuleActions,
+                            barStyle = effectiveBarStyle,
+                            backdrop = backdrop,
+                        )
                     }
                 }
-            },
-            snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
-        ) { paddingValues ->
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .nestedScroll(capsuleScrollConnection)
-                    .then(if (glassEnabled) Modifier.layerBackdrop(backdrop) else Modifier),
+            }
+
+            val onDismissRequest = { viewModel.setDialog(null) }
+
+            // Source filters as a dropdown from the capsule, like the
+            // Library page's filter dropdown — not the bottom sheet
+            // the filter used to be. The filter form is long, so the
+            // panel is a fixed-width column with a scrolling list.
+            // It renders through the Miuix Scaffold wrapper below: an
+            // overlay needs the scaffold host, which this pushed page
+            // otherwise lacks.
+            val filterPopupMaxHeight = LocalConfiguration.current.screenHeightDp.dp * 0.7f
+            OverlayListPopup(
+                show = state.dialog is BrowseSourceViewModel.Dialog.Filter,
+                alignment = PopupPositionProvider.Align.End,
+                onDismissRequest = onDismissRequest,
+                maxHeight = filterPopupMaxHeight,
+                renderInRootScaffold = true,
             ) {
-                BrowseSourceContent(
-                    source = source,
-                    mangaList = viewModel.mangaPagerFlowFlow.collectAsLazyPagingItems(),
-                    columns = viewModel.getColumnsPreference(LocalConfiguration.current.orientation),
-                    displayMode = viewModel.displayMode,
-                    snackbarHostState = snackbarHostState,
-                    contentPadding = paddingValues,
-                    onWebViewClick = onWebViewClick,
-                    onHelpClick = { uriHandler.openUri(Constants.URL_HELP) },
-                    onLocalSourceHelpClick = onHelpClick,
-                    onMangaClick = { navigator.push((MangaScreen(it.id, true))) },
-                    onMangaLongClick = { manga ->
-                        scope.launch(Dispatchers.IO) {
-                            val duplicates = viewModel.getDuplicateLibraryManga(manga)
-                            when {
-                                manga.favorite -> viewModel.setDialog(BrowseSourceViewModel.Dialog.RemoveManga(manga))
-                                duplicates.isNotEmpty() -> viewModel.setDialog(
-                                    BrowseSourceViewModel.Dialog.AddDuplicateManga(manga, duplicates),
-                                )
-                                else -> viewModel.addFavorite(manga)
-                            }
-                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                        }
-                    },
-                )
-                // The action capsule, on the right edge over the
-                // list — the same glass as HomeScreen's capsule.
-                AnimatedVisibility(
-                    visible = capsuleScrollVisible && capsuleActions.isNotEmpty(),
-                    enter = fadeIn() + slideInHorizontally(initialOffsetX = { it }),
-                    exit = fadeOut() + slideOutHorizontally(targetOffsetX = { it }),
-                    modifier = Modifier
-                        .align(Alignment.CenterEnd)
-                        .padding(end = 20.dp),
+                Column(
+                    modifier = Modifier.width(320.dp),
                 ) {
-                    MiuixFloatingCapsule(
-                        actions = capsuleActions,
-                        barStyle = effectiveBarStyle,
-                        backdrop = backdrop,
+                    Row(
+                        modifier = Modifier.padding(8.dp),
+                    ) {
+                        TextButton(
+                            text = stringResource(MR.strings.action_reset),
+                            onClick = viewModel::resetFilters,
+                        )
+
+                        Spacer(modifier = Modifier.weight(1f))
+
+                        Button(
+                            onClick = {
+                                viewModel.search(filters = state.filters)
+                                onDismissRequest()
+                            },
+                            colors = ButtonDefaults.buttonColorsPrimary(),
+                        ) {
+                            Text(stringResource(MR.strings.action_filter))
+                        }
+                    }
+                    HorizontalDivider()
+                    LazyColumn(
+                        modifier = Modifier.weight(1f),
+                    ) {
+                        items(state.filters) {
+                            FilterItem(it) { viewModel.setFilters(state.filters) }
+                        }
+                    }
+                }
+            }
+
+            when (val dialog = state.dialog) {
+                // The filter panel is the dropdown above, not a dialog.
+                is BrowseSourceViewModel.Dialog.Filter -> {}
+                is BrowseSourceViewModel.Dialog.AddDuplicateManga -> {
+                    DuplicateMangaDialog(
+                        duplicates = dialog.duplicates,
+                        onDismissRequest = onDismissRequest,
+                        onConfirm = { viewModel.addFavorite(dialog.manga) },
+                        onOpenManga = { navigator.push(MangaScreen(it.id)) },
+                        onMigrate = { viewModel.setDialog(BrowseSourceViewModel.Dialog.Migrate(dialog.manga, it)) },
                     )
                 }
-            }
-        }
 
-        // Cover layout dropdown for the floating action capsule's
-        // display button, mirroring the Library page's.
-        OverlayDropdownPopup(
-            entries = listOf(
-                DropdownEntry(
-                    items = listOf(
-                        MR.strings.action_display_grid to LibraryDisplayMode.CompactGrid,
-                        MR.strings.action_display_cover_only_grid to LibraryDisplayMode.CoverOnlyGrid,
-                        MR.strings.action_display_list to LibraryDisplayMode.List,
-                    ).map { (titleRes, mode) ->
-                        DropdownItem(
-                            text = stringResource(titleRes),
-                            selected = viewModel.displayMode == mode,
-                            onClick = {
-                                selectingDisplayMode = false
-                                viewModel.displayMode = mode
-                            },
-                        )
-                    },
-                ),
-            ),
-            show = selectingDisplayMode,
-            onDismiss = { selectingDisplayMode = false },
-            onDismissFinished = {},
-            maxHeight = null,
-            dropdownColors = DropdownDefaults.dropdownColors(),
-            renderInRootScaffold = true,
-            collapseOnSelection = true,
-        )
-
-        val onDismissRequest = { viewModel.setDialog(null) }
-        when (val dialog = state.dialog) {
-            is BrowseSourceViewModel.Dialog.Filter -> {
-                SourceFilterDialog(
-                    onDismissRequest = onDismissRequest,
-                    filters = state.filters,
-                    onReset = viewModel::resetFilters,
-                    onFilter = { viewModel.search(filters = state.filters) },
-                    onUpdate = viewModel::setFilters,
-                )
-            }
-            is BrowseSourceViewModel.Dialog.AddDuplicateManga -> {
-                DuplicateMangaDialog(
-                    duplicates = dialog.duplicates,
-                    onDismissRequest = onDismissRequest,
-                    onConfirm = { viewModel.addFavorite(dialog.manga) },
-                    onOpenManga = { navigator.push(MangaScreen(it.id)) },
-                    onMigrate = { viewModel.setDialog(BrowseSourceViewModel.Dialog.Migrate(dialog.manga, it)) },
-                )
-            }
-
-            is BrowseSourceViewModel.Dialog.Migrate -> {
-                MigrateMangaDialog(
-                    current = dialog.current,
-                    target = dialog.target,
-                    // Initiated from the context of [dialog.target] so we show [dialog.current].
-                    onClickTitle = { navigator.push(MangaScreen(dialog.current.id)) },
-                    onDismissRequest = onDismissRequest,
-                )
-            }
-            is BrowseSourceViewModel.Dialog.RemoveManga -> {
-                RemoveMangaDialog(
-                    onDismissRequest = onDismissRequest,
-                    onConfirm = {
-                        viewModel.changeMangaFavorite(dialog.manga)
-                    },
-                    mangaToRemove = dialog.manga,
-                )
-            }
-            is BrowseSourceViewModel.Dialog.ChangeMangaCategory -> {
-                ChangeCategoryDialog(
-                    initialSelection = dialog.initialSelection,
-                    onDismissRequest = onDismissRequest,
-                    onEditCategories = { navigator.push(CategoryScreen()) },
-                    onConfirm = { include, _ ->
-                        viewModel.changeMangaFavorite(dialog.manga)
-                        viewModel.moveMangaToCategories(dialog.manga, include)
-                    },
-                )
-            }
-            else -> {}
-        }
-
-        LaunchedEffect(Unit) {
-            queryEvent.receiveAsFlow()
-                .collectLatest {
-                    when (it) {
-                        is SearchType.Genre -> viewModel.searchGenre(it.txt)
-                        is SearchType.Text -> viewModel.search(it.txt)
-                    }
+                is BrowseSourceViewModel.Dialog.Migrate -> {
+                    MigrateMangaDialog(
+                        current = dialog.current,
+                        target = dialog.target,
+                        // Initiated from the context of [dialog.target] so we show [dialog.current].
+                        onClickTitle = { navigator.push(MangaScreen(dialog.current.id)) },
+                        onDismissRequest = onDismissRequest,
+                    )
                 }
+                is BrowseSourceViewModel.Dialog.RemoveManga -> {
+                    RemoveMangaDialog(
+                        onDismissRequest = onDismissRequest,
+                        onConfirm = {
+                            viewModel.changeMangaFavorite(dialog.manga)
+                        },
+                        mangaToRemove = dialog.manga,
+                    )
+                }
+                is BrowseSourceViewModel.Dialog.ChangeMangaCategory -> {
+                    ChangeCategoryDialog(
+                        initialSelection = dialog.initialSelection,
+                        onDismissRequest = onDismissRequest,
+                        onEditCategories = { navigator.push(CategoryScreen()) },
+                        onConfirm = { include, _ ->
+                            viewModel.changeMangaFavorite(dialog.manga)
+                            viewModel.moveMangaToCategories(dialog.manga, include)
+                        },
+                    )
+                }
+                else -> {}
+            }
+
+            LaunchedEffect(Unit) {
+                queryEvent.receiveAsFlow()
+                    .collectLatest {
+                        when (it) {
+                            is SearchType.Genre -> viewModel.searchGenre(it.txt)
+                            is SearchType.Text -> viewModel.search(it.txt)
+                        }
+                    }
+            }
         }
     }
 
@@ -492,34 +507,32 @@ data class BrowseSourceScreen(
     }
 }
 
-// A physical push button, not a flat chip: raised with a gradient,
-// a rim light and a shadow when up, pressed into a flat darker face
-// with an inset top edge when down.
+// The same material as the floating capsule and the bottom bar:
+// a surfaceContainer pill, flat like the capsule (no gradient,
+// no shadow). The chips sit on the header's opaque surface, so
+// there is no page content behind them to blur — in glass mode
+// they take the translucent alpha instead of the glass one, or
+// the pill would vanish. The active chip is marked the way the
+// bottom bar marks its active tab: the accent tint.
 @Composable
 private fun FilterButton(
     selected: Boolean,
     onClick: () -> Unit,
     icon: ImageVector,
     label: String,
+    barStyle: BarStyle,
 ) {
-    val isDark = isSystemInDarkTheme()
     val colorScheme = MiuixTheme.colorScheme
-    val raisedTop = if (isDark) colorScheme.surfaceContainerHighest else colorScheme.surfaceContainer
-    val raisedBottom = if (isDark) colorScheme.surfaceContainer else colorScheme.surfaceContainerHigh
+    val containerColor = when (barStyle) {
+        BarStyle.OPAQUE -> colorScheme.surfaceContainer
+        BarStyle.TRANSLUCENT, BarStyle.LIQUID_GLASS -> colorScheme.surfaceContainer.copy(alpha = 0.75f)
+    }
+    val contentColor = if (selected) colorScheme.primary else colorScheme.onSurface
     val shape = RoundedCornerShape(12.dp)
     Box(
         modifier = Modifier
-            .shadow(if (selected) 0.dp else 2.dp, shape)
             .clip(shape)
-            .background(
-                Brush.verticalGradient(
-                    if (selected) {
-                        listOf(raisedBottom, raisedBottom)
-                    } else {
-                        listOf(raisedTop, raisedBottom)
-                    },
-                ),
-            )
+            .background(containerColor)
             .clickable(onClick = onClick)
             .padding(horizontal = 12.dp, vertical = 8.dp),
         contentAlignment = Alignment.Center,
@@ -529,24 +542,13 @@ private fun FilterButton(
                 imageVector = icon,
                 contentDescription = null,
                 modifier = Modifier.size(18.dp),
+                tint = contentColor,
             )
             Text(
                 text = label,
                 modifier = Modifier.padding(start = 4.dp),
+                color = contentColor,
             )
         }
-        Box(
-            modifier = Modifier
-                .align(Alignment.TopCenter)
-                .fillMaxWidth()
-                .height(1.dp)
-                .background(
-                    if (selected) {
-                        Color.Black.copy(alpha = 0.2f)
-                    } else {
-                        Color.White.copy(alpha = 0.45f)
-                    },
-                ),
-        )
     }
 }

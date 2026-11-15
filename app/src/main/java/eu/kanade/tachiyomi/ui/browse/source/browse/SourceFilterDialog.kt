@@ -75,8 +75,10 @@ fun SourceFilterDialog(
     }
 }
 
+// Shared with the Explore page, which shows the same form in a
+// dropdown from the capsule instead of this sheet.
 @Composable
-private fun FilterItem(filter: Filter<*>, onUpdate: () -> Unit) {
+internal fun FilterItem(filter: Filter<*>, onUpdate: () -> Unit) {
     when (filter) {
         is Filter.Header -> {
             HeadingItem(filter.name)
