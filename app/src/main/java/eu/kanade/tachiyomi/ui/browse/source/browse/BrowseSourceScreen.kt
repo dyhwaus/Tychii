@@ -6,15 +6,20 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SnackbarHost
@@ -31,7 +36,11 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
@@ -45,8 +54,6 @@ import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import top.yukonga.miuix.kmp.basic.Button
-import top.yukonga.miuix.kmp.basic.ButtonDefaults
 import top.yukonga.miuix.kmp.basic.DropdownDefaults
 import top.yukonga.miuix.kmp.basic.DropdownEntry
 import top.yukonga.miuix.kmp.basic.DropdownItem
@@ -279,7 +286,7 @@ data class BrowseSourceScreen(
                             fontWeight = FontWeight.Bold,
                             modifier = Modifier.padding(
                                 start = 16.dp,
-                                top = 40.dp,
+                                top = 75.dp,
                                 end = 16.dp,
                                 bottom = 4.dp,
                             ),
@@ -488,8 +495,9 @@ data class BrowseSourceScreen(
     }
 }
 
-// Same small Miuix button chip as the global search toolbar (Miuix has
-// no chip; selected uses the primary button colors).
+// A physical push button, not a flat chip: raised with a gradient,
+// a rim light and a shadow when up, pressed into a flat darker face
+// with an inset top edge when down.
 @Composable
 private fun FilterButton(
     selected: Boolean,
@@ -497,18 +505,51 @@ private fun FilterButton(
     icon: ImageVector,
     label: String,
 ) {
-    Button(
-        onClick = onClick,
-        colors = if (selected) ButtonDefaults.buttonColorsPrimary() else ButtonDefaults.buttonColors(),
+    val isDark = isSystemInDarkTheme()
+    val colorScheme = MiuixTheme.colorScheme
+    val raisedTop = if (isDark) colorScheme.surfaceContainerHighest else colorScheme.surfaceContainer
+    val raisedBottom = if (isDark) colorScheme.surfaceContainer else colorScheme.surfaceContainerHigh
+    val shape = RoundedCornerShape(12.dp)
+    Box(
+        modifier = Modifier
+            .shadow(if (selected) 0.dp else 2.dp, shape)
+            .clip(shape)
+            .background(
+                Brush.verticalGradient(
+                    if (selected) {
+                        listOf(raisedBottom, raisedBottom)
+                    } else {
+                        listOf(raisedTop, raisedBottom)
+                    },
+                ),
+            )
+            .clickable(onClick = onClick)
+            .padding(horizontal = 12.dp, vertical = 8.dp),
+        contentAlignment = Alignment.Center,
     ) {
-        Icon(
-            imageVector = icon,
-            contentDescription = null,
-            modifier = Modifier.size(18.dp),
-        )
-        Text(
-            text = label,
-            modifier = Modifier.padding(start = 4.dp),
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                modifier = Modifier.size(18.dp),
+            )
+            Text(
+                text = label,
+                modifier = Modifier.padding(start = 4.dp),
+            )
+        }
+        Box(
+            modifier = Modifier
+                .align(Alignment.TopCenter)
+                .fillMaxWidth()
+                .height(1.dp)
+                .background(
+                    if (selected) {
+                        Color.Black.copy(alpha = 0.2f)
+                    } else {
+                        Color.White.copy(alpha = 0.45f)
+                    },
+                ),
         )
     }
 }
