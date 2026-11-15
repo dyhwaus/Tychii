@@ -32,12 +32,13 @@ data class CapsuleAction(
 // sort, display mode, filter, ...), on the right edge over the list.
 // Same material as the title capsule and the bottom bar: opaque is a
 // solid surfaceContainer, translucent is surfaceContainer at 0.75 alpha,
-// liquid glass blurs the page content behind it. In glass mode it
-// consumes the shared [backdrop], so — like the title capsule and the
-// bottom bar — it must stay OUTSIDE the layer recorded by
-// `layerBackdrop` (HomeScreen renders it as an overlay, never inside a
-// tab's toolbar or content), or it will blur itself and crash hwui
-// (infinite recursion in RenderNode::prepareTreeImpl).
+// liquid glass blurs the page content behind it and refracts it at the
+// edges, like the bottom bar. In glass mode it consumes the shared
+// [backdrop], so — like the title capsule and the bottom bar — it must
+// stay OUTSIDE the layer recorded by `layerBackdrop` (HomeScreen
+// renders it as an overlay, never inside a tab's toolbar or content),
+// or it will blur itself and crash hwui (infinite recursion in
+// RenderNode::prepareTreeImpl).
 //
 // There is no layer behind it: it floats over the covers with only a
 // gap (the caller pads it from the screen edge), covering part of the
@@ -73,6 +74,15 @@ fun MiuixFloatingCapsule(
                     effects = {
                         vibrancy()
                         blur(4.dp.toPx(), 4.dp.toPx())
+                        // The lens is what makes this liquid glass rather
+                        // than plain frosted blur — same refraction as
+                        // the bottom bar. It only works on a
+                        // CornerBasedShape, which the 24.dp rounded
+                        // capsule is.
+                        lens(
+                            refractionHeight = 24.dp.toPx(),
+                            refractionAmount = 24.dp.toPx(),
+                        )
                     },
                     highlight = { highlight?.copy(alpha = 0.75f) },
                     onDrawSurface = { drawRect(containerColor) },
