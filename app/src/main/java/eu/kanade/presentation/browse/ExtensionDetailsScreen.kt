@@ -322,17 +322,22 @@ private fun DetailsHeader(
             }
         }
 
+        // Both actions are the same filled Button so they come out
+        // the same size — uninstall used to be a TextButton and came
+        // out shorter than the blue app-info button.
         Row(
             modifier = Modifier
+                .fillMaxWidth()
                 .padding(horizontal = MaterialTheme.padding.medium)
                 .padding(top = MaterialTheme.padding.small),
             horizontalArrangement = Arrangement.spacedBy(MaterialTheme.padding.medium),
         ) {
-            TextButton(
-                text = stringResource(MR.strings.ext_uninstall),
+            Button(
                 modifier = Modifier.weight(1f),
                 onClick = onClickUninstall,
-            )
+            ) {
+                Text(stringResource(MR.strings.ext_uninstall))
+            }
 
             if (onClickAppInfo != null) {
                 Button(
