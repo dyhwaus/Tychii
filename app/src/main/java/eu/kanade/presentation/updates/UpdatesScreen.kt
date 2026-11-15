@@ -1,14 +1,21 @@
 package eu.kanade.presentation.updates
 
 import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.background
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.LocalContentColor
+import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -19,17 +26,16 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.util.fastAll
 import androidx.compose.ui.util.fastAny
-import eu.kanade.presentation.components.AppBar
-import eu.kanade.presentation.components.AppBarActions
 import eu.kanade.presentation.manga.components.ChapterDownloadAction
 import eu.kanade.presentation.manga.components.MangaBottomActionMenu
 import eu.kanade.presentation.miuix.CapsuleAction
 import eu.kanade.presentation.miuix.LiquidNavBarClearance
 import eu.kanade.presentation.miuix.TopCapsuleClearance
-import eu.kanade.presentation.util.isTabletUi
 import eu.kanade.tachiyomi.data.download.model.Download
 import eu.kanade.tachiyomi.ui.home.HomeScreen
 import eu.kanade.tachiyomi.ui.updates.UpdatesItem
@@ -39,6 +45,7 @@ import kotlinx.coroutines.launch
 import kotlinx.datetime.LocalDate
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.rounded.CalendarMonth
+import mihon.icons.materialsymbols.rounded.Close
 import mihon.icons.materialsymbols.rounded.FilterList
 import mihon.icons.materialsymbols.rounded.FlipToBack
 import mihon.icons.materialsymbols.rounded.Refresh
@@ -54,6 +61,9 @@ import eu.kanade.presentation.components.QuietEmptyScreen
 import tachiyomi.presentation.core.screens.LoadingScreen
 import tachiyomi.presentation.core.theme.active
 import tachiyomi.presentation.core.util.plus
+import top.yukonga.miuix.kmp.basic.IconButton
+import top.yukonga.miuix.kmp.basic.Text as MiuixText
+import top.yukonga.miuix.kmp.theme.MiuixTheme
 import kotlin.time.Duration.Companion.seconds
 
 @Composable
@@ -146,10 +156,6 @@ fun UpdateScreen(
         topBar = { _ ->
             if (state.selected.isNotEmpty()) {
                 UpdatesAppBar(
-                    onCalendarClicked = { onCalendarClicked() },
-                    onUpdateLibrary = { scope.launch { onUpdateLibrary() } },
-                    onFilterClicked = { selectingFilter = true },
-                    hasFilters = hasActiveFilters,
                     actionModeCounter = state.selected.size,
                     onSelectAll = { onSelectAll(true) },
                     onInvertSelection = { onInvertSelection() },
@@ -236,10 +242,6 @@ fun UpdateScreen(
 
 @Composable
 private fun UpdatesAppBar(
-    onCalendarClicked: () -> Unit,
-    onUpdateLibrary: () -> Unit,
-    onFilterClicked: () -> Unit,
-    hasFilters: Boolean,
     // For action mode
     actionModeCounter: Int,
     onSelectAll: () -> Unit,
@@ -247,65 +249,53 @@ private fun UpdatesAppBar(
     onCancelActionMode: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    AppBar(
-        modifier = modifier,
-        // Same as the Library page: the bar sits on the page background,
-        // not Miuix surface (pure black in dark mode). Action mode keeps
-        // AppBar's own tinted color, so null is passed then.
-        backgroundColor = if (actionModeCounter > 0) null else MaterialTheme.colorScheme.background,
-        // Phones show the page title in the centered capsule floating over
-        // the toolbar (HomeScreen); tablets keep the title here (no capsule).
-        title = if (isTabletUi()) stringResource(MR.strings.label_recent_updates) else null,
-        actions = {
-            // Phones: the centered title capsule floats in this same
-            // 64.dp band, and the action icons sat under it. Hidden on
-            // phones so the band holds only the capsule and the search
-            // icon; tablets keep them (no capsule there). Action-mode
-            // actions below are untouched — the capsule hides then.
-            if (isTabletUi()) {
-                AppBarActions(
-                    listOf(
-                        AppBar.Action(
-                            title = stringResource(MR.strings.action_filter),
-                            icon = MaterialSymbols.Rounded.FilterList,
-                            iconTint = if (hasFilters) MaterialTheme.colorScheme.active else LocalContentColor.current,
-                            onClick = onFilterClicked,
-                        ),
-                        AppBar.Action(
-                            title = stringResource(MR.strings.action_view_upcoming),
-                            icon = MaterialSymbols.Rounded.CalendarMonth,
-                            onClick = onCalendarClicked,
-                        ),
-                        AppBar.Action(
-                            title = stringResource(MR.strings.action_update_library),
-                            icon = MaterialSymbols.Rounded.Refresh,
-                            onClick = onUpdateLibrary,
-                        ),
-                    ),
-                )
-            }
-        },
-        actionModeCounter = actionModeCounter,
-        onCancelActionMode = onCancelActionMode,
-        actionModeActions = {
-            AppBarActions(
-                listOf(
-                    AppBar.Action(
-                        title = stringResource(MR.strings.action_select_all),
-                        icon = MaterialSymbols.Rounded.SelectAll,
-                        onClick = onSelectAll,
-                    ),
-                    AppBar.Action(
-                        title = stringResource(MR.strings.action_select_inverse),
-                        icon = MaterialSymbols.Rounded.FlipToBack,
-                        onClick = onInvertSelection,
-                    ),
-                ),
+    // A floating pill like the Library selection bar, not the
+    // full-width Material band. The bar only ever renders in
+    // selection mode — the top bar is empty at rest — so there is no
+    // regular branch here; filter/upcoming/refresh live in the
+    // floating action capsule instead.
+    val backgroundColor = MiuixTheme.colorScheme.surfaceContainer
+        .copy(alpha = if (isSystemInDarkTheme()) 0.9f else 0.95f)
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .statusBarsPadding()
+            .padding(top = 8.dp, start = 12.dp, end = 12.dp)
+            .clip(RoundedCornerShape(24.dp))
+            .background(backgroundColor)
+            .height(64.dp)
+            .padding(horizontal = 8.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        IconButton(onClick = onCancelActionMode) {
+            Icon(
+                imageVector = MaterialSymbols.Rounded.Close,
+                contentDescription = stringResource(MR.strings.action_cancel),
             )
-        },
-        // No scroll behavior (see the Scaffold above): the toolbar must
-        // never tint while scrolling.
-    )
+        }
+        Box(
+            modifier = Modifier
+                .weight(1f)
+                .padding(horizontal = 8.dp),
+        ) {
+            MiuixText(
+                text = "$actionModeCounter",
+                style = MiuixTheme.textStyles.title2,
+            )
+        }
+        IconButton(onClick = onSelectAll) {
+            Icon(
+                imageVector = MaterialSymbols.Rounded.SelectAll,
+                contentDescription = stringResource(MR.strings.action_select_all),
+            )
+        }
+        IconButton(onClick = onInvertSelection) {
+            Icon(
+                imageVector = MaterialSymbols.Rounded.FlipToBack,
+                contentDescription = stringResource(MR.strings.action_select_inverse),
+            )
+        }
+    }
 }
 
 @Composable
