@@ -1463,6 +1463,20 @@ existing snackbar asking whether to delete the downloads; that
 is about the files, not a second confirmation of the removal.
 Untested — needs a rebuild and a tap test.
 
+## Explore long-press removes directly, no confirm dialog (2026-11-15)
+
+Same change on the Explore page (e6b53ce5): long-pressing a
+manga that is already in the library used to open the remove
+confirmation dialog; now it calls `changeMangaFavorite()`
+straight away. The now-dead pieces went with it: the
+`Dialog.RemoveManga` entry, its branch in the dialog `when`,
+the `RemoveMangaDialog` import — and `RemoveMangaDialog`
+itself, deleted (local rm + remote delete 6d9015c4), since the
+manga detail page had already stopped using it in 14fac64a and
+nothing else called it. The duplicate-manga and
+change-category dialogs on the same long-press path are
+untouched. Untested — needs a rebuild and a long-press test.
+
 ## Build fixes
 
 - 2026-11-14: the Explore capsule called `stringResource(...)` for the
