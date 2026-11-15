@@ -69,7 +69,6 @@ import dev.zacsweers.metrox.viewmodel.assistedMetroViewModel
 import eu.kanade.domain.ui.model.BarStyle
 import eu.kanade.presentation.browse.BrowseSourceContent
 import eu.kanade.presentation.browse.MissingSourceScreen
-import eu.kanade.presentation.browse.components.RemoveMangaDialog
 import eu.kanade.presentation.category.components.ChangeCategoryDialog
 import eu.kanade.presentation.components.SearchToolbar
 import eu.kanade.presentation.manga.DuplicateMangaDialog
@@ -355,7 +354,7 @@ data class BrowseSourceScreen(
                             scope.launch(Dispatchers.IO) {
                                 val duplicates = viewModel.getDuplicateLibraryManga(manga)
                                 when {
-                                    manga.favorite -> viewModel.setDialog(BrowseSourceViewModel.Dialog.RemoveManga(manga))
+                                    manga.favorite -> viewModel.changeMangaFavorite(manga)
                                     duplicates.isNotEmpty() -> viewModel.setDialog(
                                         BrowseSourceViewModel.Dialog.AddDuplicateManga(manga, duplicates),
                                     )
@@ -458,15 +457,6 @@ data class BrowseSourceScreen(
                         // Initiated from the context of [dialog.target] so we show [dialog.current].
                         onClickTitle = { navigator.push(MangaScreen(dialog.current.id)) },
                         onDismissRequest = onDismissRequest,
-                    )
-                }
-                is BrowseSourceViewModel.Dialog.RemoveManga -> {
-                    RemoveMangaDialog(
-                        onDismissRequest = onDismissRequest,
-                        onConfirm = {
-                            viewModel.changeMangaFavorite(dialog.manga)
-                        },
-                        mangaToRemove = dialog.manga,
                     )
                 }
                 is BrowseSourceViewModel.Dialog.ChangeMangaCategory -> {
