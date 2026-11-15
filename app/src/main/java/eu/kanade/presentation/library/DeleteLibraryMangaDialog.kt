@@ -1,9 +1,9 @@
 package eu.kanade.presentation.library
 
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -14,6 +14,8 @@ import tachiyomi.core.common.preference.CheckboxState
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.components.LabeledCheckbox
 import tachiyomi.presentation.core.i18n.stringResource
+import top.yukonga.miuix.kmp.basic.TextButton
+import top.yukonga.miuix.kmp.overlay.OverlayDialog
 
 @Composable
 fun DeleteLibraryMangaDialog(
@@ -31,15 +33,37 @@ fun DeleteLibraryMangaDialog(
             },
         )
     }
-    AlertDialog(
+    OverlayDialog(
+        show = true,
+        title = stringResource(MR.strings.action_remove),
         onDismissRequest = onDismissRequest,
-        dismissButton = {
-            TextButton(onClick = onDismissRequest) {
-                Text(text = stringResource(MR.strings.action_cancel))
+    ) {
+        Column {
+            list.forEach { state ->
+                LabeledCheckbox(
+                    label = stringResource(state.value),
+                    checked = state.isChecked,
+                    onCheckedChange = {
+                        val index = list.indexOf(state)
+                        if (index != -1) {
+                            val mutableList = list.toMutableList()
+                            mutableList[index] = state.next() as CheckboxState.State<StringResource>
+                            list = mutableList.toList()
+                        }
+                    },
+                )
             }
-        },
-        confirmButton = {
+        }
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.End,
+        ) {
             TextButton(
+                text = stringResource(MR.strings.action_cancel),
+                onClick = onDismissRequest,
+            )
+            TextButton(
+                text = stringResource(MR.strings.action_ok),
                 enabled = list.any { it.isChecked },
                 onClick = {
                     onDismissRequest()
@@ -48,30 +72,7 @@ fun DeleteLibraryMangaDialog(
                         list.getOrElse(1) { CheckboxState.State.None(0) }.isChecked,
                     )
                 },
-            ) {
-                Text(text = stringResource(MR.strings.action_ok))
-            }
-        },
-        title = {
-            Text(text = stringResource(MR.strings.action_remove))
-        },
-        text = {
-            Column {
-                list.forEach { state ->
-                    LabeledCheckbox(
-                        label = stringResource(state.value),
-                        checked = state.isChecked,
-                        onCheckedChange = {
-                            val index = list.indexOf(state)
-                            if (index != -1) {
-                                val mutableList = list.toMutableList()
-                                mutableList[index] = state.next() as CheckboxState.State<StringResource>
-                                list = mutableList.toList()
-                            }
-                        },
-                    )
-                }
-            }
-        },
-    )
+            )
+        }
+    }
 }
