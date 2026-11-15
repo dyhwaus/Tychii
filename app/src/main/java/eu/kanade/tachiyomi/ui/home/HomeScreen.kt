@@ -64,6 +64,7 @@ import cafe.adriel.voyager.navigator.tab.LocalTabNavigator
 import cafe.adriel.voyager.navigator.tab.TabNavigator
 import eu.kanade.domain.ui.model.BarStyle
 import eu.kanade.presentation.miuix.CapsuleAction
+import eu.kanade.presentation.miuix.FloatMotion
 import eu.kanade.presentation.miuix.MiuixCapsuleTitle
 import eu.kanade.presentation.miuix.MiuixFloatingCapsule
 import eu.kanade.presentation.miuix.TychiiLiquidBar
@@ -338,8 +339,8 @@ object HomeScreen : Screen() {
                         ) {
                             AnimatedVisibility(
                                 visible = showTitleCapsule,
-                                enter = fadeIn(),
-                                exit = fadeOut(),
+                                enter = fadeIn(FloatMotion.FadeIn),
+                                exit = fadeOut(FloatMotion.FadeOut),
                             ) {
                                 MiuixCapsuleTitle(
                                     // The Library tab reports its own
@@ -357,8 +358,8 @@ object HomeScreen : Screen() {
                         }
                         AnimatedVisibility(
                             visible = showNavBar,
-                            enter = slideInVertically(initialOffsetY = { it }) + fadeIn(),
-                            exit = slideOutVertically(targetOffsetY = { it }) + fadeOut(),
+                            enter = slideInVertically(animationSpec = FloatMotion.SlideIn, initialOffsetY = { it }) + fadeIn(FloatMotion.FadeIn),
+                            exit = slideOutVertically(animationSpec = FloatMotion.SlideOut, targetOffsetY = { it }) + fadeOut(FloatMotion.FadeOut),
                             modifier = Modifier
                                 .align(Alignment.BottomCenter)
                                 .navigationBarsPadding(),
@@ -405,8 +406,8 @@ object HomeScreen : Screen() {
                         // offering actions.
                         AnimatedVisibility(
                             visible = capsuleScrollVisible && capsuleActions.isNotEmpty(),
-                            enter = fadeIn() + slideInHorizontally(initialOffsetX = { it }),
-                            exit = fadeOut() + slideOutHorizontally(targetOffsetX = { it }),
+                            enter = fadeIn(FloatMotion.FadeIn) + slideInHorizontally(animationSpec = FloatMotion.SlideIn, initialOffsetX = { it }),
+                            exit = fadeOut(FloatMotion.FadeOut) + slideOutHorizontally(animationSpec = FloatMotion.SlideOut, targetOffsetX = { it }),
                             modifier = Modifier
                                 .align(Alignment.CenterEnd)
                                 // Clear of the right edge: 12.dp left the

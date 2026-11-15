@@ -74,6 +74,7 @@ import eu.kanade.presentation.category.components.ChangeCategoryDialog
 import eu.kanade.presentation.components.SearchToolbar
 import eu.kanade.presentation.manga.DuplicateMangaDialog
 import eu.kanade.presentation.miuix.CapsuleAction
+import eu.kanade.presentation.miuix.FloatMotion
 import eu.kanade.presentation.miuix.MiuixFloatingCapsule
 import eu.kanade.presentation.theme.isMiuixGlassSupported
 import eu.kanade.presentation.util.AssistContentScreen
@@ -371,8 +372,8 @@ data class BrowseSourceScreen(
                     AnimatedVisibility(
                         visible = capsuleScrollVisible && capsuleActions.isNotEmpty() &&
                             state.dialog !is BrowseSourceViewModel.Dialog.Filter,
-                        enter = fadeIn() + slideInHorizontally(initialOffsetX = { it }),
-                        exit = fadeOut() + slideOutHorizontally(targetOffsetX = { it }),
+                        enter = fadeIn(FloatMotion.FadeIn) + slideInHorizontally(animationSpec = FloatMotion.SlideIn, initialOffsetX = { it }),
+                        exit = fadeOut(FloatMotion.FadeOut) + slideOutHorizontally(animationSpec = FloatMotion.SlideOut, targetOffsetX = { it }),
                         modifier = Modifier
                             .align(Alignment.CenterEnd)
                             .padding(end = 20.dp),

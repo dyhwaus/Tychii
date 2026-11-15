@@ -2,7 +2,6 @@ package eu.kanade.presentation.manga.components
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.tween
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -44,6 +43,7 @@ import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import eu.kanade.presentation.components.DownloadDropdownMenu
 import eu.kanade.presentation.manga.DownloadAction
+import eu.kanade.presentation.miuix.FloatMotion
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
@@ -87,8 +87,8 @@ fun MangaBottomActionMenu(
 ) {
     AnimatedVisibility(
         visible = visible,
-        enter = expandVertically(expandFrom = Alignment.Bottom),
-        exit = shrinkVertically(shrinkTowards = Alignment.Bottom),
+        enter = expandVertically(animationSpec = FloatMotion.SizeIn, expandFrom = Alignment.Bottom),
+        exit = shrinkVertically(animationSpec = FloatMotion.SizeOut, shrinkTowards = Alignment.Bottom),
     ) {
         val scope = rememberCoroutineScope()
         // A floating pill, like the reader's bottom bar. The buttons
@@ -227,8 +227,8 @@ private fun RowScope.Button(
             )
             AnimatedVisibility(
                 visible = toConfirm,
-                enter = expandVertically(expandFrom = Alignment.Top) + fadeIn(),
-                exit = shrinkVertically(shrinkTowards = Alignment.Top) + fadeOut(),
+                enter = expandVertically(animationSpec = FloatMotion.SizeIn, expandFrom = Alignment.Top) + fadeIn(FloatMotion.FadeIn),
+                exit = shrinkVertically(animationSpec = FloatMotion.SizeOut, shrinkTowards = Alignment.Top) + fadeOut(FloatMotion.FadeOut),
             ) {
                 MiuixText(
                     text = title,
@@ -276,18 +276,18 @@ fun LibraryBottomActionMenu(
         enter = if (revealFromY != null) {
             slideInVertically(
                 initialOffsetY = { -slideOffset(it) },
-                animationSpec = tween(350),
-            ) + fadeIn(animationSpec = tween(350))
+                animationSpec = FloatMotion.SlideIn,
+            ) + fadeIn(animationSpec = FloatMotion.FadeIn)
         } else {
-            expandVertically(animationSpec = tween(delayMillis = 300))
+            expandVertically(animationSpec = FloatMotion.SizeIn)
         },
         exit = if (revealFromY != null) {
             slideOutVertically(
                 targetOffsetY = { -slideOffset(it) },
-                animationSpec = tween(250),
-            ) + fadeOut(animationSpec = tween(250))
+                animationSpec = FloatMotion.SlideOut,
+            ) + fadeOut(animationSpec = FloatMotion.FadeOut)
         } else {
-            shrinkVertically(animationSpec = tween())
+            shrinkVertically(animationSpec = FloatMotion.SizeOut)
         },
     ) {
         val scope = rememberCoroutineScope()

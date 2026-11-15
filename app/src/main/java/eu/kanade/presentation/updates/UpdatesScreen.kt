@@ -1,6 +1,10 @@
 package eu.kanade.presentation.updates
 
 import androidx.activity.compose.BackHandler
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
@@ -34,6 +38,7 @@ import androidx.compose.ui.util.fastAny
 import eu.kanade.presentation.manga.components.ChapterDownloadAction
 import eu.kanade.presentation.manga.components.MangaBottomActionMenu
 import eu.kanade.presentation.miuix.CapsuleAction
+import eu.kanade.presentation.miuix.FloatMotion
 import eu.kanade.presentation.miuix.LiquidNavBarClearance
 import eu.kanade.presentation.miuix.TopCapsuleClearance
 import eu.kanade.tachiyomi.data.download.model.Download
@@ -256,6 +261,13 @@ private fun UpdatesAppBar(
     // floating action capsule instead.
     val backgroundColor = MiuixTheme.colorScheme.surfaceContainer
         .copy(alpha = if (isSystemInDarkTheme()) 0.9f else 0.95f)
+    AnimatedVisibility(
+        visible = true,
+        // The pill mounts when selection starts and unmounts when it
+        // ends, so only the enter plays; the exit never gets the chance.
+        enter = slideInVertically(FloatMotion.SlideIn) { -it } + fadeIn(FloatMotion.FadeIn),
+        exit = fadeOut(FloatMotion.FadeOut),
+    ) {
     Row(
         modifier = modifier
             .fillMaxWidth()
@@ -295,6 +307,7 @@ private fun UpdatesAppBar(
                 contentDescription = stringResource(MR.strings.action_select_inverse),
             )
         }
+    }
     }
 }
 

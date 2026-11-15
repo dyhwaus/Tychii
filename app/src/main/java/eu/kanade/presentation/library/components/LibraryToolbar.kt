@@ -1,5 +1,9 @@
 package eu.kanade.presentation.library.components
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
@@ -24,6 +28,7 @@ import androidx.compose.ui.unit.sp
 import eu.kanade.presentation.components.AppBar
 import eu.kanade.presentation.components.AppBarActions
 import eu.kanade.presentation.components.SearchToolbar
+import eu.kanade.presentation.miuix.FloatMotion
 import eu.kanade.presentation.util.isTabletUi
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.rounded.Close
@@ -162,6 +167,13 @@ private fun LibrarySelectionToolbar(
     // is only ever transient.
     val backgroundColor = MiuixTheme.colorScheme.surfaceContainer
         .copy(alpha = if (isSystemInDarkTheme()) 0.9f else 0.95f)
+    AnimatedVisibility(
+        visible = true,
+        // The pill mounts when selection starts and unmounts when it
+        // ends, so only the enter plays; the exit never gets the chance.
+        enter = slideInVertically(FloatMotion.SlideIn) { -it } + fadeIn(FloatMotion.FadeIn),
+        exit = fadeOut(FloatMotion.FadeOut),
+    ) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -201,6 +213,7 @@ private fun LibrarySelectionToolbar(
                 contentDescription = stringResource(MR.strings.action_select_inverse),
             )
         }
+    }
     }
 }
 
