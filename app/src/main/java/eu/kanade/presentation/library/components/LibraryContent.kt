@@ -54,6 +54,7 @@ fun LibraryContent(
     onContinueReadingClicked: ((LibraryManga) -> Unit)?,
     onToggleSelection: (Category, LibraryManga) -> Unit,
     onToggleRangeSelection: (Category, LibraryManga) -> Unit,
+    onSelectionAnchorChange: (Float) -> Unit,
     onRefresh: suspend () -> Boolean,
     onGlobalSearchClicked: () -> Unit,
     getDisplayMode: (Int) -> PreferenceMutableState<LibraryDisplayMode>,
@@ -85,6 +86,9 @@ fun LibraryContent(
         var selectingSort by remember { mutableStateOf(false) }
         var selectingDisplayMode by remember { mutableStateOf(false) }
         var selectingFilter by remember { mutableStateOf(false) }
+        // Latest known cover positions, by manga id. A plain map, not
+        // state: positions are only read when a cover is pressed.
+        val coverPositions = remember { mutableMapOf<Long, Float>() }
         LibraryViewOptionsDropdowns(
             sort = sort,
             hasTrackers = hasTrackers,
@@ -213,14 +217,22 @@ fun LibraryContent(
                 getDisplayMode = getDisplayMode,
                 getColumnsForOrientation = getColumnsForOrientation,
                 getItemsForCategory = getItemsForCategory,
+                onCoverPositioned = { id, y -> coverPositions[id] = y },
                 onClickManga = { category, manga ->
                     if (selection.isNotEmpty()) {
+                        // The bottom bar animates out of the cover that
+                        // was pressed, so remember its position before
+                        // toggling (the covers already report it).
+                        coverPositions[manga.manga.id]?.let(onSelectionAnchorChange)
                         onToggleSelection(category, manga)
                     } else {
                         onClickManga(manga.manga.id)
                     }
                 },
-                onLongClickManga = onToggleRangeSelection,
+                onLongClickManga = { category, manga ->
+                    coverPositions[manga.manga.id]?.let(onSelectionAnchorChange)
+                    onToggleRangeSelection(category, manga)
+                },
                 onClickContinueReading = onContinueReadingClicked,
             )
         }

@@ -21,6 +21,7 @@ internal fun LibraryCompactGrid(
     onClickContinueReading: ((LibraryManga) -> Unit)?,
     searchQuery: String?,
     onGlobalSearchClicked: () -> Unit,
+    onCoverPositioned: (Long, Float) -> Unit,
 ) {
     LazyLibraryGrid(
         modifier = Modifier.fillMaxSize(),
@@ -61,6 +62,7 @@ internal fun LibraryCompactGrid(
                 } else {
                     null
                 },
+                onCoverPositioned = { y -> onCoverPositioned(manga.id, y) },
             )
         }
     }

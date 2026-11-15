@@ -7,6 +7,8 @@ import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -34,6 +36,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.DpOffset
@@ -66,6 +70,7 @@ import top.yukonga.miuix.kmp.basic.Surface
 import top.yukonga.miuix.kmp.basic.Text as MiuixText
 import top.yukonga.miuix.kmp.popup.OverlayDropdownPopup
 import top.yukonga.miuix.kmp.theme.MiuixTheme
+import kotlin.math.roundToInt
 import kotlin.time.Duration.Companion.seconds
 
 @Composable
@@ -247,11 +252,43 @@ fun LibraryBottomActionMenu(
     onDeleteClicked: () -> Unit,
     onMigrateClicked: () -> Unit,
     modifier: Modifier = Modifier,
+    // Vertical centre of the cover the selection came from, in window
+    // coordinates. When set, the bar slides down from the cover
+    // instead of expanding from its own top edge.
+    revealFromY: Float? = null,
 ) {
+    // How far the bar travels from the cover to its resting place: the
+    // bar sits at the very bottom, so its top edge is the window
+    // height minus this content's height.
+    val density = LocalDensity.current
+    val windowHeightPx = with(density) {
+        LocalConfiguration.current.screenHeightDp.dp.toPx()
+    }
+    val slideOffset: (Int) -> Int = { height ->
+        if (revealFromY != null) {
+            (windowHeightPx - height - revealFromY).coerceAtLeast(0f).roundToInt()
+        } else {
+            0
+        }
+    }
     AnimatedVisibility(
         visible = visible,
-        enter = expandVertically(animationSpec = tween(delayMillis = 300)),
-        exit = shrinkVertically(animationSpec = tween()),
+        enter = if (revealFromY != null) {
+            slideInVertically(
+                initialOffsetY = { -slideOffset(it) },
+                animationSpec = tween(350),
+            ) + fadeIn(animationSpec = tween(350))
+        } else {
+            expandVertically(animationSpec = tween(delayMillis = 300))
+        },
+        exit = if (revealFromY != null) {
+            slideOutVertically(
+                targetOffsetY = { -slideOffset(it) },
+                animationSpec = tween(250),
+            ) + fadeOut(animationSpec = tween(250))
+        } else {
+            shrinkVertically(animationSpec = tween())
+        },
     ) {
         val scope = rememberCoroutineScope()
         // Same floating pill as the chapter menu above.

@@ -23,6 +23,7 @@ internal fun LibraryList(
     onClickContinueReading: ((LibraryManga) -> Unit)?,
     searchQuery: String?,
     onGlobalSearchClicked: () -> Unit,
+    onCoverPositioned: (Long, Float) -> Unit,
 ) {
     // Plain list, no fast-scroll thumb (see LazyLibraryGrid).
     LazyColumn(
@@ -72,6 +73,7 @@ internal fun LibraryList(
                 } else {
                     null
                 },
+                onCoverPositioned = { y -> onCoverPositioned(manga.id, y) },
             )
         }
     }

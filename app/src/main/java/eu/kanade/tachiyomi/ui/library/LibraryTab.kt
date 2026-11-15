@@ -13,8 +13,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalContext
@@ -226,6 +228,11 @@ data object LibraryTab : Tab {
 
         val snackbarHostState = remember { SnackbarHostState() }
 
+        // Vertical centre of the cover that started (or last changed)
+        // the selection, in window coordinates. The bottom bar slides
+        // down from it when selection opens or closes.
+        var selectionAnchorY by remember { mutableStateOf<Float?>(null) }
+
         val onClickRefresh: suspend (Category?) -> Boolean = { category ->
             val started = LibraryUpdateWorker.startNow(context.workManager, category)
             scope.launch {
@@ -294,6 +301,7 @@ data object LibraryTab : Tab {
             bottomBar = {
                 LibraryBottomActionMenu(
                     visible = state.selectionMode,
+                    revealFromY = selectionAnchorY,
                     onChangeCategoryClicked = viewModel::openChangeCategoryDialog,
                     onMarkAsReadClicked = { viewModel.markReadSelection(true) },
                     onMarkAsUnreadClicked = { viewModel.markReadSelection(false) },
@@ -355,6 +363,7 @@ data object LibraryTab : Tab {
                             viewModel.toggleRangeSelection(category, manga)
                             haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                         },
+                        onSelectionAnchorChange = { selectionAnchorY = it },
                         onRefresh = { onClickRefresh(state.activeCategory) },
                         onGlobalSearchClicked = {
                             navigator.push(GlobalSearchScreen(viewModel.state.value.searchQuery ?: ""))

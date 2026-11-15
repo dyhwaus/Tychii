@@ -27,6 +27,8 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.boundsInWindow
+import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -81,6 +83,7 @@ fun MangaCompactGridItem(
     coverAlpha: Float = 1f,
     coverBadgeStart: @Composable (RowScope.() -> Unit)? = null,
     coverBadgeEnd: @Composable (RowScope.() -> Unit)? = null,
+    onCoverPositioned: ((Float) -> Unit)? = null,
 ) {
     GridItemSelectable(
         isSelected = isSelected,
@@ -97,7 +100,8 @@ fun MangaCompactGridItem(
                     MangaCover.Book(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .alpha(if (isSelected) GRID_SELECTED_COVER_ALPHA else coverAlpha),
+                            .alpha(if (isSelected) GRID_SELECTED_COVER_ALPHA else coverAlpha)
+                            .reportCoverCenterY(onCoverPositioned),
                         data = coverData,
                         // Top corners rounded to meet the card; the bottom
                         // is square so the cover flows into the title area.
@@ -155,6 +159,7 @@ fun MangaComfortableGridItem(
     coverBadgeStart: (@Composable RowScope.() -> Unit)? = null,
     coverBadgeEnd: (@Composable RowScope.() -> Unit)? = null,
     onClickContinueReading: (() -> Unit)? = null,
+    onCoverPositioned: ((Float) -> Unit)? = null,
 ) {
     GridItemSelectable(
         isSelected = isSelected,
@@ -167,7 +172,8 @@ fun MangaComfortableGridItem(
                     MangaCover.Book(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .alpha(if (isSelected) GRID_SELECTED_COVER_ALPHA else coverAlpha),
+                            .alpha(if (isSelected) GRID_SELECTED_COVER_ALPHA else coverAlpha)
+                            .reportCoverCenterY(onCoverPositioned),
                         data = coverData,
                     )
                 },
@@ -302,6 +308,16 @@ private fun Modifier.selectedOutline(
     color: Color,
 ) = drawBehind { if (isSelected) drawRect(color = color) }
 
+// Reports the cover's vertical centre in window coordinates, so the
+// selection bar can animate out of the cover that was pressed. A
+// no-op when no listener is attached, so Browse grids pay nothing.
+private fun Modifier.reportCoverCenterY(onCoverPositioned: ((Float) -> Unit)?) =
+    if (onCoverPositioned != null) {
+        onGloballyPositioned { onCoverPositioned(it.boundsInWindow().center.y) }
+    } else {
+        this
+    }
+
 /**
  * Layout of list item.
  */
@@ -318,6 +334,7 @@ fun MangaListItem(
     // The Library tab hides the divider so the list is one continuous
     // background; other lists keep it.
     showDivider: Boolean = true,
+    onCoverPositioned: ((Float) -> Unit)? = null,
 ) {
     Column {
         Row(
@@ -334,7 +351,8 @@ fun MangaListItem(
             MangaCover.Square(
                 modifier = Modifier
                     .fillMaxHeight()
-                    .alpha(coverAlpha),
+                    .alpha(coverAlpha)
+                    .reportCoverCenterY(onCoverPositioned),
                 data = coverData,
             )
             Text(
