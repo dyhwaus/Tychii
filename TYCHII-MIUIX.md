@@ -1477,6 +1477,30 @@ nothing else called it. The duplicate-manga and
 change-category dialogs on the same long-press path are
 untouched. Untested — needs a rebuild and a long-press test.
 
+## Updates cards unified with the Library card (2026-11-15)
+
+The Updates page's waterfall card is now the Library's compact
+grid card (78d88657), and the sweep found it was the last one —
+Library, History, Explore and global search already use
+`MangaCompactGridItem`, so every manga card in the app is the
+same component now. The surface-card background is gone; the
+title sits on the frosted strip over the cover's bottom edge.
+The update-specific parts stayed: the unread dot / bookmark on
+the cover's top start, the download indicator moved from the
+cover's bottom end to its top end, and the chapter line (name +
+read progress) in a slim row under the cover — tapping that row
+does the same as tapping the card. Selection is now the
+Library's frame + dimmed cover instead of the old 2.dp primary
+border. Two behaviours kept by extending the shared card: a
+separate cover tap (opens the manga page) via a new optional
+`onClickCover` on `MangaCompactGridItem`, passed through to
+`MangaCover.Book`'s `onClick`; and the strip's play button opens
+the chapter. Small trade-offs to know: a read update's title no
+longer dims on the strip (the chapter line below still dims and
+the unread dot still marks unread items), and the title may now
+run to two lines on the strip instead of one. Untested — needs
+a rebuild and a look at the Updates page.
+
 ## Build fixes
 
 - 2026-11-14: the Explore capsule called `stringResource(...)` for the
