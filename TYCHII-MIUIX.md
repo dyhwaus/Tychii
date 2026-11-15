@@ -1501,6 +1501,20 @@ the unread dot still marks unread items), and the title may now
 run to two lines on the strip instead of one. Untested — needs
 a rebuild and a look at the Updates page.
 
+## Extension details: equal-size action buttons (2026-11-15)
+
+On the extension info page (45fe3520) the 解除安装 and 程序信息
+buttons are now the same filled Miuix Button, each `weight(1f)`
+in a `fillMaxWidth` row. The mismatch: uninstall was a
+`TextButton` (17.sp Miuix button text) while app info was a
+`Button` with a plain M3 `Text` (16.sp / 24.dp line height), so
+the two came out different heights despite the same 40.dp
+minimum. Uninstall keeps the neutral `buttonColors()` grey it
+already had; app info keeps its blue `buttonColorsPrimary()`.
+The page's other parts (M3 app bar, settings widgets) are
+untouched — they belong to the migration inventory. Untested —
+needs a rebuild and a look at the extension info page.
+
 ## Build fixes
 
 - 2026-11-14: the Explore capsule called `stringResource(...)` for the
