@@ -1,7 +1,15 @@
 package eu.kanade.presentation.library.components
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Icon
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -9,13 +17,15 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import eu.kanade.presentation.components.AppBar
 import eu.kanade.presentation.components.AppBarActions
 import eu.kanade.presentation.components.SearchToolbar
 import eu.kanade.presentation.util.isTabletUi
 import mihon.icons.materialsymbols.MaterialSymbols
+import mihon.icons.materialsymbols.rounded.Close
 import mihon.icons.materialsymbols.rounded.FilterList
 import mihon.icons.materialsymbols.rounded.FlipToBack
 import mihon.icons.materialsymbols.rounded.SelectAll
@@ -23,6 +33,9 @@ import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.components.Pill
 import tachiyomi.presentation.core.i18n.stringResource
 import tachiyomi.presentation.core.theme.active
+import top.yukonga.miuix.kmp.basic.IconButton
+import top.yukonga.miuix.kmp.basic.Text as MiuixText
+import top.yukonga.miuix.kmp.theme.MiuixTheme
 
 @Composable
 fun LibraryToolbar(
@@ -143,27 +156,51 @@ private fun LibrarySelectionToolbar(
     onClickSelectAll: () -> Unit,
     onClickInvertSelection: () -> Unit,
 ) {
-    AppBar(
-        titleContent = { Text(text = "$selectedCount") },
-        actions = {
-            AppBarActions(
-                listOf(
-                    AppBar.Action(
-                        title = stringResource(MR.strings.action_select_all),
-                        icon = MaterialSymbols.Rounded.SelectAll,
-                        onClick = onClickSelectAll,
-                    ),
-                    AppBar.Action(
-                        title = stringResource(MR.strings.action_select_inverse),
-                        icon = MaterialSymbols.Rounded.FlipToBack,
-                        onClick = onClickInvertSelection,
-                    ),
-                ),
+    // A floating pill like the reader's top bar, not the full-width
+    // Material band: the band cut the covers off and the selection bar
+    // is only ever transient.
+    val backgroundColor = MiuixTheme.colorScheme.surfaceContainer
+        .copy(alpha = if (isSystemInDarkTheme()) 0.9f else 0.95f)
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .statusBarsPadding()
+            .padding(top = 8.dp, start = 12.dp, end = 12.dp)
+            .clip(RoundedCornerShape(24.dp))
+            .background(backgroundColor)
+            .height(64.dp)
+            .padding(horizontal = 8.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        IconButton(onClick = onClickUnselectAll) {
+            Icon(
+                imageVector = MaterialSymbols.Rounded.Close,
+                contentDescription = stringResource(MR.strings.action_cancel),
             )
-        },
-        isActionMode = true,
-        onCancelActionMode = onClickUnselectAll,
-    )
+        }
+        Box(
+            modifier = Modifier
+                .weight(1f)
+                .padding(horizontal = 8.dp),
+        ) {
+            MiuixText(
+                text = "$selectedCount",
+                style = MiuixTheme.textStyles.title2,
+            )
+        }
+        IconButton(onClick = onClickSelectAll) {
+            Icon(
+                imageVector = MaterialSymbols.Rounded.SelectAll,
+                contentDescription = stringResource(MR.strings.action_select_all),
+            )
+        }
+        IconButton(onClick = onClickInvertSelection) {
+            Icon(
+                imageVector = MaterialSymbols.Rounded.FlipToBack,
+                contentDescription = stringResource(MR.strings.action_select_inverse),
+            )
+        }
+    }
 }
 
 @Immutable

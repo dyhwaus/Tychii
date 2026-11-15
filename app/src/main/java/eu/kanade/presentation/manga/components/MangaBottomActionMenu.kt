@@ -15,18 +15,13 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.WindowInsetsSides
-import androidx.compose.foundation.layout.asPaddingValues
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.windowInsetsPadding
-import androidx.compose.foundation.shape.ZeroCornerSize
-import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -44,7 +39,6 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import eu.kanade.presentation.components.DownloadDropdownMenu
-import eu.kanade.presentation.components.DropdownMenu
 import eu.kanade.presentation.manga.DownloadAction
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -64,6 +58,13 @@ import mihon.icons.materialsymbols.rounded.RemoveDone
 import mihon.icons.materialsymbols.rounded.SwapCalls
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.i18n.stringResource
+import top.yukonga.miuix.kmp.basic.DropdownDefaults
+import top.yukonga.miuix.kmp.basic.DropdownEntry
+import top.yukonga.miuix.kmp.basic.DropdownItem
+import top.yukonga.miuix.kmp.basic.Icon
+import top.yukonga.miuix.kmp.basic.Surface
+import top.yukonga.miuix.kmp.basic.Text as MiuixText
+import top.yukonga.miuix.kmp.popup.OverlayDropdownPopup
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import kotlin.time.Duration.Companion.seconds
 
@@ -85,14 +86,23 @@ fun MangaBottomActionMenu(
         exit = shrinkVertically(shrinkTowards = Alignment.Bottom),
     ) {
         val scope = rememberCoroutineScope()
-        // Miuix container color. The buttons stay custom: they need
-        // long-press to reveal their labels, and Miuix IconButton has no
-        // long-click, so the Material ripple box is kept.
-        Surface(
-            modifier = modifier,
-            shape = MaterialTheme.shapes.large.copy(bottomEnd = ZeroCornerSize, bottomStart = ZeroCornerSize),
-            color = MiuixTheme.colorScheme.surfaceContainerHigh,
+        // A floating pill, like the reader's bottom bar. The buttons
+        // stay custom: they need long-press to reveal their labels,
+        // and Miuix IconButton has no long-click, so the Material
+        // ripple box is kept.
+        Box(
+            modifier = modifier
+                .windowInsetsPadding(
+                    WindowInsets.navigationBars
+                        .only(WindowInsetsSides.Bottom),
+                )
+                .padding(start = 12.dp, end = 12.dp, bottom = 8.dp),
         ) {
+            Surface(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(24.dp),
+                color = MiuixTheme.colorScheme.surfaceContainerHigh,
+            ) {
             val haptic = LocalHapticFeedback.current
             val confirm = remember { mutableStateListOf(false, false, false, false, false, false, false) }
             var resetJob by remember { mutableStateOf<Job?>(null) }
@@ -106,13 +116,7 @@ fun MangaBottomActionMenu(
                 }
             }
             Row(
-                modifier = Modifier
-                    .padding(
-                        WindowInsets.navigationBars
-                            .only(WindowInsetsSides.Bottom)
-                            .asPaddingValues(),
-                    )
-                    .padding(horizontal = 8.dp, vertical = 12.dp),
+                modifier = Modifier.padding(horizontal = 8.dp, vertical = 12.dp),
             ) {
                 if (onBookmarkClicked != null) {
                     Button(
@@ -178,6 +182,7 @@ fun MangaBottomActionMenu(
                     )
                 }
             }
+            }
         }
     }
 }
@@ -220,11 +225,11 @@ private fun RowScope.Button(
                 enter = expandVertically(expandFrom = Alignment.Top) + fadeIn(),
                 exit = shrinkVertically(shrinkTowards = Alignment.Top) + fadeOut(),
             ) {
-                Text(
+                MiuixText(
                     text = title,
                     overflow = TextOverflow.Visible,
                     maxLines = 1,
-                    style = MaterialTheme.typography.labelSmall,
+                    style = MiuixTheme.textStyles.footnote1,
                 )
             }
         }
@@ -249,11 +254,21 @@ fun LibraryBottomActionMenu(
         exit = shrinkVertically(animationSpec = tween()),
     ) {
         val scope = rememberCoroutineScope()
-        Surface(
-            modifier = modifier,
-            shape = MaterialTheme.shapes.large.copy(bottomEnd = ZeroCornerSize, bottomStart = ZeroCornerSize),
-            color = MaterialTheme.colorScheme.surfaceContainerHigh,
+        // Same floating pill as the chapter menu above.
+        Box(
+            modifier = modifier
+                .fillMaxWidth()
+                .windowInsetsPadding(
+                    WindowInsets.navigationBars
+                        .only(WindowInsetsSides.Bottom),
+                )
+                .padding(start = 12.dp, end = 12.dp, bottom = 8.dp),
         ) {
+            Surface(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(24.dp),
+                color = MiuixTheme.colorScheme.surfaceContainerHigh,
+            ) {
             val haptic = LocalHapticFeedback.current
             val confirm = remember { mutableStateListOf(false, false, false, false, false, false) }
             var resetJob by remember { mutableStateOf<Job?>(null) }
@@ -268,12 +283,7 @@ fun LibraryBottomActionMenu(
             }
             val itemOverflow = onDownloadClicked != null
             Row(
-                modifier = Modifier
-                    .windowInsetsPadding(
-                        WindowInsets.navigationBars
-                            .only(WindowInsetsSides.Bottom),
-                    )
-                    .padding(horizontal = 8.dp, vertical = 12.dp),
+                modifier = Modifier.padding(horizontal = 8.dp, vertical = 12.dp),
             ) {
                 Button(
                     title = stringResource(MR.strings.action_move_category),
@@ -337,22 +347,38 @@ fun LibraryBottomActionMenu(
                         onLongClick = {},
                         onClick = { overflowMenuOpen = true },
                     ) {
-                        DropdownMenu(
-                            expanded = overflowMenuOpen,
-                            onDismissRequest = { overflowMenuOpen = false },
-                            offset = BottomBarMenuDpOffset,
-                        ) {
-                            DropdownMenuItem(
-                                text = { Text(stringResource(MR.strings.migrate)) },
-                                onClick = onMigrateClicked,
-                            )
-                            DropdownMenuItem(
-                                text = { Text(stringResource(MR.strings.action_delete)) },
-                                onClick = onDeleteClicked,
-                            )
-                        }
+                        OverlayDropdownPopup(
+                            entries = listOf(
+                                DropdownEntry(
+                                    items = listOf(
+                                        DropdownItem(
+                                            text = stringResource(MR.strings.migrate),
+                                            onClick = {
+                                                overflowMenuOpen = false
+                                                onMigrateClicked()
+                                            },
+                                        ),
+                                        DropdownItem(
+                                            text = stringResource(MR.strings.action_delete),
+                                            onClick = {
+                                                overflowMenuOpen = false
+                                                onDeleteClicked()
+                                            },
+                                        ),
+                                    ),
+                                ),
+                            ),
+                            show = overflowMenuOpen,
+                            onDismiss = { overflowMenuOpen = false },
+                            onDismissFinished = {},
+                            maxHeight = null,
+                            dropdownColors = DropdownDefaults.dropdownColors(),
+                            renderInRootScaffold = true,
+                            collapseOnSelection = true,
+                        )
                     }
                 }
+            }
             }
         }
     }
