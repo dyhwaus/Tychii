@@ -1371,6 +1371,22 @@ scrolling, the 56.dp height the list's bottom clearance is
 measured from, and the onSurface play icon + label. Untested —
 needs a rebuild and a visual check.
 
+## Chapter list: breathing room (2026-11-15)
+
+The chapter rows were tight: 12.dp of padding above and below
+each row, 6.dp between the title and the date/scanlator line,
+and the "X 话" header sat only 4.dp off the description card
+above it (70db0274). Now the row pads 16.dp top and bottom, the
+title-to-subtitle gap is 8.dp, and the header carries 12.dp
+above it and 8.dp below — a clear section break after the
+description card and air before the first chapter. The inset
+divider stays where it was (8.dp each side), so it now sits
+24.dp from the subtitle above and the title below instead of
+20.dp, and the full gap between two chapters is 48.dp. The
+missing-chapters gap row is untouched: it is a thin divider
+with a label, not a content row. Untested — needs a rebuild
+and a visual check.
+
 ## Build fixes
 
 - 2026-11-14: the Explore capsule called `stringResource(...)` for the
