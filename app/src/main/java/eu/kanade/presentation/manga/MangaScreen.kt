@@ -2,11 +2,19 @@ package eu.kanade.presentation.manga
 
 import android.graphics.drawable.Drawable
 import androidx.activity.compose.BackHandler
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.expandHorizontally
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkHorizontally
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.asPaddingValues
@@ -23,10 +31,10 @@ import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.SmallExtendedFloatingActionButton
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
@@ -39,6 +47,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
@@ -51,6 +60,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastAll
 import androidx.compose.ui.util.fastAny
 import androidx.compose.ui.util.fastMap
+import eu.kanade.domain.ui.model.BarStyle
 import eu.kanade.presentation.components.relativeDateText
 import eu.kanade.presentation.manga.components.ChapterDownloadAction
 import eu.kanade.presentation.manga.components.ChapterHeader
@@ -61,6 +71,9 @@ import eu.kanade.presentation.manga.components.MangaChapterListItem
 import eu.kanade.presentation.manga.components.MangaInfoBox
 import eu.kanade.presentation.manga.components.MangaToolbar
 import eu.kanade.presentation.manga.components.MissingChapterCountListItem
+import eu.kanade.presentation.miuix.rememberTiltBrightHighlight
+import eu.kanade.presentation.miuix.vibrancy
+import eu.kanade.presentation.theme.isMiuixGlassSupported
 import eu.kanade.presentation.util.formatChapterNumber
 import androidx.core.graphics.ColorUtils
 import eu.kanade.tachiyomi.data.download.model.Download
@@ -69,6 +82,7 @@ import eu.kanade.tachiyomi.ui.manga.ChapterList
 import eu.kanade.tachiyomi.ui.manga.MangaViewModel
 import eu.kanade.tachiyomi.util.system.copyToClipboard
 import eu.kanade.tachiyomi.util.system.quietVibrant
+import mihon.app.di.appGraph
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.roundedfilled.PlayArrow
 import tachiyomi.domain.chapter.model.Chapter
@@ -80,9 +94,16 @@ import tachiyomi.presentation.core.components.TwoPanelBox
 import tachiyomi.presentation.core.components.VerticalFastScroller
 import tachiyomi.presentation.core.components.material.PullRefresh
 import tachiyomi.presentation.core.i18n.stringResource
+import tachiyomi.presentation.core.util.collectAsState
 import tachiyomi.presentation.core.util.shouldExpandFAB
 import tachiyomi.source.local.isLocal
 import top.yukonga.miuix.kmp.basic.Scaffold
+import top.yukonga.miuix.kmp.blur.LayerBackdrop
+import top.yukonga.miuix.kmp.blur.blur
+import top.yukonga.miuix.kmp.blur.drawBackdrop
+import top.yukonga.miuix.kmp.blur.layerBackdrop
+import top.yukonga.miuix.kmp.blur.rememberLayerBackdrop
+import top.yukonga.miuix.kmp.theme.MiuixTheme
 import kotlin.time.Instant
 
 @Composable
@@ -141,6 +162,13 @@ fun MangaScreen(
 ) {
     val context = LocalContext.current
     val themeColor = rememberThemeColor(vibrantColor)
+    val barStyle by remember { context.appGraph.uiPreferences.barStyle }.collectAsState()
+    val effectiveBarStyle = if (barStyle == BarStyle.LIQUID_GLASS && !isMiuixGlassSupported) {
+        BarStyle.TRANSLUCENT
+    } else {
+        barStyle
+    }
+    val backdrop = rememberLayerBackdrop()
     val onCopyTagToClipboard: (tag: String) -> Unit = {
         if (it.isNotEmpty()) {
             context.copyToClipboard(it, it)
@@ -185,6 +213,8 @@ fun MangaScreen(
             onInvertSelection = onInvertSelection,
             themeColor = themeColor,
             onGeneratePalette = onGeneratePalette,
+            barStyle = effectiveBarStyle,
+            backdrop = backdrop,
         )
     } else {
         MangaScreenLargeImpl(
@@ -224,9 +254,79 @@ fun MangaScreen(
             onInvertSelection = onInvertSelection,
             themeColor = themeColor,
             onGeneratePalette = onGeneratePalette,
+            barStyle = effectiveBarStyle,
+            backdrop = backdrop,
         )
     }
 }
+
+// The start/resume button as a floating pill in the navigation bar's
+// material: surfaceContainer, translucent or liquid glass per the bar
+// style — never the blue M3 FAB.
+@Composable
+private fun MangaStartButton(
+    label: String,
+    expanded: Boolean,
+    onClick: () -> Unit,
+    barStyle: BarStyle,
+    backdrop: LayerBackdrop,
+    modifier: Modifier = Modifier,
+) {
+    val isGlass = barStyle == BarStyle.LIQUID_GLASS
+    val surfaceContainer = MiuixTheme.colorScheme.surfaceContainer
+    val containerColor = when (barStyle) {
+        BarStyle.OPAQUE -> surfaceContainer
+        BarStyle.TRANSLUCENT -> surfaceContainer.copy(alpha = 0.75f)
+        BarStyle.LIQUID_GLASS -> surfaceContainer.copy(alpha = 0.4f)
+    }
+    // Fully rounded at 56.dp tall; RoundedCornerShape, not CircleShape,
+    // so the backdrop shape stays a CornerBasedShape.
+    val shape = remember { RoundedCornerShape(28.dp) }
+    val highlight = if (isGlass) rememberTiltBrightHighlight() else null
+    Box(
+        modifier = modifier.then(
+            if (isGlass) {
+                Modifier.drawBackdrop(
+                    backdrop = backdrop,
+                    shape = { shape },
+                    effects = {
+                        vibrancy()
+                        blur(4.dp.toPx(), 4.dp.toPx())
+                    },
+                    highlight = { highlight?.copy(alpha = 0.75f) },
+                    onDrawSurface = { drawRect(containerColor) },
+                )
+            } else {
+                Modifier.background(containerColor, shape)
+            },
+        )
+            .clip(shape)
+            .clickable(onClick = onClick)
+            .padding(horizontal = 20.dp, vertical = 16.dp),
+        contentAlignment = Alignment.Center,
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Icon(
+                imageVector = MaterialSymbols.RoundedFilled.PlayArrow,
+                contentDescription = null,
+                tint = MiuixTheme.colorScheme.onSurface,
+            )
+            AnimatedVisibility(
+                visible = expanded,
+                enter = fadeIn() + expandHorizontally(),
+                exit = fadeOut() + shrinkHorizontally(),
+            ) {
+                Text(
+                    text = label,
+                    modifier = Modifier.padding(start = 8.dp),
+                    color = MiuixTheme.colorScheme.onSurface,
+                    style = MaterialTheme.typography.labelLarge,
+                )
+            }
+        }
+    }
+}
+
 
 @Composable
 private fun MangaScreenSmallImpl(
@@ -281,6 +381,8 @@ private fun MangaScreenSmallImpl(
     // Cover-derived theme color, null while unknown.
     themeColor: Color?,
     onGeneratePalette: (Drawable) -> Unit,
+    barStyle: BarStyle,
+    backdrop: LayerBackdrop,
 ) {
     val chapterListState = rememberLazyListState()
 
@@ -350,22 +452,22 @@ private fun MangaScreenSmallImpl(
         snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
         floatingActionButton = {
             val isFABVisible = state.hasUnreadChapters && !isAnySelected
-            Box(Modifier.onSizeChanged { fabHeight = it.height }) {
-                SmallExtendedFloatingActionButton(
-                    text = {
-                        Text(
-                            text = stringResource(
-                                if (state.hasReadChapters) MR.strings.action_resume else MR.strings.action_start,
-                            ),
-                        )
-                    },
-                    icon = { Icon(imageVector = MaterialSymbols.RoundedFilled.PlayArrow, contentDescription = null) },
-                    onClick = onContinueReading,
-                    expanded = chapterListState.shouldExpandFAB(),
-                    modifier = Modifier.animateFloatingActionButton(
+            Box(
+                Modifier
+                    .onSizeChanged { fabHeight = it.height }
+                    .animateFloatingActionButton(
                         visible = isFABVisible,
                         alignment = Alignment.BottomEnd,
                     ),
+            ) {
+                MangaStartButton(
+                    label = stringResource(
+                        if (state.hasReadChapters) MR.strings.action_resume else MR.strings.action_start,
+                    ),
+                    expanded = chapterListState.shouldExpandFAB(),
+                    onClick = onContinueReading,
+                    barStyle = barStyle,
+                    backdrop = backdrop,
                 )
             }
         },
@@ -387,6 +489,7 @@ private fun MangaScreenSmallImpl(
             refreshing = state.isRefreshingData,
             onRefresh = onRefresh,
             enabled = !isAnySelected,
+            modifier = Modifier.then(if (barStyle == BarStyle.LIQUID_GLASS) Modifier.layerBackdrop(backdrop) else Modifier),
             indicatorPadding = PaddingValues(top = topPadding),
         ) {
             val layoutDirection = LocalLayoutDirection.current
@@ -539,6 +642,8 @@ fun MangaScreenLargeImpl(
     // Cover-derived theme color, null while unknown.
     themeColor: Color?,
     onGeneratePalette: (Drawable) -> Unit,
+    barStyle: BarStyle,
+    backdrop: LayerBackdrop,
 ) {
     val layoutDirection = LocalLayoutDirection.current
     val density = LocalDensity.current
@@ -605,22 +710,22 @@ fun MangaScreenLargeImpl(
         snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
         floatingActionButton = {
             val isFABVisible = state.hasUnreadChapters && !isAnySelected
-            Box(Modifier.onSizeChanged { fabHeight = it.height }) {
-                SmallExtendedFloatingActionButton(
-                    text = {
-                        Text(
-                            text = stringResource(
-                                if (state.hasReadChapters) MR.strings.action_resume else MR.strings.action_start,
-                            ),
-                        )
-                    },
-                    icon = { Icon(imageVector = MaterialSymbols.RoundedFilled.PlayArrow, contentDescription = null) },
-                    onClick = onContinueReading,
-                    expanded = chapterListState.shouldExpandFAB(),
-                    modifier = Modifier.animateFloatingActionButton(
+            Box(
+                Modifier
+                    .onSizeChanged { fabHeight = it.height }
+                    .animateFloatingActionButton(
                         visible = isFABVisible,
                         alignment = Alignment.BottomEnd,
                     ),
+            ) {
+                MangaStartButton(
+                    label = stringResource(
+                        if (state.hasReadChapters) MR.strings.action_resume else MR.strings.action_start,
+                    ),
+                    expanded = chapterListState.shouldExpandFAB(),
+                    onClick = onContinueReading,
+                    barStyle = barStyle,
+                    backdrop = backdrop,
                 )
             }
         },
@@ -640,6 +745,7 @@ fun MangaScreenLargeImpl(
             refreshing = state.isRefreshingData,
             onRefresh = onRefresh,
             enabled = !isAnySelected,
+            modifier = Modifier.then(if (barStyle == BarStyle.LIQUID_GLASS) Modifier.layerBackdrop(backdrop) else Modifier),
             indicatorPadding = PaddingValues(
                 start = insetPadding.calculateStartPadding(layoutDirection),
                 top = with(density) { topBarHeight.toDp() },
