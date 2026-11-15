@@ -1329,6 +1329,29 @@ the chips losing their blue primary state. The button stays a filled
 button, so it still reads as the confirm action next to the Reset
 `TextButton`.
 
+## Manga detail: favorite toggle needs its remove dialog (2026-11-15)
+
+Tapping 收藏 a second time on the manga detail page did nothing.
+The tap itself is fine: `onAddToLibraryClicked` calls
+`showRemoveFromLibraryDialog()` when the manga is already a
+favorite, and the confirm dialog calls `toggleFavorite()`. The
+dialog is the part that never appeared — `RemoveMangaDialog` is a
+Miuix `OverlayDialog`, and in `ui/manga/MangaScreen.kt` the whole
+dialog `when` block is rendered in `Content()` as a sibling of the
+presentation `MangaScreen()` call, outside the Miuix `Scaffold`
+that lives inside that call. Pushed screens have no other Miuix
+Scaffold ancestor, so the overlay had no host and silently never
+rendered. Fixed in 241d7be4 by wrapping the page body (after the
+loading early return) in the same layout-neutral `MiuixScaffold`
+as the Explore page — zero insets, page background — which hosts
+the remove dialog and the other `OverlayDialog`s rendered in the
+same block. Mechanics checked in the Miuix source first: a nested
+Scaffold shares its parent's root dialog states
+(`parentRootDialogStates ?: dialogStates`), and a dialog with
+`renderInRootScaffold` registers into that root list, which the
+outer wrapper's popup host renders. Untested — needs a rebuild
+and a real unfavorite tap to confirm.
+
 ## Build fixes
 
 - 2026-11-14: the Explore capsule called `stringResource(...)` for the
