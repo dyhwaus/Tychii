@@ -3,7 +3,6 @@ package tachiyomi.domain.library.model
 sealed interface LibraryDisplayMode {
 
     data object CompactGrid : LibraryDisplayMode
-    data object ComfortableGrid : LibraryDisplayMode
     data object List : LibraryDisplayMode
     data object CoverOnlyGrid : LibraryDisplayMode
 
@@ -18,12 +17,15 @@ sealed interface LibraryDisplayMode {
     }
 
     companion object {
-        val values by lazy { setOf(CompactGrid, ComfortableGrid, List, CoverOnlyGrid) }
+        val values by lazy { setOf(CompactGrid, List, CoverOnlyGrid) }
         val default = CompactGrid
 
         fun deserialize(serialized: String): LibraryDisplayMode {
             return when (serialized) {
-                "COMFORTABLE_GRID" -> ComfortableGrid
+                // The comfortable grid was merged into the compact
+                // grid (same columns, same card); old installs may
+                // still have it saved.
+                "COMFORTABLE_GRID" -> CompactGrid
                 "COMPACT_GRID" -> CompactGrid
                 "COVER_ONLY_GRID" -> CoverOnlyGrid
                 "LIST" -> List
@@ -34,7 +36,6 @@ sealed interface LibraryDisplayMode {
 
     fun serialize(): String {
         return when (this) {
-            ComfortableGrid -> "COMFORTABLE_GRID"
             CompactGrid -> "COMPACT_GRID"
             CoverOnlyGrid -> "COVER_ONLY_GRID"
             List -> "LIST"

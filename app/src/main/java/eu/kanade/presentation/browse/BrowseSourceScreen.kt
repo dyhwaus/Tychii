@@ -12,7 +12,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.paging.LoadState
 import androidx.paging.compose.LazyPagingItems
-import eu.kanade.presentation.browse.components.BrowseSourceComfortableGrid
 import eu.kanade.presentation.browse.components.BrowseSourceCompactGrid
 import eu.kanade.presentation.browse.components.BrowseSourceList
 import eu.kanade.presentation.components.AppBar
@@ -117,15 +116,6 @@ fun BrowseSourceContent(
     }
 
     when (displayMode) {
-        LibraryDisplayMode.ComfortableGrid -> {
-            BrowseSourceComfortableGrid(
-                mangaList = mangaList,
-                columns = columns,
-                contentPadding = contentPadding,
-                onMangaClick = onMangaClick,
-                onMangaLongClick = onMangaLongClick,
-            )
-        }
         LibraryDisplayMode.List -> {
             BrowseSourceList(
                 mangaList = mangaList,

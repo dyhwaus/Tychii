@@ -96,7 +96,6 @@ import mihon.icons.materialsymbols.rounded.Search
 import mihon.icons.materialsymbols.rounded.Verified
 import mihon.icons.materialsymbols.roundedfilled.Favorite
 import mihon.icons.materialsymbols.roundedfilled.ViewCompact
-import mihon.icons.materialsymbols.roundedfilled.ViewModule
 import mihon.presentation.core.util.collectAsLazyPagingItems
 import tachiyomi.core.common.Constants
 import tachiyomi.domain.library.model.LibraryDisplayMode
@@ -247,7 +246,6 @@ data class BrowseSourceScreen(
                 CapsuleAction(
                     icon = when (viewModel.displayMode) {
                         LibraryDisplayMode.List -> MaterialSymbols.AutoMirroredRoundedFilled.ViewList
-                        LibraryDisplayMode.ComfortableGrid -> MaterialSymbols.RoundedFilled.ViewModule
                         LibraryDisplayMode.CompactGrid,
                         LibraryDisplayMode.CoverOnlyGrid,
                         -> MaterialSymbols.RoundedFilled.ViewCompact
@@ -394,7 +392,6 @@ data class BrowseSourceScreen(
                 DropdownEntry(
                     items = listOf(
                         MR.strings.action_display_grid to LibraryDisplayMode.CompactGrid,
-                        MR.strings.action_display_comfortable_grid to LibraryDisplayMode.ComfortableGrid,
                         MR.strings.action_display_cover_only_grid to LibraryDisplayMode.CoverOnlyGrid,
                         MR.strings.action_display_list to LibraryDisplayMode.List,
                     ).map { (titleRes, mode) ->

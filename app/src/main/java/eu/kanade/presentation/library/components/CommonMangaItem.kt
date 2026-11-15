@@ -127,58 +127,6 @@ fun MangaCompactGridItem(
 }
 
 /**
- * Layout of grid list item with the title on a frosted glass strip
- * over the cover's bottom edge.
- */
-@Composable
-fun MangaComfortableGridItem(
-    coverData: MangaCoverModel,
-    title: String,
-    onClick: () -> Unit,
-    onLongClick: () -> Unit,
-    isSelected: Boolean = false,
-    titleMaxLines: Int = 3,
-    coverAlpha: Float = 1f,
-    coverBadgeStart: (@Composable RowScope.() -> Unit)? = null,
-    coverBadgeEnd: (@Composable RowScope.() -> Unit)? = null,
-    onClickContinueReading: (() -> Unit)? = null,
-    onCoverPositioned: ((Float) -> Unit)? = null,
-) {
-    GridItemSelectable(
-        isSelected = isSelected,
-        onClick = onClick,
-        onLongClick = onLongClick,
-    ) {
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .shadow(2.dp, RoundedCornerShape(12.dp))
-                .clip(RoundedCornerShape(12.dp)),
-        ) {
-            MangaGridCover(
-                cover = {
-                    MangaCover.Book(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .alpha(if (isSelected) GRID_SELECTED_COVER_ALPHA else coverAlpha)
-                            .reportCoverCenterY(onCoverPositioned),
-                        data = coverData,
-                    )
-                },
-                badgesStart = coverBadgeStart,
-                badgesEnd = coverBadgeEnd,
-            )
-            CoverTitleStrip(
-                title = title,
-                maxLines = titleMaxLines,
-                onClickContinueReading = onClickContinueReading,
-                modifier = Modifier.align(Alignment.BottomCenter),
-            )
-        }
-    }
-}
-
-/**
  * Frosted glass strip: a translucent veil over the cover, brighter
  * at the top, with a rim light along its top edge — the launcher
  * icon's frosted disc in strip form. No real blur: the strip sits

@@ -30,7 +30,6 @@ import mihon.icons.materialsymbols.automirroredroundedfilled.ViewList
 import mihon.icons.materialsymbols.rounded.FilterList
 import mihon.icons.materialsymbols.rounded.Search
 import mihon.icons.materialsymbols.roundedfilled.ViewCompact
-import mihon.icons.materialsymbols.roundedfilled.ViewModule
 import tachiyomi.domain.category.model.Category
 import tachiyomi.domain.library.model.LibraryDisplayMode
 import tachiyomi.domain.library.model.LibraryManga
@@ -152,7 +151,6 @@ fun LibraryContent(
                         CapsuleAction(
                             icon = when (displayMode) {
                                 LibraryDisplayMode.List -> MaterialSymbols.AutoMirroredRoundedFilled.ViewList
-                                LibraryDisplayMode.ComfortableGrid -> MaterialSymbols.RoundedFilled.ViewModule
                                 LibraryDisplayMode.CompactGrid,
                                 LibraryDisplayMode.CoverOnlyGrid,
                                 -> MaterialSymbols.RoundedFilled.ViewCompact

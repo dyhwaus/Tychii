@@ -108,20 +108,6 @@ fun LibraryPager(
                     onCoverPositioned = onCoverPositioned,
                 )
             }
-            LibraryDisplayMode.ComfortableGrid -> {
-                LibraryComfortableGrid(
-                    items = items,
-                    columns = columns,
-                    contentPadding = contentPadding,
-                    selection = selection,
-                    onClick = onClickManga,
-                    onLongClick = onLongClickManga,
-                    onClickContinueReading = onClickContinueReading,
-                    searchQuery = searchQuery,
-                    onGlobalSearchClicked = onGlobalSearchClicked,
-                    onCoverPositioned = onCoverPositioned,
-                )
-            }
         }
     }
 }

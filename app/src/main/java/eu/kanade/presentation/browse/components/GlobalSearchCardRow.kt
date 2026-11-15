@@ -15,7 +15,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import eu.kanade.presentation.library.components.CommonMangaItemDefaults
-import eu.kanade.presentation.library.components.MangaComfortableGridItem
+import eu.kanade.presentation.library.components.MangaCompactGridItem
 import tachiyomi.domain.manga.model.Manga
 import tachiyomi.domain.manga.model.MangaCover
 import tachiyomi.domain.manga.model.asMangaCover
@@ -61,9 +61,8 @@ private fun MangaItem(
     onLongClick: () -> Unit,
 ) {
     Box(modifier = Modifier.width(96.dp)) {
-        MangaComfortableGridItem(
+        MangaCompactGridItem(
             title = title,
-            titleMaxLines = 3,
             coverData = cover,
             coverBadgeStart = {
                 InLibraryBadge(enabled = isFavorite)
