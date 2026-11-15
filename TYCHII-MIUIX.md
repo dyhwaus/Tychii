@@ -1207,6 +1207,34 @@ reader's bars:
   with the four parameters that fed it. Filter/upcoming/refresh
   already live in the floating action capsule. Its bottom menu was
   already the pill via `MangaBottomActionMenu`.
+- 2026-11-15 (02fc61cd): the four selection pills went from 24.dp
+  corners to 32.dp, matching the liquid nav bar (64.dp tall, 32.dp
+  corners = fully rounded). Top pills in Library/Updates, both
+  bottom menus. The reader's bars and the floating action capsule
+  stay at 24.dp.
+
+## Remaining dialogs migrated (2026-11-15)
+
+The six `AlertDialog`s left after the first batch became
+`OverlayDialog` + Miuix `TextButton`s (02fc61cd), behaviour
+unchanged: the extension uninstall confirmation
+(`ExtensionsTab`), the reader's loading-adjacent-chapter indicator
+(`ReaderActivity`, now a Miuix `CircularProgressIndicator` in the
+dialog; its `Text` and the M3 indicator were used nowhere else in
+the file), the shader import error dialog (`WebGpuViewerSettings`;
+message stays a monospace `MiuixText` at 12.sp inside the scrolling
+`SelectionContainer`, the file's other M3 buttons stay), and the
+migration confirm/progress dialogs (`MigrationMangaDialog`,
+plural title + skip text as `summary`; `MigrationProgressDialog`,
+now a Miuix `LinearProgressIndicator` fed the animated float
+directly, still not dismissable by back press or outside tap).
+One deliberately stays Material3: the extension preference edit
+dialog (`SourcePreferencesScreen.EditTextPreferenceDialog`) — its
+comment records why: it must be a platform `Dialog` window so
+extensions can find `android.R.id.button1` in its view hierarchy
+and so the soft keyboard can be forced visible through the dialog
+window; Miuix's `OverlayDialog` is an overlay popup, not a platform
+window, so it cannot host either.
 
 ## Build fixes
 
