@@ -26,10 +26,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Shadow
 import androidx.compose.ui.layout.boundsInWindow
 import androidx.compose.ui.layout.onGloballyPositioned
-import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
@@ -61,15 +63,13 @@ private val ContinueReadingButtonSizeLarge = 32.dp
 private val ContinueReadingButtonIconSizeSmall = 16.dp
 private val ContinueReadingButtonIconSizeLarge = 20.dp
 
-private val ContinueReadingButtonGridPadding = 6.dp
 private val ContinueReadingButtonListSpacing = 8.dp
 
 private const val GRID_SELECTED_COVER_ALPHA = 0.76f
 
 /**
- * Layout of grid list item as a PiliPlus-style card: the cover on top
- * and the title below it (2 lines), in a surface card — instead of the
- * title overlaid on the cover, which hid the bottom of the cover.
+ * Layout of grid list item as a PiliPlus-style card: the cover, with
+ * the title on a frosted glass strip over its bottom edge.
  * Accepts null [title] for a cover-only view.
  */
 @Composable
@@ -90,10 +90,13 @@ fun MangaCompactGridItem(
         onClick = onClick,
         onLongClick = onLongClick,
     ) {
-        Column(
+        // The title lives on the cover now, so the card is the cover
+        // itself — no surface behind it. The strip stays crisp when
+        // the cover dims on select.
+        Box(
             modifier = Modifier
-                .clip(RoundedCornerShape(8.dp))
-                .background(MiuixTheme.colorScheme.surfaceContainerHighest),
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(8.dp)),
         ) {
             MangaGridCover(
                 cover = {
@@ -103,41 +106,18 @@ fun MangaCompactGridItem(
                             .alpha(if (isSelected) GRID_SELECTED_COVER_ALPHA else coverAlpha)
                             .reportCoverCenterY(onCoverPositioned),
                         data = coverData,
-                        // Top corners rounded to meet the card; the bottom
-                        // is square so the cover flows into the title area.
-                        // Cover-only has no title below, so it keeps the
-                        // full rounding.
-                        shape = if (title != null) {
-                            RoundedCornerShape(topStart = 8.dp, topEnd = 8.dp)
-                        } else {
-                            RoundedCornerShape(8.dp)
-                        },
+                        shape = RoundedCornerShape(8.dp),
                     )
                 },
                 badgesStart = coverBadgeStart,
                 badgesEnd = coverBadgeEnd,
-                content = {
-                    if (onClickContinueReading != null) {
-                        ContinueReadingButton(
-                            size = ContinueReadingButtonSizeLarge,
-                            iconSize = ContinueReadingButtonIconSizeLarge,
-                            onClick = onClickContinueReading,
-                            modifier = Modifier
-                                .padding(ContinueReadingButtonGridPadding)
-                                .align(Alignment.BottomEnd),
-                        )
-                    }
-                },
             )
             if (title != null) {
-                GridItemTitle(
-                    modifier = Modifier.padding(horizontal = 6.dp, vertical = 5.dp),
+                CoverTitleStrip(
                     title = title,
-                    style = MaterialTheme.typography.bodyMedium.copy(
-                        fontWeight = FontWeight.Medium,
-                    ),
-                    minLines = 2,
                     maxLines = 2,
+                    onClickContinueReading = onClickContinueReading,
+                    modifier = Modifier.align(Alignment.BottomCenter),
                 )
             }
         }
@@ -145,7 +125,8 @@ fun MangaCompactGridItem(
 }
 
 /**
- * Layout of grid list item with title below the cover.
+ * Layout of grid list item with the title on a frosted glass strip
+ * over the cover's bottom edge.
  */
 @Composable
 fun MangaComfortableGridItem(
@@ -166,7 +147,11 @@ fun MangaComfortableGridItem(
         onClick = onClick,
         onLongClick = onLongClick,
     ) {
-        Column {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(12.dp)),
+        ) {
             MangaGridCover(
                 cover = {
                     MangaCover.Book(
@@ -179,28 +164,80 @@ fun MangaComfortableGridItem(
                 },
                 badgesStart = coverBadgeStart,
                 badgesEnd = coverBadgeEnd,
-                content = {
-                    if (onClickContinueReading != null) {
-                        ContinueReadingButton(
-                            size = ContinueReadingButtonSizeLarge,
-                            iconSize = ContinueReadingButtonIconSizeLarge,
-                            onClick = onClickContinueReading,
-                            modifier = Modifier
-                                .padding(ContinueReadingButtonGridPadding)
-                                .align(Alignment.BottomEnd),
-                        )
-                    }
-                },
             )
-            GridItemTitle(
-                modifier = Modifier.padding(4.dp),
+            CoverTitleStrip(
                 title = title,
+                maxLines = titleMaxLines,
+                onClickContinueReading = onClickContinueReading,
+                modifier = Modifier.align(Alignment.BottomCenter),
+            )
+        }
+    }
+}
+
+/**
+ * Frosted glass strip: a translucent veil over the cover, brighter
+ * at the top, with a rim light along its top edge — the launcher
+ * icon's frosted disc in strip form. No real blur: the strip sits
+ * inside the page's recorded backdrop layer, where glass would
+ * recurse (see the floating bar).
+ */
+@Composable
+private fun CoverTitleStrip(
+    title: String,
+    maxLines: Int,
+    onClickContinueReading: (() -> Unit)?,
+    modifier: Modifier = Modifier,
+) {
+    val veil = MiuixTheme.colorScheme.surface
+    Box(
+        modifier = modifier
+            .fillMaxWidth()
+            .background(
+                Brush.verticalGradient(
+                    colors = listOf(
+                        veil.copy(alpha = 0.45f),
+                        veil.copy(alpha = 0.8f),
+                    ),
+                ),
+            ),
+    ) {
+        Box(
+            modifier = Modifier
+                .align(Alignment.TopCenter)
+                .fillMaxWidth()
+                .height(1.dp)
+                .background(Color.White.copy(alpha = 0.35f)),
+        )
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 10.dp, vertical = 6.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text(
+                text = title,
+                modifier = Modifier.weight(1f),
+                minLines = 2,
+                maxLines = maxLines,
+                overflow = TextOverflow.Ellipsis,
                 style = MaterialTheme.typography.bodyMedium.copy(
                     fontWeight = FontWeight.Medium,
+                    shadow = Shadow(
+                        color = veil.copy(alpha = 0.5f),
+                        blurRadius = 6f,
+                        offset = Offset(0f, 1f),
+                    ),
                 ),
-                minLines = 2,
-                maxLines = titleMaxLines,
             )
+            if (onClickContinueReading != null) {
+                ContinueReadingButton(
+                    size = ContinueReadingButtonSizeLarge,
+                    iconSize = ContinueReadingButtonIconSizeLarge,
+                    onClick = onClickContinueReading,
+                    modifier = Modifier.padding(start = 8.dp),
+                )
+            }
         }
     }
 }
@@ -214,7 +251,6 @@ private fun MangaGridCover(
     cover: @Composable BoxScope.() -> Unit = {},
     badgesStart: (@Composable RowScope.() -> Unit)? = null,
     badgesEnd: (@Composable RowScope.() -> Unit)? = null,
-    content: @Composable (BoxScope.() -> Unit)? = null,
 ) {
     // The cover box is sized from its measured width, not aspectRatio:
     // aspectRatio on this Box came out square in the lazy grid, so the
@@ -228,7 +264,6 @@ private fun MangaGridCover(
                 .height(maxWidth / MangaCover.Book.ratio),
         ) {
             cover()
-            content?.invoke(this)
             if (badgesStart != null) {
                 BadgeGroup(
                     modifier = Modifier
@@ -248,24 +283,6 @@ private fun MangaGridCover(
             }
         }
     }
-}
-
-@Composable
-private fun GridItemTitle(
-    title: String,
-    style: TextStyle,
-    minLines: Int,
-    modifier: Modifier = Modifier,
-    maxLines: Int = 2,
-) {
-    Text(
-        modifier = modifier,
-        text = title,
-        minLines = minLines,
-        maxLines = maxLines,
-        overflow = TextOverflow.Ellipsis,
-        style = style,
-    )
 }
 
 /**
