@@ -1049,21 +1049,20 @@ Tapping 信任 on an untrusted self-installed extension did
 nothing. The trust chain itself is fine — the dialog, the
 ViewModel, `TrustExtension` and the reload on the preference
 change, and upstream #4071 only refactored where the store list
-comes from without changing the trust key. The cause is
-z-order: a bottom-attached dialog's buttons sit ~36–76.dp
-above the screen bottom, and the floating bar covers the same
-band (8–72.dp) while sitting above the dialog; the bar's
-background has an empty clickable that swallows the tap, so the
-信任 button never receives it.
+comes from without changing the trust key.
 
-`ExtensionContent` now hides the bar while the not-loaded
-dialog is open (`LaunchedEffect(notLoadedState)` calling
-`HomeScreen.showBottomNav`, the channel Library/Updates use
-for selection mode) and shows it again on dismiss. Both
-dialogs on the page share the trigger, so the fix covers the
-trust dialog and the not-loaded dialog. The same overlap
-exists for bottom-attached dialogs on other tab pages; they
-need the same treatment when reported.
+The first diagnosis (the floating bar covering the dialog's
+buttons) was wrong: the Extensions page is pushed onto the main
+navigator, so HomeScreen — and its bar — is not composed there
+at all. The `LaunchedEffect(notLoadedState)` bar-hide it
+produced (b086dd8d) parked on a rendezvous channel with no
+collector and did nothing. The real cause is the one found on
+the Explore and manga detail pages: the trust dialog is a Miuix
+OverlayDialog and the page had no Miuix Scaffold ancestor, so
+it never rendered. The fix (2026-11-15, 506dac8c) is the same
+layout-neutral Miuix Scaffold wrapper over BrowseSectionScreen,
+and the dead bar-hide is removed. See "Extensions: trust dialog
+finally has a host" below.
 
 ## Explore: the page sits outside HomeScreen — no capsule, no bar (2026-11-14)
 
@@ -1433,6 +1432,20 @@ M3 animateFloatingActionButton keeps the layout measured while
 hidden — the list's bottom clearance depends on that — and the
 tab switch fade-through (200 ms), which is navigation, not
 floating UI. Untested — needs a rebuild and a feel check.
+
+## Extensions: trust dialog finally has a host (2026-11-15)
+
+The Extensions page (inside BrowseSectionScreen, pushed onto the
+main navigator) had no Miuix Scaffold ancestor, so its Miuix
+OverlayDialogs — the trust dialog and the not-loaded dialog —
+silently never rendered (506dac8c). The whole BrowseSectionScreen
+content is now wrapped in the same layout-neutral Miuix Scaffold
+as the Explore and manga detail pages (zero insets, page
+background), which also hosts any Miuix overlay on the Sources
+and Migration sections. The b086dd8d bar-hide is removed with it:
+it was the wrong fix (no bar exists on a pushed page) and its
+LaunchedEffect + HomeScreen import are gone. Untested — the user
+must rebuild and try trusting a self-installed extension.
 
 ## Build fixes
 
