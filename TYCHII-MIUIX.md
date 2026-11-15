@@ -1239,6 +1239,12 @@ reader's bars:
   continue-reading button now sits on the strip instead of under
   it. The list mode keeps its row layout, and the cover-only mode
   shows no strip at all.
+- 2026-11-15 (0d836ddf): a 2.dp shadow around the manga cards
+  (`Modifier.shadow` on the card, before its clip, in both grid
+  items) so the cover lifts off the page background. Kept at 2.dp
+  on purpose: a bigger elevation would be clipped by the
+  interaction layer's 4.dp padding, and the ask was a little
+  shadow. The list rows are not cards and got none.
 
 ## Remaining dialogs migrated (2026-11-15)
 
