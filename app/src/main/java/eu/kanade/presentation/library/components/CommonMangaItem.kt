@@ -21,6 +21,8 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.contentColorFor
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
@@ -33,16 +35,21 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shadow
 import androidx.compose.ui.layout.boundsInWindow
 import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import eu.kanade.domain.ui.model.BarStyle
 import eu.kanade.presentation.manga.components.MangaCover
+import eu.kanade.presentation.theme.isMiuixGlassSupported
+import mihon.app.di.appGraph
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.roundedfilled.PlayArrow
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.components.BadgeGroup
 import tachiyomi.presentation.core.i18n.stringResource
+import tachiyomi.presentation.core.util.collectAsState
 import tachiyomi.presentation.core.util.selectedBackground
 import top.yukonga.miuix.kmp.basic.HorizontalDivider
 import top.yukonga.miuix.kmp.basic.IconButton
@@ -95,6 +102,15 @@ fun MangaCompactGridItem(
         onClick = onClick,
         onLongClick = onLongClick,
     ) {
+        // In liquid glass mode a selected item reads as almost
+        // transparent — the dimmed cover over the tint — so it gets
+        // a frosted veil instead (below). The bar style is read here
+        // so every grid that uses this card (Library, Updates,
+        // History, Explore, search) gets it without threading the
+        // setting through each screen.
+        val context = LocalContext.current
+        val barStyle by remember { context.appGraph.uiPreferences.barStyle }.collectAsState()
+        val isGlass = barStyle == BarStyle.LIQUID_GLASS && isMiuixGlassSupported
         // The title lives on the cover now, so the card is the cover
         // itself — no surface behind it. The strip stays crisp when
         // the cover dims on select.
@@ -109,12 +125,24 @@ fun MangaCompactGridItem(
                     MangaCover.Book(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .alpha(if (isSelected) GRID_SELECTED_COVER_ALPHA else coverAlpha)
+                            .alpha(if (isSelected && !isGlass) GRID_SELECTED_COVER_ALPHA else coverAlpha)
                             .reportCoverCenterY(onCoverPositioned),
                         data = coverData,
                         shape = RoundedCornerShape(8.dp),
                         onClick = onClickCover,
                     )
+                    if (isSelected && isGlass) {
+                        // Frosted veil over the cover: milky white, no
+                        // real blur — the card sits inside the page's
+                        // recorded backdrop layer, where glass would
+                        // recurse (same reason as the title strip).
+                        // The badges draw after this, so they stay crisp.
+                        Box(
+                            modifier = Modifier
+                                .matchParentSize()
+                                .background(Color.White.copy(alpha = 0.4f)),
+                        )
+                    }
                 },
                 badgesStart = coverBadgeStart,
                 badgesEnd = coverBadgeEnd,
