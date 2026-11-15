@@ -1155,6 +1155,22 @@ container to the same colour as the enabled one, so a
 missing chapter now reads as disabled. Viewer, gestures,
 tap zones and fullscreen are untouched.
 
+## Miuix migration: dialogs, first batch (2026-11-15)
+
+The full inventory lives in `MIUIX-MIGRATION.md` (local, not pushed):
+202 files still import Material3. Order is shared foundation first,
+then dialogs, then primitives area by area, theme last; the blockers
+left in Material3 are the tablet `NavigationSuiteScaffold`, the tracker
+`DatePicker`, Monet dynamic colour and the wavy progress indicator.
+
+First batch (efcd4e8a): three small `AlertDialog`s became
+`OverlayDialog` + Miuix `TextButton`s, behaviour unchanged: `DeleteLibraryMangaDialog` (checkbox list kept — its
+`LabeledCheckbox` already uses a Miuix `Checkbox`, only the label Text
+is still M3), the inner `SetCoverDialog` in
+`ReaderPageActionsDialog` (text-only, so the string became `summary`;
+the outer AdaptiveSheet was already Miuix), and
+`MigrationExitDialog`. Six `AlertDialog`s remain.
+
 ## Build fixes
 
 - 2026-11-14: the Explore capsule called `stringResource(...)` for the
