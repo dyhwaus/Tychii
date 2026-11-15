@@ -103,11 +103,11 @@ fun MangaChapterListItem(
                         onClick = onClick,
                         onLongClick = onLongClick,
                     )
-                    .padding(start = 16.dp, top = 12.dp, end = 8.dp, bottom = 12.dp),
+                    .padding(start = 16.dp, top = 16.dp, end = 8.dp, bottom = 16.dp),
             ) {
             Column(
                 modifier = Modifier.weight(1f),
-                verticalArrangement = Arrangement.spacedBy(6.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp),
             ) {
                 Row(
                     horizontalArrangement = Arrangement.spacedBy(2.dp),
@@ -189,7 +189,7 @@ fun MangaChapterListItem(
         }
         if (showDivider) {
             // The divider sat flush under the date line; 8.dp on both
-            // sides centers it between two chapters (20.dp each way).
+            // sides centers it between two chapters (24.dp each way).
             HorizontalDivider(
                 modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
             )

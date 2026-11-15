@@ -34,7 +34,7 @@ fun ChapterHeader(
                 enabled = enabled,
                 onClick = onClick,
             )
-            .padding(horizontal = 16.dp, vertical = 4.dp),
+            .padding(start = 16.dp, top = 12.dp, end = 16.dp, bottom = 8.dp),
         verticalArrangement = Arrangement.spacedBy(MaterialTheme.padding.extraSmall),
     ) {
         // Miuix section title: small subtitle style, like the group headers
