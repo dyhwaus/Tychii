@@ -1555,6 +1555,25 @@ surface colour. Untested — needs a rebuild and a scroll on the
 Library and Explore pages; the 8.dp full-strength blur radius
 is a first guess, say if it should be softer or stronger.
 
+## Selected grid card frosted in glass mode (2026-11-15)
+
+In liquid glass mode a selected manga card read as almost
+transparent — the cover dimmed to 0.76 over the selection tint
+(1da8a172). Now, in glass mode only, the selected cover keeps
+full alpha and gets a frosted veil instead: a milky white overlay
+at 0.4 alpha over the cover, under the title strip and with the
+badges drawing over it so they stay crisp. No real blur — the
+card sits inside the page's recorded backdrop layer, where glass
+would recurse (same reason as the title strip). The bar style is
+read in `MangaCompactGridItem` itself (the same
+`uiPreferences.barStyle` collect as the screens), so every grid
+using the card — Library, Updates, History, Explore, search —
+gets it without threading the setting through each screen. The
+secondary frame and the non-glass look (dim + tint) are
+unchanged. Untested — needs a rebuild and a long-press select
+in glass mode; the 0.4 veil is a first guess, say if it should
+be milkier or clearer.
+
 ## Build fixes
 
 - 2026-11-14: the Explore capsule called `stringResource(...)` for the
