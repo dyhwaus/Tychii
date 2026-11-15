@@ -1,6 +1,7 @@
 package eu.kanade.tachiyomi.ui.browse
 
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
@@ -24,6 +25,7 @@ import eu.kanade.tachiyomi.ui.browse.source.sourcesTab
 import eu.kanade.tachiyomi.ui.home.HomeScreen
 import tachiyomi.presentation.core.components.material.Scaffold
 import tachiyomi.presentation.core.i18n.stringResource
+import top.yukonga.miuix.kmp.basic.Scaffold as MiuixScaffold
 
 enum class BrowseSection {
     Sources,
@@ -43,33 +45,42 @@ data class BrowseSectionScreen(val section: BrowseSection) : Screen() {
         // the lambda from inferring () -> Boolean, which the call sites
         // below would reject.
         val navigateUp: () -> Unit = { navigator.pop() }
-        when (section) {
-            BrowseSection.Sources -> {
-                BrowseSectionContent(
-                    tab = sourcesTab(),
-                    navigateUp = navigateUp,
-                )
-            }
-            BrowseSection.Extensions -> {
-                val viewModel = metroViewModel<ExtensionsViewModel>()
-                val searchQuery by viewModel.searchQuery.collectAsStateWithLifecycle()
-                // Hide the title capsule while the search field is open
-                // (it would sit under it), like the tabbed page did.
-                LaunchedEffect(searchQuery) {
-                    HomeScreen.showTitleCapsule(searchQuery == null)
+        // Layout-neutral Miuix Scaffold: this page is pushed onto the
+        // main navigator outside HomeScreen, so without it the Miuix
+        // overlays on these pages (the extension trust dialog) never
+        // render.
+        MiuixScaffold(
+            containerColor = MaterialTheme.colorScheme.background,
+            contentWindowInsets = WindowInsets(0, 0, 0, 0),
+        ) {
+            when (section) {
+                BrowseSection.Sources -> {
+                    BrowseSectionContent(
+                        tab = sourcesTab(),
+                        navigateUp = navigateUp,
+                    )
                 }
-                BrowseSectionContent(
-                    tab = extensionsTab(viewModel),
-                    navigateUp = navigateUp,
-                    searchQuery = searchQuery,
-                    onChangeSearchQuery = viewModel::search,
-                )
-            }
-            BrowseSection.Migration -> {
-                BrowseSectionContent(
-                    tab = migrateSourceTab(),
-                    navigateUp = navigateUp,
-                )
+                BrowseSection.Extensions -> {
+                    val viewModel = metroViewModel<ExtensionsViewModel>()
+                    val searchQuery by viewModel.searchQuery.collectAsStateWithLifecycle()
+                    // Hide the title capsule while the search field is open
+                    // (it would sit under it), like the tabbed page did.
+                    LaunchedEffect(searchQuery) {
+                        HomeScreen.showTitleCapsule(searchQuery == null)
+                    }
+                    BrowseSectionContent(
+                        tab = extensionsTab(viewModel),
+                        navigateUp = navigateUp,
+                        searchQuery = searchQuery,
+                        onChangeSearchQuery = viewModel::search,
+                    )
+                }
+                BrowseSection.Migration -> {
+                    BrowseSectionContent(
+                        tab = migrateSourceTab(),
+                        navigateUp = navigateUp,
+                    )
+                }
             }
         }
     }
