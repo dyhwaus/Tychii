@@ -100,14 +100,18 @@ fun ChapterNavigator(
     }
 
     val isTabletUi = isTabletUi()
-    val mainAxisPadding = if (isTabletUi) 24.dp else 8.dp
+    // Same side margins as the floating bottom pill, so the slider
+    // pill lines up with it.
+    val mainAxisPadding = if (isTabletUi) 24.dp else 12.dp
 
     // Match with toolbar background color set in ReaderActivity
     val backgroundColor = MiuixTheme.colorScheme.surfaceContainer
         .copy(alpha = if (isSystemInDarkTheme()) 0.9f else 0.95f)
+    // The disabled container keeps its default faint colour, so a
+    // missing previous/next chapter reads as disabled instead of
+    // looking identical to an enabled button.
     val buttonColor = IconButtonDefaults.filledIconButtonColors(
         containerColor = backgroundColor,
-        disabledContainerColor = backgroundColor,
     )
 
     val onPageChange: (Int) -> Unit = { onPageIndexChange(it - 1) }

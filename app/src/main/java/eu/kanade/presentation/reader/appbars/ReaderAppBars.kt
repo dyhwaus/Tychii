@@ -21,18 +21,23 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.LayoutDirection
+import androidx.compose.ui.unit.dp
 import eu.kanade.presentation.reader.components.ChapterNavigator
 import eu.kanade.presentation.reader.components.ChapterNavigatorType
+import eu.kanade.presentation.util.isTabletUi
 import eu.kanade.tachiyomi.ui.reader.setting.ReaderOrientation
 import eu.kanade.tachiyomi.ui.reader.setting.ReadingMode
 import tachiyomi.presentation.core.components.material.padding
@@ -75,9 +80,14 @@ fun ReaderAppBars(
     onClickSettings: () -> Unit,
 ) {
     // Miuix surface, same translucency as before: the bars float over
-    // the manga page, so they stay slightly see-through.
+    // the manga page, so they stay slightly see-through. Both bars are
+    // floating pills now — the same capsule language as the title and
+    // action capsules elsewhere — instead of full-width sharp bands,
+    // with the chapter navigator pill lined up on the same side
+    // margins.
     val backgroundColor = MiuixTheme.colorScheme.surfaceContainer
         .copy(alpha = if (isSystemInDarkTheme()) 0.9f else 0.95f)
+    val sidePadding = if (isTabletUi()) 24.dp else 12.dp
 
     Column(modifier = Modifier.fillMaxHeight()) {
         AnimatedVisibility(
@@ -87,6 +97,9 @@ fun ReaderAppBars(
         ) {
             ReaderTopBar(
                 modifier = Modifier
+                    .statusBarsPadding()
+                    .padding(top = 8.dp, start = sidePadding, end = sidePadding)
+                    .clip(RoundedCornerShape(24.dp))
                     .background(backgroundColor)
                     .clickable(onClick = onClickTopAppBar),
                 mangaTitle = mangaTitle,
@@ -163,9 +176,10 @@ fun ReaderAppBars(
                 ReaderBottomBar(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .background(backgroundColor)
-                        .padding(horizontal = MaterialTheme.padding.small)
-                        .windowInsetsPadding(WindowInsets.navigationBars),
+                        .windowInsetsPadding(WindowInsets.navigationBars)
+                        .padding(start = sidePadding, end = sidePadding, bottom = 8.dp)
+                        .clip(RoundedCornerShape(24.dp))
+                        .background(backgroundColor),
                     readingMode = readingMode,
                     onClickReadingMode = onClickReadingMode,
                     orientation = orientation,
