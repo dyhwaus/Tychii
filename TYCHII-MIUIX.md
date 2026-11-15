@@ -1387,6 +1387,25 @@ missing-chapters gap row is untouched: it is a thin divider
 with a label, not a content row. Untested — needs a rebuild
 and a visual check.
 
+## History cards use the Library card (2026-11-15)
+
+The History waterfall cards were still the old form: a
+surfaceContainer card, cover with top-only 12.dp rounding,
+title + chapter/time below it, and the favourite/delete row at
+the bottom (5d799307). They now use the Library's
+`MangaCompactGridItem` directly, so the cover, the frosted
+title strip, the 8.dp rounding and the 2.dp shadow are the same
+component in both places — a change to the Library card lands
+on History too. Tap the cover to open the manga; the strip's
+play button resumes reading. What the Library card doesn't
+have stays history-specific, in a slim row under the cover:
+the chapter/time line (bodySmall, secondary) on the left, and
+the favourite (only when not in the library) and delete
+IconButtons on the right; tapping the row itself resumes
+reading, like the old card's body click. Long-press does
+nothing on history cards — there is no selection mode there.
+Untested — needs a rebuild and a visual check.
+
 ## Build fixes
 
 - 2026-11-14: the Explore capsule called `stringResource(...)` for the
