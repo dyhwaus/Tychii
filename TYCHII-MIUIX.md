@@ -1253,6 +1253,19 @@ reader's bars:
   face with a dark inset top edge and no shadow when down — the
   blue primary selected state is gone, the pressed-in look is the
   active state now. 12.dp corners, 18.dp icon, same labels.
+- 2026-11-15 (9b69d71f): the comfortable grid was merged into the
+  compact grid. The two options presented the same result: both
+  grids use the same column count (the Library's column
+  preference / the Explore page's `getColumnsPreference`, neither
+  depends on the mode) and, since the frosted title strip, the
+  same card. `ComfortableGrid` is gone from `LibraryDisplayMode`
+  (the test now expects 3 modes); old saved "COMFORTABLE_GRID"
+  values deserialize to CompactGrid. `LibraryComfortableGrid`,
+  `BrowseSourceComfortableGrid` and `MangaComfortableGridItem`
+  are deleted; the Library pager, the Explore content switch,
+  the display-mode pickers (capsule dropdown + settings dialog)
+  and the capsule display icons lost the comfortable entry, and
+  the global search row now uses the compact item.
 
 ## Remaining dialogs migrated (2026-11-15)
 
