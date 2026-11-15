@@ -1128,6 +1128,33 @@ left and 取消/确定 sit right. The empty-state branch
 (no categories) is unchanged; the create/rename/delete
 dialogs in the same file already used proper button rows.
 
+## Reader toolbars as floating pills (2026-11-15)
+
+The top and bottom bars were full-width sharp bands floating
+over the page — the only such bands left in an app that is
+otherwise all floating capsules — so they read as leftover
+Mihon chrome. Both are pills now, in the same language as
+the title and action capsules: 24.dp corners, translucent
+`surfaceContainer` unchanged, side margins 12.dp on phones
+and 24.dp on tablets, 8.dp clear of the status bar at the
+top and of the navigation bar at the bottom.
+
+The top bar no longer uses the shared `AppBar` (its band,
+with its own status-bar padding, cannot float). `ReaderTopBar`
+builds the same row directly — 64.dp, back button, title
+plus chapter subtitle, bookmark and overflow — reusing the
+shared `AppBarTitle`, `UpIcon` and `AppBarActions` pieces,
+so only the container changed; tapping the pill still opens
+the manga page. The bottom pill is 48.dp tall (4.dp vertical
+padding around the icons, like the floating capsule). The
+chapter navigator pill's side padding went from 8.dp to
+12.dp on phones so its edges line up with the bottom pill;
+the vertical navigator keeps its place at the side. The
+prev/next buttons also stopped forcing their disabled
+container to the same colour as the enabled one, so a
+missing chapter now reads as disabled. Viewer, gestures,
+tap zones and fullscreen are untouched.
+
 ## Build fixes
 
 - 2026-11-14: the Explore capsule called `stringResource(...)` for the
