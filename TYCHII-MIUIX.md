@@ -1515,6 +1515,46 @@ The page's other parts (M3 app bar, settings widgets) are
 untouched — they belong to the migration inventory. Untested —
 needs a rebuild and a look at the extension info page.
 
+## Glass-mode crash entering a source page (2026-11-15)
+
+Tapping a source in liquid glass mode crashed the app on
+entering its Explore page (42c18509). Cause: the floating action
+capsule — which draws the recorded backdrop with blur — sat
+INSIDE the `Box` that records that backdrop with
+`layerBackdrop`, so it blurred itself: infinite recursion in
+`RenderNode::prepareTreeImpl`. The capsule's own KDoc states
+the rule; HomeScreen already follows it (bar and capsules are
+siblings of the recorded layer). Fixed the same way here: the
+capsule is now a sibling of the recorded content Box, in an
+outer `Box`, with the scroll connection staying on the content
+Box. The manga detail page was checked too and is fine — its
+`layerBackdrop` sits on the PullRefresh content while the start
+button lives in the Scaffold's floating-action-button slot,
+outside the layer. Untested — needs a rebuild and entering a
+source in glass mode.
+
+## Top gradient blur fade (2026-11-15)
+
+Scrolling content used to be cut off hard at the top edge; now
+it dissolves (5411b7cb). New shared `TopFadeBlur`
+(`presentation/miuix/TopFadeBlur.kt`): a strip at the top whose
+veil is a vertical gradient from the page colour to transparent,
+and in liquid glass mode the content behind it is also
+progressively blurred through Miuix's `ProgressiveBlur.Top` —
+full blur at the top edge, pixel-sharp at the bottom — via
+`progressiveBlur` + `drawBackdrop`'s `progressiveGradient`.
+The plain gradient background stays as the veil in every mode,
+so the fade still works where the blur is off or unsupported.
+Like the capsules, it consumes the shared backdrop, so it sits
+OUTSIDE the recorded layer, under the floating elements: on the
+tab pages it spans the capsule band (status bar +
+TopCapsuleClearance, ending exactly where the list content
+begins) and sits under the title capsule; on Explore it is a
+48.dp strip under the top bar, its veil matching the top bar's
+surface colour. Untested — needs a rebuild and a scroll on the
+Library and Explore pages; the 8.dp full-strength blur radius
+is a first guess, say if it should be softer or stronger.
+
 ## Build fixes
 
 - 2026-11-14: the Explore capsule called `stringResource(...)` for the
