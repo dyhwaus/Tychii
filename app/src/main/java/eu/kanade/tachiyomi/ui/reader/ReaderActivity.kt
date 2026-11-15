@@ -25,9 +25,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.layout.windowInsetsPadding
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
@@ -119,6 +116,9 @@ import tachiyomi.core.common.i18n.stringResource
 import tachiyomi.core.common.util.system.logcat
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.screens.LoadingScreen
+import top.yukonga.miuix.kmp.basic.CircularProgressIndicator
+import top.yukonga.miuix.kmp.basic.Text as MiuixText
+import top.yukonga.miuix.kmp.overlay.OverlayDialog
 import tachiyomi.presentation.core.util.collectAsState
 
 class ReaderActivity : BaseActivity() {
@@ -264,19 +264,18 @@ class ReaderActivity : BaseActivity() {
             }
 
             if (state.isLoadingAdjacentChapter) {
-                AlertDialog(
+                OverlayDialog(
+                    show = true,
                     onDismissRequest = {},
-                    confirmButton = {},
-                    text = {
-                        Row(
-                            horizontalArrangement = Arrangement.spacedBy(16.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                        ) {
-                            CircularProgressIndicator()
-                            Text(stringResource(MR.strings.loading))
-                        }
-                    },
-                )
+                ) {
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(16.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        CircularProgressIndicator()
+                        MiuixText(stringResource(MR.strings.loading))
+                    }
+                }
             }
 
             val onDismissRequest = viewModel::closeDialog

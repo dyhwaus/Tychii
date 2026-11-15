@@ -261,7 +261,7 @@ private fun UpdatesAppBar(
             .fillMaxWidth()
             .statusBarsPadding()
             .padding(top = 8.dp, start = 12.dp, end = 12.dp)
-            .clip(RoundedCornerShape(24.dp))
+            .clip(RoundedCornerShape(32.dp))
             .background(backgroundColor)
             .height(64.dp)
             .padding(horizontal = 8.dp),

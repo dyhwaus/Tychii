@@ -3,15 +3,17 @@ package eu.kanade.tachiyomi.ui.reader.viewer.webgpu
 import android.content.ActivityNotFoundException
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -36,6 +38,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import ca.mpreg.webgpuviewer.renderer.ImageFilterWgsl
 import ca.mpreg.webgpuviewer.renderer.Sampler
 import dev.icerock.moko.resources.StringResource
@@ -70,6 +74,9 @@ import tachiyomi.presentation.core.components.SliderItem
 import tachiyomi.presentation.core.components.material.padding
 import tachiyomi.presentation.core.i18n.stringResource
 import tachiyomi.presentation.core.util.collectAsState
+import top.yukonga.miuix.kmp.basic.Text as MiuixText
+import top.yukonga.miuix.kmp.basic.TextButton as MiuixTextButton
+import top.yukonga.miuix.kmp.overlay.OverlayDialog
 import java.text.NumberFormat
 import kotlin.math.roundToInt
 
@@ -329,24 +336,29 @@ private fun rememberShaderPicker(pref: Preference<List<WebGpuShader>>, sampler: 
     }
 
     error?.let { message ->
-        AlertDialog(
+        OverlayDialog(
+            show = true,
+            title = stringResource(MR.strings.image_filter_invalid),
             onDismissRequest = { error = null },
-            confirmButton = {
-                TextButton(onClick = { error = null }) {
-                    Text(stringResource(MR.strings.action_ok))
-                }
-            },
-            title = { Text(stringResource(MR.strings.image_filter_invalid)) },
-            text = {
-                SelectionContainer(Modifier.verticalScroll(rememberScrollState())) {
-                    Text(
-                        text = message,
-                        fontFamily = FontFamily.Monospace,
-                        style = MaterialTheme.typography.bodySmall,
-                    )
-                }
-            },
-        )
+        ) {
+            SelectionContainer(Modifier.verticalScroll(rememberScrollState())) {
+                MiuixText(
+                    text = message,
+                    fontFamily = FontFamily.Monospace,
+                    fontSize = 12.sp,
+                )
+            }
+            Spacer(Modifier.height(16.dp))
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.End,
+            ) {
+                MiuixTextButton(
+                    text = stringResource(MR.strings.action_ok),
+                    onClick = { error = null },
+                )
+            }
+        }
     }
 
     return {

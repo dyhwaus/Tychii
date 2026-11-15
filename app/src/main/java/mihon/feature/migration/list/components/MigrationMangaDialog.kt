@@ -1,12 +1,15 @@
 package mihon.feature.migration.list.components
 
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.i18n.pluralStringResource
 import tachiyomi.presentation.core.i18n.stringResource
+import top.yukonga.miuix.kmp.basic.TextButton
+import top.yukonga.miuix.kmp.overlay.OverlayDialog
 
 @Composable
 fun MigrationMangaDialog(
@@ -16,49 +19,46 @@ fun MigrationMangaDialog(
     skippedCount: Int,
     onMigrate: () -> Unit,
 ) {
-    AlertDialog(
-        onDismissRequest = onDismissRequest,
-        title = {
-            Text(
-                text = pluralStringResource(
-                    resource = if (copy) {
-                        MR.plurals.migrationListScreen_migrateDialog_copyTitle
-                    } else {
-                        MR.plurals.migrationListScreen_migrateDialog_migrateTitle
-                    },
-                    count = totalCount,
-                    totalCount,
-                ),
+    OverlayDialog(
+        show = true,
+        title = pluralStringResource(
+            resource = if (copy) {
+                MR.plurals.migrationListScreen_migrateDialog_copyTitle
+            } else {
+                MR.plurals.migrationListScreen_migrateDialog_migrateTitle
+            },
+            count = totalCount,
+            totalCount,
+        ),
+        summary = if (skippedCount > 0) {
+            pluralStringResource(
+                resource = MR.plurals.migrationListScreen_migrateDialog_skipText,
+                count = skippedCount,
+                skippedCount,
             )
+        } else {
+            null
         },
-        text = {
-            if (skippedCount > 0) {
-                Text(
-                    text = pluralStringResource(
-                        resource = MR.plurals.migrationListScreen_migrateDialog_skipText,
-                        count = skippedCount,
-                        skippedCount,
-                    ),
-                )
-            }
-        },
-        confirmButton = {
-            TextButton(onClick = onMigrate) {
-                Text(
-                    text = stringResource(
-                        resource = if (copy) {
-                            MR.strings.migrationListScreen_migrateDialog_copyLabel
-                        } else {
-                            MR.strings.migrationListScreen_migrateDialog_migrateLabel
-                        },
-                    ),
-                )
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismissRequest) {
-                Text(text = stringResource(MR.strings.migrationListScreen_migrateDialog_cancelLabel))
-            }
-        },
-    )
+        onDismissRequest = onDismissRequest,
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.End,
+        ) {
+            TextButton(
+                text = stringResource(MR.strings.migrationListScreen_migrateDialog_cancelLabel),
+                onClick = onDismissRequest,
+            )
+            TextButton(
+                text = stringResource(
+                    resource = if (copy) {
+                        MR.strings.migrationListScreen_migrateDialog_copyLabel
+                    } else {
+                        MR.strings.migrationListScreen_migrateDialog_migrateLabel
+                    },
+                ),
+                onClick = onMigrate,
+            )
+        }
+    }
 }

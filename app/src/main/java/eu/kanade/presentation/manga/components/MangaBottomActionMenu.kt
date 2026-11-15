@@ -100,7 +100,7 @@ fun MangaBottomActionMenu(
         ) {
             Surface(
                 modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(24.dp),
+                shape = RoundedCornerShape(32.dp),
                 color = MiuixTheme.colorScheme.surfaceContainerHigh,
             ) {
             val haptic = LocalHapticFeedback.current
@@ -266,7 +266,7 @@ fun LibraryBottomActionMenu(
         ) {
             Surface(
                 modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(24.dp),
+                shape = RoundedCornerShape(32.dp),
                 color = MiuixTheme.colorScheme.surfaceContainerHigh,
             ) {
             val haptic = LocalHapticFeedback.current
