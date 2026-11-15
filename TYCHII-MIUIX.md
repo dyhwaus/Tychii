@@ -1103,6 +1103,31 @@ Whether removing works now, and whether the remove dialog
 even opens, is still open — it needs the user to test
 after rebuilding.
 
+## ChangeCategoryDialog: Miuix card list (2026-11-15)
+
+The 设置分类 dialog (opened from the Library page's
+selection mode, and from Browse/History/manga detail) had
+two layout defects: its category rows were bare — no
+vertical padding at all, so the checkbox rows touched each
+other and the tap target was barely the checkbox height —
+and its bottom button Row had no `fillMaxWidth`, so the
+`Spacer(weight = 1f)` between 编辑 and 取消/确定 got no
+space and all three buttons bunched up on the left.
+
+Now the rows live in one Miuix `Card`, like the reader
+settings groups: each row is 16.dp horizontal / 12.dp
+vertical padding, the label takes the remaining width
+(`weight(1f)`, 8.dp after the checkbox). The Card colour
+is `surfaceContainerHighest`, not the default
+`surfaceContainer` — the dialog background is
+`surfaceContainer` in both themes (white in light,
+#242424 in dark), so a default Card would vanish into
+it; one shade up stays visible in both. The button Row
+is `fillMaxWidth` with 12.dp top padding, so 编辑 sits
+left and 取消/确定 sit right. The empty-state branch
+(no categories) is unchanged; the create/rename/delete
+dialogs in the same file already used proper button rows.
+
 ## Build fixes
 
 - 2026-11-14: the Explore capsule called `stringResource(...)` for the
