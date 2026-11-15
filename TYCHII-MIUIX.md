@@ -1225,6 +1225,20 @@ reader's bars:
   window height minus the bar height minus the anchor, so the bar's
   top edge starts exactly on the cover's centre. The chapter menu
   keeps the old bottom-expand (no anchor there).
+- 2026-11-15 (d961910e): manga titles moved from below the cover
+  onto a frosted glass strip over the cover's bottom edge
+  (`CoverTitleStrip`, in both grid items). The strip is a
+  translucent veil over the cover — surface at 0.45 alpha at the
+  top, 0.8 at the bottom — with a 1.dp white rim light along its
+  top edge, the title in bodyMedium Medium with a soft veil-coloured
+  shadow. No real blur: the strip sits inside the page's recorded
+  backdrop layer, where glass would recurse (the same reason the
+  floating bar lives outside that layer); the look is the launcher
+  icon's frosted disc in strip form. The compact card's surface is
+  gone — the card is the cover itself, full 8.dp rounding — and the
+  continue-reading button now sits on the strip instead of under
+  it. The list mode keeps its row layout, and the cover-only mode
+  shows no strip at all.
 
 ## Remaining dialogs migrated (2026-11-15)
 
