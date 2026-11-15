@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.WindowInsetsSides
+import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.displayCutout
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -21,6 +22,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.layout.union
@@ -67,6 +69,8 @@ import eu.kanade.presentation.miuix.CapsuleAction
 import eu.kanade.presentation.miuix.FloatMotion
 import eu.kanade.presentation.miuix.MiuixCapsuleTitle
 import eu.kanade.presentation.miuix.MiuixFloatingCapsule
+import eu.kanade.presentation.miuix.TopCapsuleClearance
+import eu.kanade.presentation.miuix.TopFadeBlur
 import eu.kanade.presentation.miuix.TychiiLiquidBar
 import eu.kanade.presentation.theme.isMiuixGlassSupported
 import eu.kanade.presentation.util.Screen
@@ -317,6 +321,18 @@ object HomeScreen : Screen() {
                                 TabContent(tabNavigator)
                             }
                         }
+                        // Top edge fade: content scrolling up under the
+                        // title capsule dissolves instead of being cut off
+                        // at the top edge. It spans the capsule band
+                        // (status bar + TopCapsuleClearance) and sits
+                        // under the capsule, so the capsule stays crisp.
+                        TopFadeBlur(
+                            height = WindowInsets.statusBars.asPaddingValues().calculateTopPadding() + TopCapsuleClearance,
+                            color = MaterialTheme.colorScheme.background,
+                            barStyle = effectiveBarStyle,
+                            backdrop = backdrop,
+                            modifier = Modifier.align(Alignment.TopCenter),
+                        )
                         // Centered page-title capsule, replacing the
                         // top-left title of each tab's own toolbar. The Box
                         // is the 64.dp toolbar band below the status bar,
