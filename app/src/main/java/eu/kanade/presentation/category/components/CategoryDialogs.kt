@@ -23,6 +23,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.state.ToggleableState
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.unit.dp
 import eu.kanade.core.preference.asToggleableState
 import eu.kanade.presentation.category.visualName
 import tachiyomi.core.common.preference.CheckboxState
@@ -30,9 +31,12 @@ import tachiyomi.domain.category.model.Category
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.components.material.padding
 import tachiyomi.presentation.core.i18n.stringResource
+import top.yukonga.miuix.kmp.basic.Card
+import top.yukonga.miuix.kmp.basic.CardDefaults
 import top.yukonga.miuix.kmp.basic.Checkbox
 import top.yukonga.miuix.kmp.basic.TextButton
 import top.yukonga.miuix.kmp.overlay.OverlayDialog
+import top.yukonga.miuix.kmp.theme.MiuixTheme
 
 @Composable
 fun CategoryCreateDialog(
@@ -226,6 +230,14 @@ fun ChangeCategoryDialog(
         Column(
             modifier = Modifier.verticalScroll(rememberScrollState()),
         ) {
+            // The dialog background is surfaceContainer in both themes, so a
+            // default Card would vanish into it; one shade up stays visible.
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.defaultColors(
+                    color = MiuixTheme.colorScheme.surfaceContainerHighest,
+                ),
+            ) {
                 selection.forEach { checkbox ->
                     val onChange: (CheckboxState<Category>) -> Unit = {
                         val index = selection.indexOf(it)
@@ -238,7 +250,11 @@ fun ChangeCategoryDialog(
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .clickable { onChange(checkbox) },
+                            .clickable { onChange(checkbox) }
+                            .padding(
+                                horizontal = MaterialTheme.padding.medium,
+                                vertical = 12.dp,
+                            ),
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
                         when (checkbox) {
@@ -258,12 +274,19 @@ fun ChangeCategoryDialog(
 
                         Text(
                             text = checkbox.value.visualName,
-                            modifier = Modifier.padding(horizontal = MaterialTheme.padding.medium),
+                            modifier = Modifier
+                                .weight(1f)
+                                .padding(start = MaterialTheme.padding.small),
                         )
                     }
                 }
             }
-        Row {
+        }
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = 12.dp),
+        ) {
             TextButton(
                 text = stringResource(MR.strings.action_edit),
                 onClick = {
