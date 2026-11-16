@@ -1957,6 +1957,34 @@ still read as frosted while scrolling (frozen frame, not black or
 transparent), and that the glass goes live again within a beat of
 stopping.
 
+## Scroll-pause reverted; other optimisations audited (2026-11-16)
+
+The user reported the scroll-pause optimisation caused rendering
+problems, and asked to revert to the previous version and optimise
+elsewhere instead. Reverted in ae7f51b8: the four files are back to
+their pre-a640952a state (no glassPaused / scrollTick /
+isScrollInProgress gating anywhere — verified by grep — and the
+MiuixGlassScrollIdleDelayMs constant is gone too). The
+frozen-frame-while-scrolling approach is dropped; do not bring it back
+without knowing what it broke on the device.
+
+Audit of the other places, done read-only before picking a next step:
+- Library grids are missing item keys: LibraryCompactGrid and
+  LibraryList both call items() with a contentType but no key, so items
+  are matched by index — when the list changes (sort, filter, category,
+  new updates) every visible item is rematched and recomposed instead of
+  keeping its own composition. Updates and History already have keys.
+  Fix would be key = { it.libraryManga.manga.id } in both files.
+- Coil has no clear win: the ImageLoader is upstream defaults (memory
+  cache 25%, fetcher 8 / decoder 3 threads), and covers are already
+  downsampled to the cell size by AsyncImage. Forcing RGB_565 would
+  halve cover memory but risks banding on gradients — not taken.
+- Reader preloading is already tuned (pager offscreenPageLimit 1,
+  continuous viewer preloads 3 pages ahead / 2 behind). No change.
+
+Untested — the revert itself needs a rebuild to confirm the rendering
+problem is gone.
+
 ## Build fixes
 
 - 2026-11-16: the chapter-card change imported `RectangleShape` from
