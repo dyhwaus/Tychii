@@ -2,6 +2,9 @@
 // Copyright YuKongA, Apache-2.0
 // 移植自 SukiSU-Ultra 的 ui/component/miuix/animation/DampedDragAnimation.kt
 // （其改编自 compose-miuix-ui 示例，Apache-2.0）。
+// 点按/长按的识别是本项目自己写的：累计位移没超过 touchSlop 认点按，
+// 按住不动超过长按时限认长按（行为对齐 WeKite 的 pill，但实现没有
+// 照搬它那份 GPL 代码）。
 
 package eu.kanade.presentation.miuix.liquid
 
@@ -16,7 +19,9 @@ import androidx.compose.ui.input.pointer.util.VelocityTracker
 import androidx.compose.ui.unit.IntSize
 import kotlin.math.abs
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.android.awaitFrame
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
@@ -37,6 +42,11 @@ internal class DampedDragAnimation(
     val onDragStarted: DampedDragAnimation.(position: Offset) -> Unit,
     val onDragStopped: DampedDragAnimation.() -> Unit,
     val onDrag: DampedDragAnimation.(size: IntSize, dragAmount: Offset) -> Unit,
+    // 手指没拖动就松开时回调（点按 pill）。pill 盖在选中 tab 上面，
+    // tab 自己的 onClick 收不到这次点按，靠这里转出去。
+    val onTap: DampedDragAnimation.() -> Unit = {},
+    // 按住 pill 不动超过长按时限时回调；同理是给 tab 的长按转用的。
+    val onLongPress: DampedDragAnimation.() -> Unit = {},
 ) {
 
     private val valueAnimationSpec = spring(1f, 1000f, visibilityThreshold)
@@ -62,16 +72,39 @@ internal class DampedDragAnimation(
     val velocity: Float get() = velocityAnimation.value
 
     val modifier: Modifier = Modifier.pointerInput(Unit) {
+        // 点按与长按的认法和系统手势一致：松手时累计位移没超过
+        // touchSlop 就是点按；按住不动超过长按时限就是长按，拖
+        // 动超过 touchSlop 就停掉长按计时。
+        val tapSlop = viewConfiguration.touchSlop
+        val longPressTimeoutMs = viewConfiguration.longPressTimeoutMillis
+        var draggedPx = 0f
+        var longPressJob: Job? = null
+        var longPressFired = false
         inspectDragGestures(
             onDragStart = { down ->
+                draggedPx = 0f
+                longPressFired = false
                 onDragStarted(down.position)
                 press()
+                longPressJob = animationScope.launch {
+                    delay(longPressTimeoutMs)
+                    longPressFired = true
+                    onLongPress()
+                }
             },
             onDragEnd = {
+                longPressJob?.cancel()
+                longPressJob = null
                 onDragStopped()
                 release()
+                if (!longPressFired && draggedPx <= tapSlop) {
+                    onTap()
+                }
             },
             onDragCancel = {
+                longPressJob?.cancel()
+                longPressJob = null
+                longPressFired = false
                 onDragStopped()
                 release()
             },
@@ -83,7 +116,12 @@ internal class DampedDragAnimation(
             val wasInside = canDrag(previousPosition)
 
             if (isInside && wasInside) {
+                draggedPx += abs(dragAmount.x) + abs(dragAmount.y)
                 onDrag(size, dragAmount)
+                if (draggedPx > tapSlop) {
+                    longPressJob?.cancel()
+                    longPressJob = null
+                }
             }
         }
     }

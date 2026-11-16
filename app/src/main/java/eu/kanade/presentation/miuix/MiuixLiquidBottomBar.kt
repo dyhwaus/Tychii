@@ -3,13 +3,18 @@
 // 移植自 SukiSU-Ultra 的 ui/component/FloatingBottomBar.kt
 // （其改编自 compose-miuix-ui 官方示例 IosLiquidGlassNavigationBar，Apache-2.0）。
 //
-// 与原实现的差别有四处：
+// 与原实现的差别有五处：
 // 1) 包名与本项目的依赖路径；
 // 2) 深浅色不再从 SukiSU 的主题工具取，而是由调用方传入 `isDark`（本项目跟随应用内设置）；
 // 3) 折射/内阴影/增艳复用本项目已移植的 ui/miuix/LiquidGlass.kt 与 LiquidInnerShadow.kt。
 // 4) 选中 pill 采样 WeKite 式 CombinedBackdrop（页面 + 已染色的选中层），
 //    透镜与面纱按 WeKite 的参数；但选中层只录图标，不做第二遍模糊
 //    （早先版本做过，GPU 开销太大）。
+// 5) pill 在内容 Row 之上（WeKite 的层叠）：只有这样 pill 的拖动手势
+//    才收得到触摸——内容 Row 盖在上面时，触摸根本到不了 pill。pill
+//    盖住选中 tab 后，点按/长按靠 DampedDragAnimation 的 onTap/
+//    onLongPress 转给 onTabReselected；选中图标靠 CombinedBackdrop
+//    在 pill 里折射出来，不会被盖住。
 //
 // 之所以整段移植而不是"照着写"：这套底栏的观感来自几个必须同时成立的细节——
 // 双层玻璃（底栏一层 + 选中项强调色的一层，后者只作为模糊源）、滑块自己的透镜折射与内阴影、
@@ -45,6 +50,7 @@ import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.runtime.staticCompositionLocalOf
@@ -113,6 +119,9 @@ internal val LocalBottomBarForceActiveTab = staticCompositionLocalOf { false }
  *
  * @param selectedIndex 当前选中项（读作 lambda，避免每帧重组调用方）
  * @param onSelected 拖动/点击切换后的回调
+ * @param onTabReselected 点按已选中的 tab 时的回调（pill 盖住它，点按
+ * 到不了 tab 自己；默认走 onSelected）
+ * @param onTabReselectedLongPress 长按已选中的 tab 时的回调
  * @param backdrop 页面内容的模糊源
  * @param tabsCount Tab 数量（拖动范围 0..tabsCount-1）
  * @param isBlurEnabled 是否启用玻璃（关闭时退化为纯色胶囊）
@@ -124,6 +133,8 @@ internal fun MiuixLiquidBottomBar(
     modifier: Modifier = Modifier,
     selectedIndex: () -> Int,
     onSelected: (index: Int) -> Unit,
+    onTabReselected: (index: Int) -> Unit = onSelected,
+    onTabReselectedLongPress: (index: Int) -> Unit = {},
     backdrop: Backdrop,
     tabsCount: Int,
     isDark: Boolean,
@@ -174,6 +185,10 @@ internal fun MiuixLiquidBottomBar(
 
     val holder = remember { DampedDragAnimationHolder() }
 
+    // 回调要保鲜：动画只 remember 一次，onTabReselected 换了要读到新的。
+    val onTabReselectedState = rememberUpdatedState(onTabReselected)
+    val onTabReselectedLongPressState = rememberUpdatedState(onTabReselectedLongPress)
+
     val dampedDragAnimation = remember(animationScope, tabsCount, density, isLtr) {
         DampedDragAnimation(
             animationScope = animationScope,
@@ -215,6 +230,17 @@ internal fun MiuixLiquidBottomBar(
                         offsetAnimation.snapTo(offsetAnimation.value + dragAmount.x)
                     }
                 }
+            },
+            // pill 盖在选中 tab 上面，点按/长按到不了 tab 自己，这里
+            // 转出去（点按已选中的 tab 就是重选，比如书架 tab 重
+            // 点打开设置）。
+            onTap = {
+                val index = value.fastRoundToInt().fastCoerceIn(0, tabsCount - 1)
+                onTabReselectedState.value(index)
+            },
+            onLongPress = {
+                val index = value.fastRoundToInt().fastCoerceIn(0, tabsCount - 1)
+                onTabReselectedLongPressState.value(index)
             },
         ).also { holder.instance = it }
     }
@@ -342,6 +368,35 @@ internal fun MiuixLiquidBottomBar(
             }
         }
 
+        // Tab content, under the indicator pill. The pill sits on top
+        // (it has to: only then do its drag gestures receive touches),
+        // and the selected icon still shows — refracted inside the pill
+        // through the combined backdrop. This Row mirrors the background
+        // Row's size and motion (same height, padding, rubber-band
+        // offset and press scale) so the icons sit exactly where they did.
+        Row(
+            Modifier
+                .graphicsLayer {
+                    translationX = panelOffset
+                    val width = size.width.coerceAtLeast(1f)
+                    val s = lerp(
+                        1f,
+                        1f + 16.dp.toPx() / width,
+                        dampedDragAnimation.pressProgress,
+                    )
+                    scaleX = s
+                    scaleY = s
+                }
+                .height(64.dp)
+                .padding(4.dp)
+                .fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            CompositionLocalProvider(LocalContentColor provides tabContentColor) {
+                content()
+            }
+        }
+
         if (tabWidthPx > 0f) {
             val tabWidthDp = with(density) { tabWidthPx.toDp() }
             if (isBlurEnabled) {
@@ -438,33 +493,5 @@ internal fun MiuixLiquidBottomBar(
             }
         }
 
-        // Tab content, on top of the indicator pill. The pill's glass
-        // used to be drawn over this Row, so it painted the blurred page
-        // over the selected icon and the icon vanished. This Row mirrors
-        // the background Row's size and motion (same height, padding,
-        // rubber-band offset and press scale) so the icons sit exactly
-        // where they did.
-        Row(
-            Modifier
-                .graphicsLayer {
-                    translationX = panelOffset
-                    val width = size.width.coerceAtLeast(1f)
-                    val s = lerp(
-                        1f,
-                        1f + 16.dp.toPx() / width,
-                        dampedDragAnimation.pressProgress,
-                    )
-                    scaleX = s
-                    scaleY = s
-                }
-                .height(64.dp)
-                .padding(4.dp)
-                .fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            CompositionLocalProvider(LocalContentColor provides tabContentColor) {
-                content()
-            }
-        }
     }
 }

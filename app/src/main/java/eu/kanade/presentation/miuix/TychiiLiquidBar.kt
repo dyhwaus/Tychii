@@ -60,6 +60,9 @@ fun TychiiLiquidBar(
         MiuixLiquidBottomBar(
             selectedIndex = selectedIndex,
             onSelected = onTabSelected,
+            // pill 盖住已选中的 tab，点按它就是重选，走 onTabClick
+            //（和直接点 tab 一样，比如书架 tab 重 点开设置）。
+            onTabReselected = { index -> onTabClick(tabs[index]) },
             backdrop = backdrop,
             tabsCount = tabs.size,
             isDark = isDark,
