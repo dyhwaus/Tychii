@@ -1668,6 +1668,32 @@ scrolling.
 the fade is back at 8.dp, and the shared recipe comment in
 `LiquidGlass.kt` is restored to match. No other change.
 
+## User-tuned liquid glass recipe (2026-11-16)
+
+The user edited the six glass files by hand (sent back as
+LiquidGlass_OS_Complete_v2_0_udda.zip) and asked for them to be
+applied globally — applied as-is, plus two comment-only fixes (the
+shared-recipe KDoc and the title capsule's "no lens" note, both stale
+against the new values). The recipe is now lighter: blur 6.dp,
+surface veil 0.26, chromatic aberration 0.14, vibrancy saturation
+1.18; the specular highlight is wider and softer (stroke 1.15.dp at
+0.92 alpha, inner white 0.17, inner blur 2.8.dp, light intensities
+0.82 / 0.26). The dispersion shader is rewritten — 3 RGB samples
+instead of 7 spectral ones, with a Fresnel-like edge factor, so the
+prism fringe grows towards the rim; circleMap now clamps its input
+and guards the sqrt, so no NaN at the edges. Per-piece lens values
+moved too: bottom bar 18.dp / 12.dp, side capsule 16.dp / 10.dp
+with a press-scale spring on its buttons, title capsule gains a very
+shallow lens (8.dp / 4.dp, chroma at a quarter of the shared value),
+selected pill lens now (8+4*progress, 7+5*progress) with a lighter
+accent tint (0.11 + 0.035*progress) plus a faint white lift, inner
+shadow 18.dp / 0.12 with a 0.65 vertical offset, top fade blur
+10.dp. The start button and reader bars/navigator were not in the
+zip — they follow the shared constants, so they pick up the lighter
+recipe while keeping their 24.dp lens. Untested — needs a rebuild:
+check the lighter veil over busy covers (text legibility), the
+capsule's shallow lens on the title, and the capsule press spring.
+
 ## Build fixes
 
 - 2026-11-14: the Explore capsule called `stringResource(...)` for the
