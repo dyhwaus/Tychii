@@ -1624,6 +1624,33 @@ needs a rebuild: check the start button over the chapter list, the
 reader bars over a page, and whether 8.dp blur costs anything
 noticeable while scrolling.
 
+## Lens depth, chromatic aberration, and a visible selected pill (2026-11-16)
+
+The user asked to reference HyperLight's liquid glass. HyperLight is
+an LSPosed module for HyperOS, not a library — its glass engine is
+Haze's haze-glass — so what transfers is its parameter set, and our
+lens already had the knobs: `depthEffect` and `chromaticAberration`
+were only ever turned on for the selected-tab pill. They are now on
+everywhere the lens is used, from one shared constant in
+`LiquidGlass.kt`: `MiuixGlassChromaticAberration = 0.5f` (the pill's
+old value). Bottom bar, side capsule, start button, reader bars and
+chapter navigator all refract with depth + a prism fringe at the rim;
+the title capsule deliberately keeps no lens, so its text is never
+distorted at the edges. An engine swap to Haze Glass was considered
+and interrupted before any code was written — not done.
+
+The selected-tab pill also had a second problem: in glass mode its
+background was effectively transparent. It refracts the page directly
+and its surface only drew a 0.1f dark/light veil, so against the
+bar's 0.55 veil it read as a clear hole and the selection was
+invisible. It now draws a translucent accent tint
+(`accentColor.copy(alpha = 0.2f)`) in `onDrawSurface` — one drawRect,
+not a second glass pass (the earlier second-pass attempt cost too
+much GPU time), in the same alpha family as the non-glass pill
+(accent 0.15f). Untested — needs a rebuild: check the glass over
+busy covers (depth + dispersion cost), and whether the pill reads as
+the selected tab in both themes.
+
 ## Build fixes
 
 - 2026-11-14: the Explore capsule called `stringResource(...)` for the
