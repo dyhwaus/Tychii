@@ -2086,6 +2086,29 @@ read as separate metal switches in both themes, the selected one pops
 out with a spring when tapped, the old one settles back, labels and
 badges are right, and the glass bar still works when switched back.
 
+## Explore listing chips follow the bar material (2026-11-16)
+
+The user asked for the Popular / Latest chips on the per-source
+Explore page to use the same material as the global bar style — in
+metal mode they were still flat grey pills while everything else was
+brushed metal.
+
+Done in code e0de3d97: FilterButton (BrowseSourceScreen.kt) now
+branches on the bar style like the floating pieces. Metal: the
+brushed-metal surface with the icon and label engraved. Liquid glass:
+the side capsule's blur, lens and tilt highlight, sampling the shared
+backdrop — but the veil stays at the translucent alpha (0.75), not the
+glass one (0.4): the chips sit on the header's opaque surface, so
+there is no page content behind them to blur, and the glass alpha
+would make the pill vanish (the earlier code said the same thing in
+its comment; the glass edge now comes from the highlight and lens
+instead). Opaque and translucent are unchanged. The backdrop is passed
+down from the screen (it was already in scope at the call sites).
+
+Untested — needs a rebuild: open a source's Explore page and check the
+Popular / Latest chips read as metal in metal mode (engraved, legible)
+and as frosted glass in glass mode, in both themes.
+
 ## Build fixes
 
 - 2026-11-16: the metal material used the wrong `Shadow`: there are
