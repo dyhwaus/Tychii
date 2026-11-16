@@ -2135,6 +2135,38 @@ Untested — needs a rebuild: check the strip reads as metal in metal
 mode (engraved title legible, the continue button a metal disc) and
 is unchanged in glass mode, in both themes.
 
+## Metal retuned to bright chrome (2026-11-16)
+
+The user asked to optimise the metal material into a bright,
+chrome-like one. The brushed version was a flat two-stop gradient
+with fine horizontal lines; chrome is a polished mirror, so the
+recipe changed in MetalMaterial.kt only (code f220047c):
+
+- Base: the two-stop gradient is now a five-stop banded one —
+  bright, light silver, a darker reflection band in the middle (the
+  reflected horizon), a bright band, a darker bottom. Light:
+  #FBFCFD / #E9EDF1 / #C4CBD3 / #F4F7F9 / #C7CED5. Dark (black
+  chrome): #4A4E54 / #33363B / #1E2023 / #3D4046 / #26282C — also
+  brighter than the old graphite, with the same band structure.
+- The brush lines are gone entirely — chrome is a polished face,
+  and the lines were the brushed look. (The loop and its hash are
+  deleted, not just hidden.)
+- Chamfer: top edge white 0.5 → 0.7, bottom edge black 0.35 → 0.45 —
+  chrome edges are brighter and harder.
+- Sheen: white 0.06 → 0.1, same top-left diagonal.
+- Unchanged: the engraving (dark cut + white burr), the recess
+  colours, the drop shadows, and every caller — the bar, capsules,
+  start button, reader bars, chips and card strip all pick the new
+  look up through the shared metalSurface. The header comment also
+  drops a stale line (the selected tab is a raised switch now, not
+  a stamped recess; the recess survives for the chapter navigator's
+  buttons).
+
+Untested — needs a rebuild: check the metal reads as bright chrome
+in both themes (bright bands, no visible brushing, engraved text
+still legible on the brighter base) and that the glass modes are
+untouched.
+
 ## Build fixes
 
 - 2026-11-16: the metal material used the wrong `Shadow`: there are
