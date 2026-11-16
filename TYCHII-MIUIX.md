@@ -6,7 +6,8 @@ from Mihon. This note records what changed, what was deliberately not
 changed, and how to build.
 
 Current version: **v0.2.0** (versionCode 42) — every user-visible page
-except the reader now follows the Miuix style. The reader is untouched
+follows the Miuix style, including the reader's floating bars (same
+liquid glass as the bottom bar). The reader viewer itself is untouched
 (gesture-driven fullscreen viewer, highest risk).
 
 ## Miuix (v0.9.4)
@@ -1593,6 +1594,35 @@ capsule has neither. Untested — needs a rebuild and a look at a
 side capsule over covers in glass mode; on the narrow capsule
 the 24.dp refraction may read stronger than on the wide bar,
 say if it should be gentler.
+
+## Liquid glass, stronger frost and one shared recipe (2026-11-16)
+
+The manga start button's glass looked wrong: it was the only floating
+glass piece without the bottom bar's lens refraction and drop shadow,
+so it read as a flat translucent pill, and the glass itself was thin
+— 4.dp blur and a 0.4 surface veil over the dense chapter list let
+the text bleed through. The frost is now stronger everywhere, from
+one shared recipe in `LiquidGlass.kt`: `MiuixGlassBlurRadius = 8.dp`
+(the radius the top fade already uses at full strength) and
+`MiuixGlassSurfaceAlpha = 0.55f`. The bottom bar, title capsule,
+side capsule and start button all use them; the start button also
+gains the bar's 24.dp / 24.dp lens and its 10.dp drop shadow
+(0.2 dark / 0.1 light). Translucent stays 0.75 and opaque stays
+solid; only the glass numbers moved.
+
+The reader joins the same material (3010e50f): `ReaderActivity`
+reads the Appearance bar style (same API-32 gate as the manga
+page), records the viewer into a shared `LayerBackdrop`, and the
+top bar, bottom bar and chapter navigator — all floating 24.dp
+pills — draw the glass over it (blur + vibrancy + lens + tilt
+highlight + 0.55 veil). The bars sit as siblings after the viewer
+in the root Box, outside the recorded layer, so they never blur
+themselves. In opaque/translucent modes the viewer is not recorded
+and the pills keep the solid/0.75 surface. Viewer, gestures, tap
+zones, fullscreen and the page indicator are untouched. Untested —
+needs a rebuild: check the start button over the chapter list, the
+reader bars over a page, and whether 8.dp blur costs anything
+noticeable while scrolling.
 
 ## Build fixes
 
