@@ -2216,6 +2216,34 @@ into the metal in both themes (dark rim on top, light rim below the
 strokes), and that the two-layer text still wraps and ellipsises
 like the single one.
 
+## Metal as Smartisan-style hardware (2026-11-16)
+
+The user asked whether the metal could become Smartisan OS style,
+and picked the skeuomorphic-hardware direction (the other two
+offered were the clean system UI and metal with a Smartisan-red
+accent). The idea: the bar stops being "a metal material" and
+becomes a realistic hardware object, like the metal parts in
+Smartisan's icons — a polished aluminum face, light on top, a
+bevelled edge, a shadow below.
+
+Done in code 74e82d96, in MetalMaterial.kt only (all metal pieces
+pick it up through the shared metalSurface):
+
+- A top highlight band: a soft white light fading from the top edge
+  to transparent at 30% down (white 0.18) — light glinting off the
+  top of a real metal bar. The flat aluminum face was missing
+  exactly this.
+- A crisper bevel: top edge white 0.4 → 0.6, bottom edge black
+  0.3 → 0.4 — a real bevel is bright on top and shadowed below,
+  like a cut edge.
+- Unchanged: the aluminum base gradient, the fine satin grain, the
+  diagonal sheen, the engraving, the recess colours and the drop
+  shadows.
+
+Untested — needs a rebuild: check the metal reads as a physical
+object in both themes (bright top face, hard edge, soft shadow) and
+that the glass modes are untouched.
+
 ## Build fixes
 
 - 2026-11-16: the metal material used the wrong `Shadow`: there are
