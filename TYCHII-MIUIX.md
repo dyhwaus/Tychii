@@ -2193,6 +2193,29 @@ Untested — needs a rebuild: check the metal reads as satin aluminum
 in both themes (even, bright, fine grain, no mirror bands) and that
 the glass modes are untouched.
 
+## Card titles engraved in metal mode (2026-11-16)
+
+The user asked whether the manga card's title could be a real
+engraved effect in metal mode. The strip already used the shared
+engraved shadow — but that is only a light burr below the glyph, and
+on the bright aluminum base white-on-near-white is nearly invisible,
+so the title read as plain dark text.
+
+Done in code db27f00c: a new shared helper, MetalEngravedText
+(MetalMaterial.kt), draws the title twice — a dark copy offset 1px
+up (the shadowed top edge of the cut) and the main glyph with the
+light burr below (the lit bottom edge). Light from above, dark on
+top, light at the bottom: the cross-section of a carved letter.
+CoverTitleStrip uses it in metal mode (same two-line wrap and
+ellipsis); the non-metal title keeps its soft halo shadow. The bar
+and capsule titles keep the single-shadow engraving for now — only
+the card title was asked for.
+
+Untested — needs a rebuild: check the card titles read as carved
+into the metal in both themes (dark rim on top, light rim below the
+strokes), and that the two-layer text still wraps and ellipsises
+like the single one.
+
 ## Build fixes
 
 - 2026-11-16: the metal material used the wrong `Shadow`: there are
