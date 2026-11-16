@@ -60,13 +60,16 @@ val MiuixGlassSpecular: Highlight = Highlight(
 /**
  * 磨砂强度：所有浮动玻璃件共用——底栏、标题胶囊、侧边胶囊、漫画开始
  * 按钮、阅读器顶栏/底栏/章节导航。一个地方调，全局一起变，免得各处
- * 漂移。模糊 6.dp，面纱 0.26，色散 0.14；顶部渐隐单独用 10.dp。
+ * 漂移。模糊 8.dp，面纱 0.4，色散 0.14，增艳 1.5——配方对齐 WeKite
+ * 的底栏；顶部渐隐单独用 10.dp。选中 pill 的色散单独用 0.5（也是
+ * WeKite 的值），只在按压/拖动时透镜张开才显出来。
  * 标题胶囊的透镜很浅（8.dp / 4.dp，色散取共用值的四分之一），
  * 字不会糊。
  */
-val MiuixGlassBlurRadius = 6.dp
-const val MiuixGlassSurfaceAlpha = 0.26f
+val MiuixGlassBlurRadius = 8.dp
+const val MiuixGlassSurfaceAlpha = 0.4f
 const val MiuixGlassChromaticAberration = 0.14f
+const val MiuixGlassPillChromaticAberration = 0.5f
 
 // 主光源的参考位置与"重力方向可忽略"的阈值（|g_xy| > 0.1，约 6° 倾斜），
 // 与 miuix 内部 HighlightStyle 的 LIGHT_REF 保持一致。
@@ -146,7 +149,7 @@ fun BackdropEffectScope.vibrancy() {
     colorControls(
         brightness = 0f,
         contrast = 1f,
-        saturation = 1.18f,
+        saturation = 1.5f,
     )
 }
 

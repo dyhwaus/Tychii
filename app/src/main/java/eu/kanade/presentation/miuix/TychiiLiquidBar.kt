@@ -81,7 +81,10 @@ fun TychiiLiquidBar(
                     onClick = { onTabClick(tab) },
                     modifier = Modifier.widthIn(min = 64.dp),
                 ) {
-                    val tint = if (selected) {
+                    // 选中层录制时全部 tab 都按选中态画，这样 pill 滑到哪，
+                    // 折射出来的图标都是强调色（WeKite 的做法）。
+                    val forceActive = LocalBottomBarForceActiveTab.current
+                    val tint = if (selected || forceActive) {
                         MiuixTheme.colorScheme.primary
                     } else {
                         MiuixTheme.colorScheme.onSurface

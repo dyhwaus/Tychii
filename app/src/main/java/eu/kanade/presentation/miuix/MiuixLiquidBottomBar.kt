@@ -3,10 +3,13 @@
 // 移植自 SukiSU-Ultra 的 ui/component/FloatingBottomBar.kt
 // （其改编自 compose-miuix-ui 官方示例 IosLiquidGlassNavigationBar，Apache-2.0）。
 //
-// 与原实现的差别只有三处：
+// 与原实现的差别有四处：
 // 1) 包名与本项目的依赖路径；
 // 2) 深浅色不再从 SukiSU 的主题工具取，而是由调用方传入 `isDark`（本项目跟随应用内设置）；
 // 3) 折射/内阴影/增艳复用本项目已移植的 ui/miuix/LiquidGlass.kt 与 LiquidInnerShadow.kt。
+// 4) 选中 pill 采样 WeKite 式 CombinedBackdrop（页面 + 已染色的选中层），
+//    透镜与面纱按 WeKite 的参数；但选中层只录图标，不做第二遍模糊
+//    （早先版本做过，GPU 开销太大）。
 //
 // 之所以整段移植而不是"照着写"：这套底栏的观感来自几个必须同时成立的细节——
 // 双层玻璃（底栏一层 + 选中项强调色的一层，后者只作为模糊源）、滑块自己的透镜折射与内阴影、
@@ -44,8 +47,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
+import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.dropShadow
 import androidx.compose.ui.geometry.Offset
@@ -56,6 +61,7 @@ import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastCoerceIn
@@ -63,12 +69,15 @@ import androidx.compose.ui.util.fastRoundToInt
 import androidx.compose.ui.util.lerp
 import eu.kanade.presentation.miuix.liquid.DampedDragAnimation
 import eu.kanade.presentation.miuix.liquid.InteractiveHighlight
+import eu.kanade.presentation.miuix.liquid.rememberCombinedBackdrop
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.launch
 import top.yukonga.miuix.kmp.blur.Backdrop
 import top.yukonga.miuix.kmp.blur.blur
 import top.yukonga.miuix.kmp.blur.drawBackdrop
+import top.yukonga.miuix.kmp.blur.layerBackdrop
+import top.yukonga.miuix.kmp.blur.rememberLayerBackdrop
 import top.yukonga.miuix.kmp.theme.LocalContentColor
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import kotlin.math.sign
@@ -96,8 +105,11 @@ internal fun RowScope.FloatingBottomBarItem(
     )
 }
 
+/** 选中层录制时为 true：tab 图标全部按选中态（强调色）画，供 pill 折射。 */
+internal val LocalBottomBarForceActiveTab = staticCompositionLocalOf { false }
+
 /**
- * 液态玻璃悬浮底栏（SukiSU 同款）。
+ * 液态玻璃悬浮底栏（SukiSU 同款底栏 + WeKite 式选中 pill）。
  *
  * @param selectedIndex 当前选中项（读作 lambda，避免每帧重组调用方）
  * @param onSelected 拖动/点击切换后的回调
@@ -236,6 +248,10 @@ internal fun MiuixLiquidBottomBar(
     val baseHighlight = rememberTiltBrightHighlight(extraDegrees = -45f)
     val pillHighlight = rememberTiltBrightHighlight(extraDegrees = 90f)
 
+    // 选中层录进 tabsBackdrop，再和页面拼成 pill 的采样源。
+    val tabsBackdrop = rememberLayerBackdrop()
+    val combinedBackdrop = rememberCombinedBackdrop(backdrop, tabsBackdrop)
+
     Box(
         modifier = modifier.width(IntrinsicSize.Min),
         contentAlignment = Alignment.CenterStart,
@@ -269,11 +285,10 @@ internal fun MiuixLiquidBottomBar(
                             effects = {
                                 vibrancy()
                                 blur(MiuixGlassBlurRadius.toPx(), MiuixGlassBlurRadius.toPx())
+                                // WeKite 的底栏透镜：24/24，不带 depth 与色散。
                                 lens(
-                                    refractionHeight = 18.dp.toPx(),
-                                    refractionAmount = 12.dp.toPx(),
-                                    depthEffect = true,
-                                    chromaticAberration = MiuixGlassChromaticAberration,
+                                    refractionHeight = 24.dp.toPx(),
+                                    refractionAmount = 24.dp.toPx(),
                                 )
                             },
                             highlight = { baseHighlight.copy(alpha = 0.75f) },
@@ -303,6 +318,30 @@ internal fun MiuixLiquidBottomBar(
             // on top of the indicator pill.
         }
 
+        // 选中层：把 tab 内容再画一遍（全部按选中态的强调色），录进
+        // tabsBackdrop，供 pill 的 CombinedBackdrop 采样。只录图标，
+        // 不做第二遍模糊——早先版本做过整层玻璃，GPU 开销太大，这里
+        // 只录内容，折射由 pill 自己的透镜做。alpha 0f 且清掉语义，
+        // 不参与点击；尺寸与位置和 pill 一致（56.dp 高、左右各 4.dp），
+        // 这样 pill 采到的图标正好落在它下面。
+        if (isBlurEnabled) {
+            Row(
+                Modifier
+                    .clearAndSetSemantics {}
+                    .alpha(0f)
+                    .layerBackdrop(tabsBackdrop)
+                    .graphicsLayer { translationX = panelOffset }
+                    .height(56.dp)
+                    .padding(horizontal = 4.dp)
+                    .fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                CompositionLocalProvider(LocalBottomBarForceActiveTab provides true) {
+                    content()
+                }
+            }
+        }
+
         if (tabWidthPx > 0f) {
             val tabWidthDp = with(density) { tabWidthPx.toDp() }
             if (isBlurEnabled) {
@@ -320,20 +359,25 @@ internal fun MiuixLiquidBottomBar(
                         .then(interactiveHighlight.gestureModifier)
                         .then(dampedDragAnimation.modifier)
                         .drawBackdrop(
-                            // The pill refracts the page backdrop directly.
-                            // Its selection colour comes from the accent
-                            // tint in onDrawSurface below — one drawRect,
-                            // not a second glass pass (an earlier version
-                            // did the second pass; too much GPU time).
-                            backdrop = backdrop,
+                            // The pill refracts the combined backdrop:
+                            // the page plus the active tab layer recorded
+                            // above, so the selected icon shows through
+                            // the pill in the accent colour, refracted by
+                            // the pill's own lens. The bar's veil is not
+                            // re-applied here — the pill stays a clear
+                            // lens on the frosted bar (an earlier version
+                            // did the second glass pass; too much GPU time).
+                            backdrop = combinedBackdrop,
                             shape = { pillShape },
                             effects = {
                                 val progress = dampedDragAnimation.pressProgress
+                                // WeKite 的 pill 透镜：只在按压/拖动时张开
+                                //（静止时为 0，不折射），色散 0.5 带 depth。
                                 lens(
-                                    refractionHeight = (8.dp + 4.dp * progress).toPx(),
-                                    refractionAmount = (7.dp + 5.dp * progress).toPx(),
+                                    refractionHeight = (10.dp * progress).toPx(),
+                                    refractionAmount = (14.dp * progress).toPx(),
                                     depthEffect = true,
-                                    chromaticAberration = MiuixGlassChromaticAberration,
+                                    chromaticAberration = MiuixGlassPillChromaticAberration,
                                 )
                             },
                             highlight = {
@@ -348,18 +392,25 @@ internal fun MiuixLiquidBottomBar(
                             },
                             onDrawSurface = {
                                 val progress = dampedDragAnimation.pressProgress
-                                // 选中的底色：一层半透明主题蓝，盖在折射后
-                                // 的页面上。之前只有 0.1f 的黑/白纱，pill
-                                // 在底栏里像一块透明的洞，选没选看不出来。
-                                drawRect(accentColor.copy(alpha = 0.11f + 0.035f * progress))
-                                drawRect(Color.Black.copy(alpha = 0.025f * progress))
-                                drawRect(Color.White.copy(alpha = 0.025f * (1f - progress)))
+                                // WeKite 的 pill 面纱：静止时一层很淡的
+                                // 黑/白纱，越按越透，只留一丝黑。强调色
+                                // 不再平铺——选中态的颜色现在由折射的
+                                // 选中层图标本身带来。
+                                drawRect(
+                                    color = if (!isDark) {
+                                        Color.Black.copy(alpha = 0.1f)
+                                    } else {
+                                        Color.White.copy(alpha = 0.1f)
+                                    },
+                                    alpha = 1f - progress,
+                                )
+                                drawRect(Color.Black.copy(alpha = 0.03f * progress))
                             },
                         )
                         .innerShadow(shape = pillShape) {
                             InnerShadow(
-                                radius = 6.dp * dampedDragAnimation.pressProgress,
-                                color = Color.Black.copy(alpha = 0.12f),
+                                radius = 8.dp * dampedDragAnimation.pressProgress,
+                                color = Color.Black.copy(alpha = 0.15f),
                                 alpha = dampedDragAnimation.pressProgress,
                             )
                         }
