@@ -1827,6 +1827,41 @@ chroma at the rim), and that a tap on an already-selected tab still
 reaches the tab (the invisible active layer must not eat taps; the
 visible content Row stays on top).
 
+## Selected pill could not be dragged (2026-11-16)
+
+The user reported the pill still could not be dragged, after the
+WeKite change above. Root cause, verified in code: the tab content
+Row was the last child of the bar's Box, so it covered the pill
+entirely — touches over the pill hit the content Row first, and the
+pill's `pointerInput` (the drag gesture) never received them. The
+drag machinery itself was fine; it was unreachable. (The content Row
+had been put on top deliberately, when the pill's glass used to paint
+the blurred page over the selected icon and make it vanish. That
+reason is gone now that the pill refracts the active icon through the
+combined backdrop.)
+
+Fix, code b6aa31e5: the pill Box is now the last child of the Box
+(on top, WeKite's layering), so its drag gestures receive touches.
+Because the pill now covers the selected tab, taps and long-presses
+on it need forwarding: `DampedDragAnimation` gained `onTap` /
+`onLongPress` callbacks — the tap/long-press detection is written
+fresh here (accumulated drag vs touchSlop for a tap, a delay timer
+for a long press), not copied from WeKite's GPL-3.0 file, since
+Tychii is Apache-2.0. The bar gained `onTabReselected` /
+`onTabReselectedLongPress` params (defaulting to `onSelected` / no-op,
+read via `rememberUpdatedState` since the animation is remembered
+once), and `TychiiLiquidBar` wires `onTabReselected` to `onTabClick`,
+so tapping the selected tab still means reselect (e.g. re-tapping
+Library opens its settings dialog), exactly as if the tab itself had
+been tapped. The selected icon still shows: it is refracted inside
+the pill through the combined backdrop, as in the previous change.
+
+Untested — needs a rebuild: drag the pill between tabs (it should
+follow the finger, bulge while pressed, and snap to the nearest tab
+on release), tap the selected tab (reselect behaviour, e.g. the
+Library settings dialog), and check the selected icon stays visible
+inside the pill while it sits on top.
+
 ## Build fixes
 
 - 2026-11-16: the chapter-card change imported `RectangleShape` from
