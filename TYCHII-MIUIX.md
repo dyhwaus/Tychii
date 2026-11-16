@@ -1862,6 +1862,33 @@ on release), tap the selected tab (reselect behaviour, e.g. the
 Library settings dialog), and check the selected icon stays visible
 inside the pill while it sits on top.
 
+## Selected tab is frosted glass, not clear (2026-11-16)
+
+The user asked for the selected tab to read as frosted glass rather
+than transparent liquid glass. The pill used to be clear: it sampled
+the page sharp, with only a 0.1 veil, so the covers showed through
+almost untouched.
+
+Fix, code d0422650: the active layer (the invisible Row recorded into
+tabsBackdrop) now draws the full glass pass while recording — blur
+8.dp, vibrancy 1.5, lens 24/24, surfaceContainer veil 0.4, the same
+recipe as the bar itself — and only then the accent-coloured tab
+content on top. The pill samples that layer, so it shows a frosted
+page behind a crisp icon. The icon stays sharp because it is the
+layer's content, not its backdrop: blurring the pill itself would
+have blurred the icon too, so the blur belongs in the recording, not
+in the pill. This is exactly WeKite's stack (its overlay does the
+same full pass); the earlier Tychii port had deliberately dropped it
+to save a second blur pass, and this change takes that cost back —
+one extra blur over a 56.dp-tall strip, the pill's own area. The
+pill's own effects are unchanged (press lens + 0.1 veil on top), so
+pressing/dragging still opens the lens over the frost.
+
+Untested — needs a rebuild: check the selected tab reads as frosted
+(page blurred and milked behind it, icon crisp and accent-coloured),
+the unselected tabs still show the bar's clearer glass, and scrolling
+stays smooth with the extra blur pass.
+
 ## Build fixes
 
 - 2026-11-16: the chapter-card change imported `RectangleShape` from
