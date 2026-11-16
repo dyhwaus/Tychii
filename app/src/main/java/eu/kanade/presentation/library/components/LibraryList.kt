@@ -42,6 +42,10 @@ internal fun LibraryList(
 
         items(
             items = items,
+            // Stable key, same reason as the compact grid: a sort,
+            // filter or category change keeps each row's composition
+            // instead of rematching every visible row by index.
+            key = { it.libraryManga.manga.id },
             contentType = { "library_list_item" },
         ) { libraryItem ->
             val manga = libraryItem.libraryManga.manga

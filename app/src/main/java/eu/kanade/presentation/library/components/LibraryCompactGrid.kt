@@ -32,6 +32,10 @@ internal fun LibraryCompactGrid(
 
         items(
             items = items,
+            // Stable key so a sort, filter or category change keeps
+            // each manga's composition (and its loaded cover) instead
+            // of rematching every visible card by index.
+            key = { it.libraryManga.manga.id },
             contentType = { "library_compact_grid_item" },
         ) { libraryItem ->
             val manga = libraryItem.libraryManga.manga
