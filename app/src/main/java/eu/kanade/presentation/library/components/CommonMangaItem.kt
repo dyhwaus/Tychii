@@ -44,7 +44,7 @@ import androidx.compose.ui.unit.dp
 import eu.kanade.domain.ui.model.BarStyle
 import eu.kanade.presentation.manga.components.MangaCover
 import eu.kanade.presentation.miuix.MetalEngravedIcon
-import eu.kanade.presentation.miuix.metalEngravedShadow
+import eu.kanade.presentation.miuix.MetalEngravedText
 import eu.kanade.presentation.miuix.metalIsDark
 import eu.kanade.presentation.miuix.metalSurface
 import eu.kanade.presentation.theme.isMiuixGlassSupported
@@ -221,25 +221,34 @@ private fun CoverTitleStrip(
                 .padding(horizontal = 10.dp, vertical = 6.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            Text(
-                text = title,
-                modifier = Modifier.weight(1f),
-                minLines = 2,
-                maxLines = maxLines,
-                overflow = TextOverflow.Ellipsis,
-                style = MaterialTheme.typography.bodyMedium.copy(
-                    fontWeight = FontWeight.Medium,
-                    shadow = if (isMetal) {
-                        metalEngravedShadow(metalDark)
-                    } else {
-                        Shadow(
+            if (isMetal) {
+                MetalEngravedText(
+                    text = title,
+                    modifier = Modifier.weight(1f),
+                    style = MaterialTheme.typography.bodyMedium.copy(
+                        fontWeight = FontWeight.Medium,
+                    ),
+                    isDark = metalDark,
+                    minLines = 2,
+                    maxLines = maxLines,
+                )
+            } else {
+                Text(
+                    text = title,
+                    modifier = Modifier.weight(1f),
+                    minLines = 2,
+                    maxLines = maxLines,
+                    overflow = TextOverflow.Ellipsis,
+                    style = MaterialTheme.typography.bodyMedium.copy(
+                        fontWeight = FontWeight.Medium,
+                        shadow = Shadow(
                             color = veil.copy(alpha = 0.5f),
                             blurRadius = 6f,
                             offset = Offset(0f, 1f),
-                        )
-                    },
-                ),
-            )
+                        ),
+                    ),
+                )
+            }
             if (onClickContinueReading != null) {
                 ContinueReadingButton(
                     size = ContinueReadingButtonSizeLarge,

@@ -15,6 +15,9 @@ package eu.kanade.presentation.miuix
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.offset
 import androidx.compose.material3.Icon
+import androidx.compose.material3.LocalContentColor
+import androidx.compose.material3.LocalTextStyle
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawWithCache
@@ -31,6 +34,8 @@ import androidx.compose.ui.graphics.drawscope.clipPath
 import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 
@@ -168,6 +173,44 @@ fun MetalEngravedIcon(
             painter = painter,
             contentDescription = contentDescription,
             tint = tint,
+        )
+    }
+}
+
+/**
+ * 刻进去的文字：主字 + 上沿暗边 + 下沿亮边——刻痕的横截面，光从
+ * 上面来，上暗下亮。单靠 TextStyle 的阴影只有下沿亮边，在亮金属
+ * 上几乎看不见，所以再叠一层暗字错开 1px 放在上面。两层字，同一行，
+ * 换行与省略和单层字一样。
+ */
+@Composable
+fun MetalEngravedText(
+    text: String,
+    modifier: Modifier = Modifier,
+    color: Color = LocalContentColor.current,
+    style: TextStyle = LocalTextStyle.current,
+    isDark: Boolean,
+    minLines: Int = 1,
+    maxLines: Int = Int.MAX_VALUE,
+    overflow: TextOverflow = TextOverflow.Ellipsis,
+) {
+    Box(modifier = modifier) {
+        Text(
+            text = text,
+            color = Color.Black.copy(alpha = if (isDark) 0.4f else 0.35f),
+            style = style,
+            minLines = minLines,
+            maxLines = maxLines,
+            overflow = overflow,
+            modifier = Modifier.offset(y = (-1).dp),
+        )
+        Text(
+            text = text,
+            color = color,
+            style = style.copy(shadow = metalEngravedShadow(isDark)),
+            minLines = minLines,
+            maxLines = maxLines,
+            overflow = overflow,
         )
     }
 }
