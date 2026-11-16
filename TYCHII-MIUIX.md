@@ -1662,6 +1662,12 @@ Explore) are unchanged. Untested — needs a rebuild: check the fade
 over busy covers and whether 12.dp costs anything noticeable while
 scrolling.
 
+## Top fade blur back to 8.dp (2026-11-16)
+
+12.dp was tried and reverted the same day at the user's request —
+the fade is back at 8.dp, and the shared recipe comment in
+`LiquidGlass.kt` is restored to match. No other change.
+
 ## Build fixes
 
 - 2026-11-14: the Explore capsule called `stringResource(...)` for the
