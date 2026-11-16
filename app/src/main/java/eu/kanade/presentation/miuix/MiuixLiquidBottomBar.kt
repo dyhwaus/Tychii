@@ -126,7 +126,6 @@ internal val LocalBottomBarForceActiveTab = staticCompositionLocalOf { false }
  * @param backdrop 页面内容的模糊源
  * @param tabsCount Tab 数量（拖动范围 0..tabsCount-1）
  * @param isBlurEnabled 是否启用玻璃（关闭时退化为纯色胶囊）
- * @param isMetal 是否启用拉丝金属：底栏是金属面，选中 pill 是冲压下去的凹槽
  * @param containerAlpha 玻璃关闭时容器色的不透明度：1f 为不透明，0.75f 为半透明
  * @param isDark 深色主题：决定薄纱是提亮还是压暗
  */
@@ -141,7 +140,6 @@ internal fun MiuixLiquidBottomBar(
     tabsCount: Int,
     isDark: Boolean,
     isBlurEnabled: Boolean = true,
-    isMetal: Boolean = false,
     containerAlpha: Float = 1f,
     content: @Composable RowScope.() -> Unit,
 ) {
@@ -333,8 +331,6 @@ internal fun MiuixLiquidBottomBar(
                             },
                             onDrawSurface = { drawRect(containerColor) },
                         )
-                    } else if (isMetal) {
-                        Modifier.metalSurface(pillShape, isDark)
                     } else {
                         Modifier.background(containerColor, pillShape)
                     },
@@ -489,26 +485,6 @@ internal fun MiuixLiquidBottomBar(
                                 alpha = dampedDragAnimation.pressProgress,
                             )
                         }
-                        .height(56.dp)
-                        .width(tabWidthDp),
-                )
-            } else if (isMetal) {
-                // 金属模式的选中态不是一块玻璃 pill，而是冲压下去的
-                // 凹槽：暗一档 + 内阴影。位置和拖动和玻璃 pill 一样。
-                Box(
-                    Modifier
-                        .padding(horizontal = 4.dp)
-                        .graphicsLayer {
-                            val progressOffset = dampedDragAnimation.value * tabWidthPx
-                            translationX = if (isLtr) {
-                                progressOffset + panelOffset
-                            } else {
-                                -progressOffset + panelOffset
-                            }
-                        }
-                        .then(dampedDragAnimation.modifier)
-                        .clip(pillShape)
-                        .metalRecess(pillShape, isDark)
                         .height(56.dp)
                         .width(tabWidthDp),
                 )

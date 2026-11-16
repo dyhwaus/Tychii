@@ -10,7 +10,6 @@
 
 package eu.kanade.presentation.miuix
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.offset
 import androidx.compose.material3.Icon
@@ -107,18 +106,6 @@ fun Modifier.metalSurface(shape: Shape, isDark: Boolean): Modifier = this.then(
             )
         }
     },
-)
-
-/** 金属凹槽：暗一档的底色 + 内阴影，像冲压下去的一块。 */
-fun Modifier.metalRecess(shape: Shape, isDark: Boolean): Modifier = this.then(
-    Modifier
-        .background(if (isDark) MetalRecessDark else MetalRecessLight, shape)
-        .innerShadow(shape) {
-            InnerShadow(
-                radius = 8.dp,
-                color = Color.Black.copy(alpha = 0.25f),
-            )
-        },
 )
 
 /** 刻痕下方的亮边：光打在毛刺上，1px，硬边不模糊。 */
