@@ -2088,6 +2088,20 @@ badges are right, and the glass bar still works when switched back.
 
 ## Build fixes
 
+- 2026-11-16: the metal material used the wrong `Shadow`: there are
+  two classes with that name — `androidx.compose.ui.graphics.Shadow`
+  (the text shadow `TextStyle` takes) and
+  `androidx.compose.ui.graphics.shadow.Shadow` (the drop shadow the
+  `dropShadow` modifier takes). `metalEngravedShadow()` returned the
+  drop-shadow one, so `TextStyle.copy(shadow = ...)` rejected it at
+  MangaScreen:383, MetalTabBar:153 and MiuixCapsuleTitle:99 ("Argument
+  type mismatch ... `Shadow?` was expected"). Fixed by importing the
+  text `Shadow` in MetalMaterial.kt. The same file also missed the
+  `clipPath` import (`androidx.compose.ui.graphics.drawscope.clipPath`,
+  MetalMaterial:84 — it is a DrawScope extension, not a member).
+  Fixed in f3d0464f. Line numbers matched the remote exactly, so these
+  were real errors in the current copy.
+
 - 2026-11-16: the chapter-card change imported `RectangleShape` from
   `androidx.compose.foundation.shape`, but it lives in
   `androidx.compose.ui.graphics` (`RoundedCornerShape` is the one in
