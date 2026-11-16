@@ -38,7 +38,8 @@ data class CapsuleAction(
 // Same material as the title capsule and the bottom bar: opaque is a
 // solid surfaceContainer, translucent is surfaceContainer at 0.75 alpha,
 // liquid glass blurs the page content behind it and refracts it at the
-// edges, like the bottom bar. In glass mode it consumes the shared
+// edges, like the bottom bar; brushed metal is an opaque textured
+// surface. In glass mode it consumes the shared
 // [backdrop], so — like the title capsule and the bottom bar — it must
 // stay OUTSIDE the layer recorded by `layerBackdrop` (HomeScreen
 // renders it as an overlay, never inside a tab's toolbar or content),
@@ -57,11 +58,15 @@ fun MiuixFloatingCapsule(
     modifier: Modifier = Modifier,
 ) {
     val isGlass = barStyle == BarStyle.LIQUID_GLASS
+    val isMetal = barStyle == BarStyle.METAL
+    val metalDark = metalIsDark()
     val surfaceContainer = MiuixTheme.colorScheme.surfaceContainer
     val containerColor = when (barStyle) {
         BarStyle.OPAQUE -> surfaceContainer
         BarStyle.TRANSLUCENT -> surfaceContainer.copy(alpha = 0.75f)
         BarStyle.LIQUID_GLASS -> surfaceContainer.copy(alpha = MiuixGlassSurfaceAlpha)
+        // Metal draws its own surface; this value is never used.
+        BarStyle.METAL -> surfaceContainer
     }
     // A vertical pill: the icon buttons are ~40.dp wide, so 24.dp is
     // (close to) half the width — a capsule radius. RoundedCornerShape,
@@ -101,6 +106,8 @@ fun MiuixFloatingCapsule(
                     highlight = { highlight?.copy(alpha = 0.66f) },
                     onDrawSurface = { drawRect(containerColor) },
                 )
+            } else if (isMetal) {
+                Modifier.metalSurface(shape, metalDark)
             } else {
                 Modifier.background(containerColor, shape)
             },
@@ -117,11 +124,20 @@ fun MiuixFloatingCapsule(
                     action.onClick()
                 },
             ) {
-                Icon(
-                    imageVector = action.icon,
-                    contentDescription = action.contentDescription,
-                    tint = action.tint ?: MiuixTheme.colorScheme.onSurface,
-                )
+                if (isMetal) {
+                    MetalEngravedIcon(
+                        imageVector = action.icon,
+                        contentDescription = action.contentDescription,
+                        tint = action.tint ?: MiuixTheme.colorScheme.onSurface,
+                        isDark = metalDark,
+                    )
+                } else {
+                    Icon(
+                        imageVector = action.icon,
+                        contentDescription = action.contentDescription,
+                        tint = action.tint ?: MiuixTheme.colorScheme.onSurface,
+                    )
+                }
             }
         }
     }

@@ -26,9 +26,11 @@ import top.yukonga.miuix.kmp.theme.MiuixTheme
  *
  * Follows the same [BarStyle] as the bottom bar: opaque is a solid
  * surfaceContainer, translucent is surfaceContainer at 0.75 alpha, liquid
- * glass blurs the page content behind it. In glass mode it consumes the
- * shared [backdrop], so it must stay OUTSIDE the layer recorded by
- * `layerBackdrop` (like the bottom bar): never place it inside a tab's
+ * glass blurs the page content behind it, brushed metal is an opaque
+ * textured surface (no backdrop sampling).
+ *
+ * In glass mode it consumes the shared [backdrop], so it must stay
+ * OUTSIDE the layer recorded by `layerBackdrop` (like the bottom bar): never place it inside a tab's
  * toolbar or content, or it will blur itself and crash hwui (infinite
  * recursion in RenderNode::prepareTreeImpl).
  *
@@ -45,11 +47,15 @@ fun MiuixCapsuleTitle(
     modifier: Modifier = Modifier,
 ) {
     val isGlass = barStyle == BarStyle.LIQUID_GLASS
+    val isMetal = barStyle == BarStyle.METAL
+    val metalDark = metalIsDark()
     val surfaceContainer = MiuixTheme.colorScheme.surfaceContainer
     val containerColor = when (barStyle) {
         BarStyle.OPAQUE -> surfaceContainer
         BarStyle.TRANSLUCENT -> surfaceContainer.copy(alpha = 0.75f)
         BarStyle.LIQUID_GLASS -> surfaceContainer.copy(alpha = MiuixGlassSurfaceAlpha)
+        // Metal draws its own surface; this value is never used.
+        BarStyle.METAL -> surfaceContainer
     }
     // ~40.dp tall pill (titleMedium + 8.dp vertical padding): 20.dp is a
     // perfect capsule radius. RoundedCornerShape, not CircleShape, so the
@@ -79,6 +85,8 @@ fun MiuixCapsuleTitle(
                     highlight = { highlight?.copy(alpha = 0.64f) },
                     onDrawSurface = { drawRect(containerColor) },
                 )
+            } else if (isMetal) {
+                Modifier.metalSurface(shape, metalDark)
             } else {
                 Modifier.background(containerColor, shape)
             },
@@ -87,7 +95,11 @@ fun MiuixCapsuleTitle(
     ) {
         Text(
             text = title,
-            style = MaterialTheme.typography.titleMedium,
+            style = if (isMetal) {
+                MaterialTheme.typography.titleMedium.copy(shadow = metalEngravedShadow(metalDark))
+            } else {
+                MaterialTheme.typography.titleMedium
+            },
             color = MiuixTheme.colorScheme.onSurface,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,

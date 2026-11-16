@@ -10,6 +10,8 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.luminance
+import androidx.compose.ui.graphics.shadow.Shadow
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import eu.kanade.domain.ui.model.BarStyle
@@ -28,9 +30,10 @@ import top.yukonga.miuix.kmp.theme.MiuixTheme
  *
  * The bar follows the same [BarStyle] as the title capsule: opaque is a
  * solid surfaceContainer, translucent is surfaceContainer at 0.75 alpha,
- * liquid glass blurs the page content behind it. [barStyle] is already the
- * effective style (liquid glass resolved to translucent on API < 32 by the
- * caller), so glass here always means the device supports it.
+ * liquid glass blurs the page content behind it, brushed metal is an
+ * opaque textured surface. [barStyle] is already the effective style
+ * (liquid glass resolved to translucent on API < 32 by the caller), so
+ * glass here always means the device supports it.
  *
  * Tab width: 5 tabs share the capsule by weight, with a 64.dp minimum per
  * tab (5 x 64.dp = 320.dp, fits narrow phones; Wenku8Reader used 76.dp
@@ -49,6 +52,7 @@ fun TychiiLiquidBar(
     modifier: Modifier = Modifier,
 ) {
     val isDark = MiuixTheme.colorScheme.background.luminance() < 0.5f
+    val isMetal = barStyle == BarStyle.METAL
     // The capsule floats above the gesture bar, like Wenku8Reader.
     Box(
         modifier = modifier.padding(
@@ -67,11 +71,14 @@ fun TychiiLiquidBar(
             tabsCount = tabs.size,
             isDark = isDark,
             isBlurEnabled = barStyle == BarStyle.LIQUID_GLASS,
+            isMetal = isMetal,
             containerAlpha = when (barStyle) {
                 BarStyle.OPAQUE -> 1f
                 BarStyle.TRANSLUCENT -> 0.75f
                 // Ignored when blur is on (the glass container is 0.4 alpha).
                 BarStyle.LIQUID_GLASS -> 1f
+                // Ignored in metal mode (the metal surface has its own colors).
+                BarStyle.METAL -> 1f
             },
         ) {
             tabs.forEachIndexed { index, tab ->
@@ -95,18 +102,31 @@ fun TychiiLiquidBar(
                     BadgedBox(
                         badge = { badge?.invoke() },
                     ) {
-                        Icon(
-                            painter = tab.options.icon!!,
-                            contentDescription = tab.options.title,
-                            modifier = Modifier.size(24.dp),
-                            tint = tint,
-                        )
+                        if (isMetal) {
+                            MetalEngravedIcon(
+                                painter = tab.options.icon!!,
+                                contentDescription = tab.options.title,
+                                tint = tint,
+                                isDark = isDark,
+                                modifier = Modifier.size(24.dp),
+                            )
+                        } else {
+                            Icon(
+                                painter = tab.options.icon!!,
+                                contentDescription = tab.options.title,
+                                modifier = Modifier.size(24.dp),
+                                tint = tint,
+                            )
+                        }
                     }
                     if (showLabels) {
                         Text(
                             text = tab.options.title,
-                            fontSize = 11.sp,
-                            lineHeight = 14.sp,
+                            style = TextStyle(
+                                fontSize = 11.sp,
+                                lineHeight = 14.sp,
+                                shadow = if (isMetal) metalEngravedShadow(isDark) else Shadow(),
+                            ),
                             color = tint,
                             maxLines = 1,
                         )

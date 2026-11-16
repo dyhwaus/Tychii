@@ -73,10 +73,14 @@ import eu.kanade.presentation.manga.components.MangaChapterListItem
 import eu.kanade.presentation.manga.components.MangaInfoBox
 import eu.kanade.presentation.manga.components.MangaToolbar
 import eu.kanade.presentation.manga.components.MissingChapterCountListItem
+import eu.kanade.presentation.miuix.MetalEngravedIcon
 import eu.kanade.presentation.miuix.MiuixGlassBlurRadius
 import eu.kanade.presentation.miuix.MiuixGlassChromaticAberration
 import eu.kanade.presentation.miuix.MiuixGlassSurfaceAlpha
 import eu.kanade.presentation.miuix.lens
+import eu.kanade.presentation.miuix.metalEngravedShadow
+import eu.kanade.presentation.miuix.metalIsDark
+import eu.kanade.presentation.miuix.metalSurface
 import eu.kanade.presentation.miuix.rememberTiltBrightHighlight
 import eu.kanade.presentation.miuix.vibrancy
 import eu.kanade.presentation.theme.isMiuixGlassSupported
@@ -264,8 +268,8 @@ fun MangaScreen(
 }
 
 // The start/resume button as a floating pill in the navigation bar's
-// material: primaryContainer, translucent or liquid glass per the bar
-// style — never the blue M3 FAB.
+// material: primaryContainer, translucent, liquid glass or brushed
+// metal per the bar style — never the blue M3 FAB.
 @Composable
 private fun MangaStartButton(
     label: String,
@@ -276,6 +280,8 @@ private fun MangaStartButton(
     modifier: Modifier = Modifier,
 ) {
     val isGlass = barStyle == BarStyle.LIQUID_GLASS
+    val isMetal = barStyle == BarStyle.METAL
+    val metalDark = metalIsDark()
     // The button is a call to action, not a passive bar, so it keeps the
     // original FAB's primaryContainer instead of the shared glass veil:
     // surfaceContainer is the same color as the page background in this
@@ -289,6 +295,8 @@ private fun MangaStartButton(
         BarStyle.OPAQUE -> primaryContainer
         BarStyle.TRANSLUCENT -> primaryContainer.copy(alpha = 0.75f)
         BarStyle.LIQUID_GLASS -> primaryContainer.copy(alpha = MiuixGlassSurfaceAlpha)
+        // Metal draws its own surface; this value is never used.
+        BarStyle.METAL -> primaryContainer
     }
     // Fully rounded at 56.dp tall; RoundedCornerShape, not CircleShape,
     // so the backdrop shape stays a CornerBasedShape.
@@ -327,6 +335,17 @@ private fun MangaStartButton(
                         highlight = { highlight?.copy(alpha = 0.75f) },
                         onDrawSurface = { drawRect(containerColor) },
                     )
+            } else if (isMetal) {
+                Modifier
+                    .dropShadow(
+                        shape = shape,
+                        shadow = Shadow(
+                            radius = 10.dp,
+                            color = Color.Black,
+                            alpha = if (isDark) 0.2f else 0.1f,
+                        ),
+                    )
+                    .metalSurface(shape, metalDark)
             } else {
                 Modifier.background(containerColor, shape)
             },
@@ -337,11 +356,20 @@ private fun MangaStartButton(
         contentAlignment = Alignment.Center,
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Icon(
-                imageVector = MaterialSymbols.RoundedFilled.PlayArrow,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.onPrimaryContainer,
-            )
+            if (isMetal) {
+                MetalEngravedIcon(
+                    imageVector = MaterialSymbols.RoundedFilled.PlayArrow,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                    isDark = metalDark,
+                )
+            } else {
+                Icon(
+                    imageVector = MaterialSymbols.RoundedFilled.PlayArrow,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                )
+            }
             AnimatedVisibility(
                 visible = expanded,
                 enter = fadeIn() + expandHorizontally(),
@@ -351,7 +379,11 @@ private fun MangaStartButton(
                     text = label,
                     modifier = Modifier.padding(start = 8.dp),
                     color = MaterialTheme.colorScheme.onPrimaryContainer,
-                    style = MaterialTheme.typography.labelLarge,
+                    style = if (isMetal) {
+                        MaterialTheme.typography.labelLarge.copy(shadow = metalEngravedShadow(metalDark))
+                    } else {
+                        MaterialTheme.typography.labelLarge
+                    },
                 )
             }
         }

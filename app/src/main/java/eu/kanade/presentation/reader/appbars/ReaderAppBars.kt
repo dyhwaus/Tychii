@@ -39,6 +39,8 @@ import eu.kanade.presentation.miuix.MiuixGlassBlurRadius
 import eu.kanade.presentation.miuix.MiuixGlassChromaticAberration
 import eu.kanade.presentation.miuix.MiuixGlassSurfaceAlpha
 import eu.kanade.presentation.miuix.lens
+import eu.kanade.presentation.miuix.metalIsDark
+import eu.kanade.presentation.miuix.metalSurface
 import eu.kanade.presentation.miuix.rememberTiltBrightHighlight
 import eu.kanade.presentation.miuix.vibrancy
 import eu.kanade.presentation.reader.components.ChapterNavigator
@@ -91,8 +93,8 @@ fun ReaderAppBars(
     // The bars float over the manga page: in liquid glass mode they use
     // the same frosted material as the bottom bar and capsules (blur +
     // vibrancy + lens + tilt highlight over a surface veil), otherwise
-    // the solid/translucent surface of the global bar style. Both bars
-    // are floating pills now — the same capsule language as the title and
+    // the solid/translucent surface — or the brushed-metal surface — of
+    // the global bar style. Both bars are floating pills now — the same
     // action capsules elsewhere — instead of full-width sharp bands,
     // with the chapter navigator pill lined up on the same side
     // margins.
@@ -123,6 +125,8 @@ fun ReaderAppBars(
             highlight = { highlight?.copy(alpha = 0.75f) },
             onDrawSurface = { drawRect(containerColor) },
         )
+    } else if (barStyle == BarStyle.METAL) {
+        Modifier.metalSurface(pillShape, metalIsDark())
     } else {
         Modifier.background(containerColor, pillShape)
     }

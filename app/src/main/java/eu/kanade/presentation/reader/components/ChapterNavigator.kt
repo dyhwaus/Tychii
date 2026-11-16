@@ -41,10 +41,14 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import eu.kanade.domain.ui.model.BarStyle
+import eu.kanade.presentation.miuix.MetalRecessDark
+import eu.kanade.presentation.miuix.MetalRecessLight
 import eu.kanade.presentation.miuix.MiuixGlassBlurRadius
 import eu.kanade.presentation.miuix.MiuixGlassChromaticAberration
 import eu.kanade.presentation.miuix.MiuixGlassSurfaceAlpha
 import eu.kanade.presentation.miuix.lens
+import eu.kanade.presentation.miuix.metalIsDark
+import eu.kanade.presentation.miuix.metalSurface
 import eu.kanade.presentation.miuix.rememberTiltBrightHighlight
 import eu.kanade.presentation.miuix.vibrancy
 import eu.kanade.presentation.theme.TachiyomiPreviewTheme
@@ -117,14 +121,17 @@ fun ChapterNavigator(
 
     // Same frosted material as the reader bars and the bottom bar: in
     // liquid glass mode the slider pill blurs the page behind it,
-    // otherwise it keeps the solid/translucent surface of the global
-    // bar style.
+    // otherwise it keeps the solid/translucent surface — or the
+    // brushed-metal surface — of the global bar style.
     val glassBackdrop = if (barStyle == BarStyle.LIQUID_GLASS) backdrop else null
     val isGlass = glassBackdrop != null
     val surfaceContainer = MiuixTheme.colorScheme.surfaceContainer
     val containerColor = when {
         isGlass -> surfaceContainer.copy(alpha = MiuixGlassSurfaceAlpha)
         barStyle == BarStyle.OPAQUE -> surfaceContainer
+        // The prev/next buttons sit on the metal pill: a darker metal
+        // tone, like the stamped recess in the bottom bar.
+        barStyle == BarStyle.METAL -> if (metalIsDark()) MetalRecessDark else MetalRecessLight
         else -> surfaceContainer.copy(alpha = 0.75f)
     }
     val sliderShape = remember { RoundedCornerShape(24.dp) }
@@ -146,6 +153,8 @@ fun ChapterNavigator(
             highlight = { highlight?.copy(alpha = 0.75f) },
             onDrawSurface = { drawRect(containerColor) },
         )
+    } else if (barStyle == BarStyle.METAL) {
+        Modifier.metalSurface(sliderShape, metalIsDark())
     } else {
         Modifier.background(containerColor, sliderShape)
     }

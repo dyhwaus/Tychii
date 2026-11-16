@@ -535,7 +535,7 @@ private fun FilterButton(
     val colorScheme = MiuixTheme.colorScheme
     val containerColor = when (barStyle) {
         BarStyle.OPAQUE -> colorScheme.surfaceContainer
-        BarStyle.TRANSLUCENT, BarStyle.LIQUID_GLASS -> colorScheme.surfaceContainer.copy(alpha = 0.75f)
+        BarStyle.TRANSLUCENT, BarStyle.LIQUID_GLASS, BarStyle.METAL -> colorScheme.surfaceContainer.copy(alpha = 0.75f)
     }
     val contentColor = if (selected) colorScheme.primary else colorScheme.onSurface
     val shape = RoundedCornerShape(12.dp)
