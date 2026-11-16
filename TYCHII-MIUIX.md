@@ -1771,6 +1771,15 @@ actions, and the missing-chapters row all on the card surface).
 
 ## Build fixes
 
+- 2026-11-16: the chapter-card change imported `RectangleShape` from
+  `androidx.compose.foundation.shape`, but it lives in
+  `androidx.compose.ui.graphics` (`RoundedCornerShape` is the one in
+  `foundation.shape`), so both chapter item files failed with
+  "Unresolved reference 'RectangleShape'". Fixed by moving the import
+  to `androidx.compose.ui.graphics.RectangleShape` in
+  MangaChapterListItem.kt and MissingChapterCountListItem.kt (ad14c2d0).
+
+
 - 2026-11-14: the Explore capsule called `stringResource(...)` for the
   two `contentDescription`s directly inside the `LaunchedEffect` that
   reports the actions — but `stringResource` is @Composable and a
