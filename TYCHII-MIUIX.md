@@ -2004,6 +2004,55 @@ Untested — needs a rebuild: switch sort order or category and check
 the list updates without the visible cards flickering or reloading
 their covers.
 
+## Brushed metal: a fourth bar style (2026-11-16)
+
+The user asked for a skeuomorphic material as Tychii's signature.
+After two rounds of discussion (first three theme directions, then a
+correction: the material itself must be skeuomorphic, not the
+decoration; then three materials — paper / leather / metal) the user
+picked brushed metal, cold grey.
+
+The material, code 7b68b6b3:
+- New `presentation/miuix/MetalMaterial.kt`: a vertical micro-gradient
+  base (light #ECEDEF→#D2D4D8, dark graphite #2C2E31→#1D1F21), fine
+  horizontal brush lines (1px, black/white alternating, alpha 0.02–0.07
+  from a per-line hash so the texture is stable across frames), a 1px
+  chamfer (bright top edge, dark bottom edge, following the rounded
+  outline), a static diagonal sheen (white 0.06, top-left), and engraved
+  text/icons (dark cut + a 1px light burr below). All drawn in Compose
+  with gradients and lines — no bitmap textures.
+- `BarStyle.METAL` joins OPAQUE / TRANSLUCENT / LIQUID_GLASS; the
+  Appearance setting lists it automatically (it iterates
+  BarStyle.entries). Strings: base "Metal", zh-rCN "金属". Metal needs
+  no API 32 gate, so it runs on any API level; the glass note still
+  shows only for liquid glass.
+- The five glass pieces render metal: bottom bar (metal surface, and
+  the selected tab is a stamped recess — darker + inner shadow —
+  instead of the glass pill; drag still works), title capsule (metal
+  surface, engraved title), action capsule (metal surface, engraved
+  icons), start button (metal surface + the bar's 10.dp drop shadow,
+  engraved play icon and label), reader bars and chapter navigator
+  (metal surface; the navigator's prev/next buttons take the darker
+  recess tone). Shapes, layout and corner radii are unchanged.
+- Metal is opaque, so nothing samples the backdrop in this mode: the
+  layerBackdrop gates (HomeScreen, Explore, detail page, reader)
+  already only record for LIQUID_GLASS, so recording is simply off —
+  the per-frame re-record cost disappears. TopFadeBlur falls back to
+  its plain gradient veil (its non-glass branch). The Explore filter
+  chips stay flat (0.75 surfaceContainer) — they sit on the top bar,
+  not floating.
+- Deliberately not done: engraving the reader bars' icons and title —
+  they come from the shared AppBar components (UpIcon, AppBarTitle,
+  AppBarActions) used on other pages too, so engraving them would leak
+  the metal treatment onto non-metal pages. The reader bars get the
+  metal surface only.
+
+Untested — needs a rebuild: switch the bar style to Metal in
+Settings → Appearance and check the bar, capsules, start button and
+reader bars read as brushed metal in both themes, the selected tab
+reads as a recess with a crisp icon, the engraved text is legible,
+and the glass options still work when switched back.
+
 ## Build fixes
 
 - 2026-11-16: the chapter-card change imported `RectangleShape` from
