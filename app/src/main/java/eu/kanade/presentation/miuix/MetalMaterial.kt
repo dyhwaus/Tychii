@@ -1,9 +1,9 @@
-// 铬金属：Tychii 的拟物材质。冷灰，不掺金不掺铜，贴合黑白。
+// 铝合金：Tychii 的拟物材质。冷灰，不掺金不掺铜，贴合黑白。
 //
 // 和液态玻璃是两种物理逻辑：玻璃透明，透出背后的页面；金属不透明，
-// 靠表面质感立起来——纵向带状渐变打底，亮带与暗反射带交错，像镜面
-// 映着天光与地平线；铬是抛光面，没有拉丝；上下倒角，左上一道静态
-// 柔光。文字和图标是刻进去的：深色刻痕，下方 1px 亮边。
+// 靠表面质感立起来——纵向柔和渐变打底，细腻的缎面纹理，上下倒角，
+// 左上一道静态柔光。铝比铬柔：没有镜面的亮带与暗反射带，颜色均匀，
+// 纹理细而淡。文字和图标是刻进去的：深色刻痕，下方 1px 亮边。
 // 金属件的选中态是凸起的开关（底栏）或压下去的凹槽（章节导航），
 // 不是一块玻璃 pill。
 //
@@ -34,22 +34,12 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 
-// 基底：纵向带状渐变，亮带与暗反射带交错——铬是镜面，映的是天光
-// 与地平线。亮色比拉丝版高一档，中间的暗带是反射的地平线。
-val MetalLightBands = listOf(
-    Color(0xFFFBFCFD),
-    Color(0xFFE9EDF1),
-    Color(0xFFC4CBD3),
-    Color(0xFFF4F7F9),
-    Color(0xFFC7CED5),
-)
-val MetalDarkBands = listOf(
-    Color(0xFF4A4E54),
-    Color(0xFF33363B),
-    Color(0xFF1E2023),
-    Color(0xFF3D4046),
-    Color(0xFF26282C),
-)
+// 基底：纵向柔和渐变，上亮下暗，像光从上面落下来。铝的颜色均匀，
+// 没有铬的亮带与暗反射带；比原来的拉丝钢亮一档，对比更低。
+val MetalLightTop = Color(0xFFF3F4F6)
+val MetalLightBottom = Color(0xFFDCDEE1)
+val MetalDarkTop = Color(0xFF34373B)
+val MetalDarkBottom = Color(0xFF222427)
 
 // 凹槽的底色：比基底暗一档，配内阴影就是冲压下去的样子。
 val MetalRecessLight = Color(0xFFC2C4C8)
@@ -60,7 +50,7 @@ val MetalRecessDark = Color(0xFF17191B)
 fun metalIsDark(): Boolean = MiuixTheme.colorScheme.background.luminance() < 0.5f
 
 /**
- * 铬金属表面：带状渐变基底 + 左上柔光 + 上下倒角。
+ * 铝合金表面：柔和渐变基底 + 细腻缎面纹理 + 左上柔光 + 上下倒角。
  * 只画表面，不带阴影——浮起的阴影由调用方按原来的方式加。
  */
 fun Modifier.metalSurface(shape: Shape, isDark: Boolean): Modifier = this.then(
@@ -74,26 +64,44 @@ fun Modifier.metalSurface(shape: Shape, isDark: Boolean): Modifier = this.then(
             }
         }
         val base = Brush.verticalGradient(
-            colors = if (isDark) MetalDarkBands else MetalLightBands,
+            0f to if (isDark) MetalDarkTop else MetalLightTop,
+            1f to if (isDark) MetalDarkBottom else MetalLightBottom,
         )
-        // 倒角：上沿亮线，下沿暗线，沿着圆角走。铬的边比拉丝亮。
+        // 倒角：上沿亮线，下沿暗线，沿着圆角走。铝的边比铬柔。
         val chamfer = Brush.verticalGradient(
-            0f to Color.White.copy(alpha = 0.7f),
+            0f to Color.White.copy(alpha = 0.4f),
             0.45f to Color.Transparent,
-            1f to Color.Black.copy(alpha = 0.45f),
+            1f to Color.Black.copy(alpha = 0.3f),
         )
-        // 左上斜柔光，静态，不跟手。铬面反光强，比拉丝版亮一档。
+        // 左上斜柔光，静态，不跟手。
         val sheen = Brush.linearGradient(
             colors = listOf(
-                Color.White.copy(alpha = 0.1f),
+                Color.White.copy(alpha = 0.06f),
                 Color.Transparent,
             ),
             start = Offset.Zero,
             end = Offset(size.width * 0.7f, size.height),
         )
+        val spacing = 2.dp.toPx()
+        val lineCount = (size.height / spacing).toInt() + 1
         onDrawBehind {
             clipPath(path) {
                 drawRect(brush = base)
+                // 缎面纹理：1px 横线，黑白交错，比拉丝钢细而淡——
+                // 铝是细腻的哑光面，不是粗拉丝。每条的 alpha 由行号
+                // 的哈希定——固定下来，跨帧不闪。
+                for (i in 0 until lineCount) {
+                    val y = i * spacing
+                    val hash = ((i * 2654435761L) % 1000L) / 1000f
+                    val alpha = 0.01f + hash * 0.02f
+                    val color = if (i % 2 == 0) Color.White else Color.Black
+                    drawLine(
+                        color = color.copy(alpha = alpha),
+                        start = Offset(0f, y),
+                        end = Offset(size.width, y),
+                        strokeWidth = 1f,
+                    )
+                }
                 drawRect(brush = sheen)
             }
             drawOutline(
