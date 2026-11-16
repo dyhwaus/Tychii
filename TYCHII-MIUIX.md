@@ -1769,6 +1769,64 @@ Untested — needs a rebuild: check the card reads as one piece over a
 long list (first/last corners, dividers, selection tint, swipe
 actions, and the missing-chapters row all on the card surface).
 
+## Liquid glass: WeKite recipe and a draggable pill that refracts the active tab (2026-11-16)
+
+The user asked whether the liquid glass could match
+SymonChu/WeKite's. Research first: WeKite's glass is the same engine
+family as Tychii's (both adapted from Kyant0/AndroidLiquidGlass via
+InstallerX-Revived), so there is no new engine to swap in — what
+differs is the recipe and the bottom bar's selected pill. WeKite's
+lens shader is the older 7-sample dispersion version; Tychii keeps
+the user's own 3-sample Fresnel tune. WeKite's ViewBackdrop (sampling
+a native View, for glass floating over WeChat's own views) does not
+apply here — Tychii's content is all Compose. The user picked the
+middle of three options offered: recipe + draggable pill (not just
+parameters, not the full port with a slimmer bar and a blur-radius
+setting).
+
+Recipe (all in `LiquidGlass.kt`, shared by every glass piece): blur
+6.dp → 8.dp, veil 0.26 → 0.4, vibrancy saturation 1.18 → 1.5.
+The bar's lens is now 24/24 with no depth effect and no chromatic
+aberration (was 18/12 + depth + 0.14). The shared chromatic
+aberration stays 0.14 for the title capsule, side capsule, start
+button and reader bars; the pill gets its own constant,
+`MiuixGlassPillChromaticAberration = 0.5f`. The tilt-following
+specular highlight is unchanged (WeKite uses Miuix's built-in
+Highlight; ours is the more involved one).
+
+Pill (in `MiuixLiquidBottomBar.kt`, new `liquid/CombinedBackdrop.kt`
+ported from WeKite with its attribution header): the pill now samples
+a combined backdrop — the page plus a second layer that records the
+tab strip a second time with every tab drawn in the accent colour.
+That layer is an invisible Row (`alpha(0f)`, semantics cleared, no
+click handling) the same size and position as the pill (56.dp tall,
+4.dp side padding), rendered with all tabs forced active via a new
+`LocalBottomBarForceActiveTab` CompositionLocal that
+`TychiiLiquidBar.kt` reads for the tab tint. The pill's lens is now
+WeKite's: (10*pressProgress, 14*pressProgress, depth, chroma 0.5) —
+zero at rest, opening only while pressing or dragging. Its surface
+veil is WeKite's too (black/white 0.1 fading out with press, plus
+black 0.03*press); the flat accent tint is gone, because the
+selection colour now comes from the refracted active icon itself.
+Inner shadow is 8.dp*press, black 0.15 (was 6.dp, 0.12).
+Deliberately NOT ported from WeKite: the active layer records only
+the icons, with no second blur/lens/veil pass — an earlier Tychii
+version did the second glass pass and it cost too much GPU time;
+the pill refracts the page directly, as before.
+
+The drag itself is unchanged: the pill was already draggable
+(DampedDragAnimation with the rubber-band panel offset, press bulge
+and velocity squash came with the SukiSU port). What is new is what
+the pill shows while dragging: the active-coloured icon refracting
+inside it, instead of a flat tint.
+
+Untested — needs a rebuild: check the frostier veil and stronger
+saturation over busy covers, the pill at rest (clear lens, accent
+icon refracted inside), the pill while pressing/dragging (lens opens,
+chroma at the rim), and that a tap on an already-selected tab still
+reaches the tab (the invisible active layer must not eat taps; the
+visible content Row stays on top).
+
 ## Build fixes
 
 - 2026-11-16: the chapter-card change imported `RectangleShape` from
