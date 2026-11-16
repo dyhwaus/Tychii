@@ -75,6 +75,7 @@ import eu.kanade.presentation.manga.components.MangaToolbar
 import eu.kanade.presentation.manga.components.MissingChapterCountListItem
 import eu.kanade.presentation.miuix.MiuixGlassBlurRadius
 import eu.kanade.presentation.miuix.MiuixGlassChromaticAberration
+import eu.kanade.presentation.miuix.MiuixGlassSurfaceAlpha
 import eu.kanade.presentation.miuix.lens
 import eu.kanade.presentation.miuix.rememberTiltBrightHighlight
 import eu.kanade.presentation.miuix.vibrancy
@@ -263,7 +264,7 @@ fun MangaScreen(
 }
 
 // The start/resume button as a floating pill in the navigation bar's
-// material: surfaceContainer, translucent or liquid glass per the bar
+// material: primaryContainer, translucent or liquid glass per the bar
 // style — never the blue M3 FAB.
 @Composable
 private fun MangaStartButton(
@@ -279,13 +280,15 @@ private fun MangaStartButton(
     // original FAB's primaryContainer instead of the shared glass veil:
     // surfaceContainer is the same color as the page background in this
     // theme, so the shared veil can never lift the button off the page —
-    // that is why it read as a dark smudge. 0.75 keeps a hint of the
-    // blurred page behind it while the container color does the work.
+    // that is why it read as a dark smudge. In liquid-glass mode the
+    // veil uses the shared alpha (0.4) so the blurred page shows through
+    // like frosted glass; translucent mode keeps 0.75, where there is no
+    // blur and the label needs the opacity.
     val primaryContainer = MaterialTheme.colorScheme.primaryContainer
     val containerColor = when (barStyle) {
         BarStyle.OPAQUE -> primaryContainer
         BarStyle.TRANSLUCENT -> primaryContainer.copy(alpha = 0.75f)
-        BarStyle.LIQUID_GLASS -> primaryContainer.copy(alpha = 0.75f)
+        BarStyle.LIQUID_GLASS -> primaryContainer.copy(alpha = MiuixGlassSurfaceAlpha)
     }
     // Fully rounded at 56.dp tall; RoundedCornerShape, not CircleShape,
     // so the backdrop shape stays a CornerBasedShape.
