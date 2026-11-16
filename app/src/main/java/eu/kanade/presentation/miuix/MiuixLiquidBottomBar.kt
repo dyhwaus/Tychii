@@ -270,8 +270,8 @@ internal fun MiuixLiquidBottomBar(
                                 vibrancy()
                                 blur(MiuixGlassBlurRadius.toPx(), MiuixGlassBlurRadius.toPx())
                                 lens(
-                                    refractionHeight = 24.dp.toPx(),
-                                    refractionAmount = 24.dp.toPx(),
+                                    refractionHeight = 18.dp.toPx(),
+                                    refractionAmount = 12.dp.toPx(),
                                     depthEffect = true,
                                     chromaticAberration = MiuixGlassChromaticAberration,
                                 )
@@ -330,8 +330,8 @@ internal fun MiuixLiquidBottomBar(
                             effects = {
                                 val progress = dampedDragAnimation.pressProgress
                                 lens(
-                                    refractionHeight = 10.dp.toPx() * progress,
-                                    refractionAmount = 14.dp.toPx() * progress,
+                                    refractionHeight = (8.dp + 4.dp * progress).toPx(),
+                                    refractionAmount = (7.dp + 5.dp * progress).toPx(),
                                     depthEffect = true,
                                     chromaticAberration = MiuixGlassChromaticAberration,
                                 )
@@ -351,14 +351,15 @@ internal fun MiuixLiquidBottomBar(
                                 // 选中的底色：一层半透明主题蓝，盖在折射后
                                 // 的页面上。之前只有 0.1f 的黑/白纱，pill
                                 // 在底栏里像一块透明的洞，选没选看不出来。
-                                drawRect(accentColor.copy(alpha = 0.2f))
-                                drawRect(Color.Black.copy(alpha = 0.03f * progress))
+                                drawRect(accentColor.copy(alpha = 0.11f + 0.035f * progress))
+                                drawRect(Color.Black.copy(alpha = 0.025f * progress))
+                                drawRect(Color.White.copy(alpha = 0.025f * (1f - progress)))
                             },
                         )
                         .innerShadow(shape = pillShape) {
                             InnerShadow(
-                                radius = 8.dp * dampedDragAnimation.pressProgress,
-                                color = Color.Black.copy(alpha = 0.15f),
+                                radius = 6.dp * dampedDragAnimation.pressProgress,
+                                color = Color.Black.copy(alpha = 0.12f),
                                 alpha = dampedDragAnimation.pressProgress,
                             )
                         }

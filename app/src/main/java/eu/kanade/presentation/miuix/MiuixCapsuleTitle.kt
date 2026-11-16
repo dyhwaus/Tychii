@@ -32,8 +32,10 @@ import top.yukonga.miuix.kmp.theme.MiuixTheme
  * toolbar or content, or it will blur itself and crash hwui (infinite
  * recursion in RenderNode::prepareTreeImpl).
  *
- * The glass here is blur + vibrancy + specular highlight only — no lens
- * refraction, so the small pill's text is never distorted at its edges.
+ * The glass here is blur + vibrancy + specular highlight, plus a
+ * very shallow lens (8.dp / 4.dp, chromatic aberration at a quarter
+ * of the shared value) — just enough for a glass edge, not enough to
+ * distort the small pill's text.
  */
 @Composable
 fun MiuixCapsuleTitle(
@@ -65,8 +67,16 @@ fun MiuixCapsuleTitle(
                     effects = {
                         vibrancy()
                         blur(MiuixGlassBlurRadius.toPx(), MiuixGlassBlurRadius.toPx())
+                        // Very shallow refraction keeps title glyphs crisp while
+                        // giving the capsule a real glass edge.
+                        lens(
+                            refractionHeight = 8.dp.toPx(),
+                            refractionAmount = 4.dp.toPx(),
+                            depthEffect = true,
+                            chromaticAberration = MiuixGlassChromaticAberration * 0.25f,
+                        )
                     },
-                    highlight = { highlight?.copy(alpha = 0.75f) },
+                    highlight = { highlight?.copy(alpha = 0.64f) },
                     onDrawSurface = { drawRect(containerColor) },
                 )
             } else {

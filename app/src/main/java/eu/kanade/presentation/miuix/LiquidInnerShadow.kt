@@ -35,9 +35,9 @@ import androidx.compose.ui.unit.dp
 /** 内阴影参数：半径越大，边缘往里压得越深。 */
 @Immutable
 data class InnerShadow(
-    val radius: Dp = 24.dp,
-    val offset: DpOffset = DpOffset(0.dp, radius),
-    val color: Color = Color.Black.copy(alpha = 0.15f),
+    val radius: Dp = 18.dp,
+    val offset: DpOffset = DpOffset(0.dp, radius * 0.65f),
+    val color: Color = Color.Black.copy(alpha = 0.12f),
     val alpha: Float = 1f,
     val blendMode: BlendMode = DrawScope.DefaultBlendMode,
 ) {

@@ -4,10 +4,14 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.spring
 import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
@@ -17,6 +21,7 @@ import top.yukonga.miuix.kmp.blur.Backdrop
 import top.yukonga.miuix.kmp.blur.blur
 import top.yukonga.miuix.kmp.blur.drawBackdrop
 import top.yukonga.miuix.kmp.theme.MiuixTheme
+import kotlinx.coroutines.launch
 
 // One action in the floating capsule: an icon button. tint is null for
 // the default onSurface colour; a tab passes its accent tint when the
@@ -62,11 +67,18 @@ fun MiuixFloatingCapsule(
     // (close to) half the width — a capsule radius. RoundedCornerShape,
     // not CircleShape, so the backdrop shape stays a CornerBasedShape.
     val shape = remember { RoundedCornerShape(24.dp) }
+    val animationScope = rememberCoroutineScope()
+    val pressScale = remember { Animatable(1f) }
     // Only follow the tilt sensor in glass mode; opaque/translucent don't
     // draw a highlight at all.
     val highlight = if (isGlass) rememberTiltBrightHighlight() else null
     Column(
-        modifier = modifier.then(
+        modifier = modifier
+            .graphicsLayer {
+                scaleX = pressScale.value
+                scaleY = pressScale.value
+            }
+            .then(
             if (isGlass) {
                 Modifier.drawBackdrop(
                     backdrop = backdrop,
@@ -80,13 +92,13 @@ fun MiuixFloatingCapsule(
                         // CornerBasedShape, which the 24.dp rounded
                         // capsule is.
                         lens(
-                            refractionHeight = 24.dp.toPx(),
-                            refractionAmount = 24.dp.toPx(),
+                            refractionHeight = 16.dp.toPx(),
+                            refractionAmount = 10.dp.toPx(),
                             depthEffect = true,
                             chromaticAberration = MiuixGlassChromaticAberration,
                         )
                     },
-                    highlight = { highlight?.copy(alpha = 0.75f) },
+                    highlight = { highlight?.copy(alpha = 0.66f) },
                     onDrawSurface = { drawRect(containerColor) },
                 )
             } else {
@@ -96,7 +108,15 @@ fun MiuixFloatingCapsule(
             .padding(vertical = 4.dp),
     ) {
         actions.forEach { action ->
-            IconButton(onClick = action.onClick) {
+            IconButton(
+                onClick = {
+                    animationScope.launch {
+                        pressScale.animateTo(0.975f, spring(dampingRatio = 0.62f, stiffness = 650f))
+                        pressScale.animateTo(1f, spring(dampingRatio = 0.48f, stiffness = 420f))
+                    }
+                    action.onClick()
+                },
+            ) {
                 Icon(
                     imageVector = action.icon,
                     contentDescription = action.contentDescription,

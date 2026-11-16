@@ -38,20 +38,20 @@ import kotlin.math.sqrt
  * 上下两条亮边强度不同，玻璃看起来有厚度，而不只是描了一圈边。
  */
 val MiuixGlassSpecular: Highlight = Highlight(
-    width = 1.dp,
-    alpha = 1f,
+    width = 1.15.dp,
+    alpha = 0.92f,
     style = BloomStroke(
-        color = Color.White.copy(alpha = 0.12f),
-        innerBlurRadius = 2.0.dp,
+        color = Color.White.copy(alpha = 0.17f),
+        innerBlurRadius = 2.8.dp,
         primaryLight = LightSource(
             position = LightPosition(0.5f, -0.3f, -0.05f),
             color = Color.White,
-            intensity = 1f,
+            intensity = 0.82f,
         ),
         secondaryLight = LightSource(
             position = LightPosition(0.5f, 0.8f, -0.5f),
             color = Color.White,
-            intensity = 0.4f,
+            intensity = 0.26f,
         ),
         dualPeak = true,
     ),
@@ -60,13 +60,13 @@ val MiuixGlassSpecular: Highlight = Highlight(
 /**
  * 磨砂强度：所有浮动玻璃件共用——底栏、标题胶囊、侧边胶囊、漫画开始
  * 按钮、阅读器顶栏/底栏/章节导航。一个地方调，全局一起变，免得各处
- * 漂移。8.dp 是顶部渐隐在最强处已经用的半径；0.55 的面纱让字在密
- * 集列表上仍可读，同时页面内容还透得出来。0.5 的色散是选中小 pill
- * 已经在用的值，边缘带一点点棱镜色边；标题胶囊没有透镜，不受影响。
+ * 漂移。模糊 6.dp，面纱 0.26，色散 0.14；顶部渐隐单独用 10.dp。
+ * 标题胶囊的透镜很浅（8.dp / 4.dp，色散取共用值的四分之一），
+ * 字不会糊。
  */
-val MiuixGlassBlurRadius = 8.dp
-const val MiuixGlassSurfaceAlpha = 0.55f
-const val MiuixGlassChromaticAberration = 0.5f
+val MiuixGlassBlurRadius = 6.dp
+const val MiuixGlassSurfaceAlpha = 0.26f
+const val MiuixGlassChromaticAberration = 0.14f
 
 // 主光源的参考位置与"重力方向可忽略"的阈值（|g_xy| > 0.1，约 6° 倾斜），
 // 与 miuix 内部 HighlightStyle 的 LIGHT_REF 保持一致。
@@ -146,7 +146,7 @@ fun BackdropEffectScope.vibrancy() {
     colorControls(
         brightness = 0f,
         contrast = 1f,
-        saturation = 1.5f,
+        saturation = 1.18f,
     )
 }
 
@@ -278,7 +278,8 @@ uniform float depthEffect;
 $ROUNDED_RECT_SDF
 
 float circleMap(float x) {
-    return 1.0 - sqrt(1.0 - x * x);
+    x = clamp(x, 0.0, 1.0);
+    return 1.0 - sqrt(max(1.0 - x * x, 0.0));
 }
 
 half4 main(float2 coord) {
@@ -315,7 +316,8 @@ uniform float chromaticAberration;
 $ROUNDED_RECT_SDF
 
 float circleMap(float x) {
-    return 1.0 - sqrt(1.0 - x * x);
+    x = clamp(x, 0.0, 1.0);
+    return 1.0 - sqrt(max(1.0 - x * x, 0.0));
 }
 
 half4 main(float2 coord) {
@@ -334,43 +336,16 @@ half4 main(float2 coord) {
     float2 grad = normalize(gradSdRoundedRect(centeredCoord, halfSize, gradRadius) + depthEffect * normalize(centeredCoord));
 
     float2 refractedCoord = coord + d * grad;
-    float dispersionIntensity = chromaticAberration * ((centeredCoord.x * centeredCoord.y) / (halfSize.x * halfSize.y));
-    float2 dispersedCoord = d * grad * dispersionIntensity;
+    // Fresnel-like dispersion: it is almost invisible in the centre and
+    // increases smoothly towards the thick optical rim.
+    float edge = clamp(-sd / max(refractionHeight, 0.001), 0.0, 1.0);
+    float dispersionIntensity = chromaticAberration * edge * 0.30;
+    float2 dispersedCoord = grad * dispersionIntensity;
 
-    half4 color = half4(0.0);
-
-    half4 red = content.eval(refractedCoord + dispersedCoord);
-    color.r += red.r / 3.5;
-    color.a += red.a / 7.0;
-
-    half4 orange = content.eval(refractedCoord + dispersedCoord * (2.0 / 3.0));
-    color.r += orange.r / 3.5;
-    color.g += orange.g / 7.0;
-    color.a += orange.a / 7.0;
-
-    half4 yellow = content.eval(refractedCoord + dispersedCoord * (1.0 / 3.0));
-    color.r += yellow.r / 3.5;
-    color.g += yellow.g / 3.5;
-    color.a += yellow.a / 7.0;
-
-    half4 green = content.eval(refractedCoord);
-    color.g += green.g / 3.5;
-    color.a += green.a / 7.0;
-
-    half4 cyan = content.eval(refractedCoord - dispersedCoord * (1.0 / 3.0));
-    color.g += cyan.g / 3.5;
-    color.b += cyan.b / 3.0;
-    color.a += cyan.a / 7.0;
-
-    half4 blue = content.eval(refractedCoord - dispersedCoord * (2.0 / 3.0));
-    color.b += blue.b / 3.0;
-    color.a += blue.a / 7.0;
-
-    half4 purple = content.eval(refractedCoord - dispersedCoord);
-    color.r += purple.r / 7.0;
-    color.b += purple.b / 3.0;
-    color.a += purple.a / 7.0;
-
-    return color;
+    half4 redSample = content.eval(refractedCoord + dispersedCoord);
+    half4 greenSample = content.eval(refractedCoord);
+    half4 blueSample = content.eval(refractedCoord - dispersedCoord);
+    return half4(redSample.r, greenSample.g, blueSample.b,
+                 (redSample.a + greenSample.a + blueSample.a) / 3.0);
 }
 """
