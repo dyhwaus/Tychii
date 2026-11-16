@@ -62,6 +62,7 @@ import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import dev.zacsweers.metro.Inject
 import eu.kanade.domain.base.BasePreferences
+import eu.kanade.domain.ui.model.BarStyle
 import eu.kanade.presentation.reader.DisplayRefreshHost
 import eu.kanade.presentation.reader.OrientationSelectDialog
 import eu.kanade.presentation.reader.ReaderContentOverlay
@@ -73,6 +74,7 @@ import eu.kanade.presentation.reader.ReadingModeSelectDialog
 import eu.kanade.presentation.reader.appbars.ReaderAppBars
 import eu.kanade.presentation.reader.components.ChapterNavigatorType
 import eu.kanade.presentation.reader.settings.ReaderSettingsDialog
+import eu.kanade.presentation.theme.isMiuixGlassSupported
 import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.data.notification.NotificationReceiver
 import eu.kanade.tachiyomi.data.notification.Notifications
@@ -110,6 +112,7 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import logcat.LogPriority
 import mihon.app.di.AppGraph
+import mihon.app.di.appGraph
 import mihon.core.metro.metroGraph
 import tachiyomi.core.common.Constants
 import tachiyomi.core.common.i18n.stringResource
@@ -118,6 +121,9 @@ import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.screens.LoadingScreen
 import top.yukonga.miuix.kmp.basic.CircularProgressIndicator
 import top.yukonga.miuix.kmp.basic.Text as MiuixText
+import top.yukonga.miuix.kmp.blur.Backdrop
+import top.yukonga.miuix.kmp.blur.layerBackdrop
+import top.yukonga.miuix.kmp.blur.rememberLayerBackdrop
 import top.yukonga.miuix.kmp.overlay.OverlayDialog
 import tachiyomi.presentation.core.util.collectAsState
 
@@ -199,6 +205,14 @@ class ReaderActivity : BaseActivity() {
             val brightness by settingsViewModel.brightness.collectAsState()
             val navigation = settingsViewModel.navigation.collectAsState().value
 
+            val barStyle by remember { appGraph.uiPreferences.barStyle }.collectAsState()
+            val effectiveBarStyle = if (barStyle == BarStyle.LIQUID_GLASS && !isMiuixGlassSupported) {
+                BarStyle.TRANSLUCENT
+            } else {
+                barStyle
+            }
+            val backdrop = rememberLayerBackdrop()
+
             val backgroundColor = remember(general.theme) { Color(baseContext.readerBackgroundColor(general.theme)) }
             val colorOverlayBlendMode = remember(colorOverlayMode) {
                 ReaderPreferences.ColorFilterMode.getOrNull(colorOverlayMode)?.second
@@ -231,7 +245,23 @@ class ReaderActivity : BaseActivity() {
                     }
                     .then(if (general.keepScreenOn) Modifier.keepScreenOn() else Modifier),
             ) {
-                ReaderViewer()
+                // The viewer is the backdrop the bars blur: in glass mode
+                // it is recorded into the shared layer, and the bars —
+                // siblings after it in this Box — stay outside it, or
+                // they would blur themselves and crash hwui.
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .then(
+                            if (effectiveBarStyle == BarStyle.LIQUID_GLASS) {
+                                Modifier.layerBackdrop(backdrop)
+                            } else {
+                                Modifier
+                            },
+                        ),
+                ) {
+                    ReaderViewer()
+                }
 
                 if (isLoadingViewer) {
                     LoadingScreen()
@@ -260,7 +290,7 @@ class ReaderActivity : BaseActivity() {
 
                 ReaderNavigationOverlay(state = navigationOverlayState)
 
-                AppBars(state = state)
+                AppBars(state = state, barStyle = effectiveBarStyle, backdrop = backdrop)
             }
 
             if (state.isLoadingAdjacentChapter) {
@@ -539,7 +569,11 @@ class ReaderActivity : BaseActivity() {
     }
 
     @Composable
-    fun AppBars(state: ReaderViewModel.State) {
+    fun AppBars(
+        state: ReaderViewModel.State,
+        barStyle: BarStyle,
+        backdrop: Backdrop,
+    ) {
         val isHttpSource = state.source is HttpSource
         val readingMode = ReadingMode.fromPreference(viewModel.getMangaReadingMode())
 
@@ -555,6 +589,8 @@ class ReaderActivity : BaseActivity() {
 
         ReaderAppBars(
             visible = state.menuVisible,
+            barStyle = barStyle,
+            backdrop = backdrop,
 
             mangaTitle = state.manga?.title,
             chapterTitle = state.currentChapter?.chapter?.name,

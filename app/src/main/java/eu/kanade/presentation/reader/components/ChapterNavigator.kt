@@ -3,7 +3,6 @@ package eu.kanade.presentation.reader.components
 import androidx.compose.foundation.background
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsDraggedAsState
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -41,6 +40,12 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
+import eu.kanade.domain.ui.model.BarStyle
+import eu.kanade.presentation.miuix.MiuixGlassBlurRadius
+import eu.kanade.presentation.miuix.MiuixGlassSurfaceAlpha
+import eu.kanade.presentation.miuix.lens
+import eu.kanade.presentation.miuix.rememberTiltBrightHighlight
+import eu.kanade.presentation.miuix.vibrancy
 import eu.kanade.presentation.theme.TachiyomiPreviewTheme
 import eu.kanade.presentation.util.isTabletUi
 import mihon.icons.materialsymbols.MaterialSymbols
@@ -48,6 +53,9 @@ import mihon.icons.materialsymbols.rounded.SkipNext
 import mihon.icons.materialsymbols.rounded.SkipPrevious
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.i18n.stringResource
+import top.yukonga.miuix.kmp.blur.Backdrop
+import top.yukonga.miuix.kmp.blur.blur
+import top.yukonga.miuix.kmp.blur.drawBackdrop
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import kotlin.math.roundToInt
 
@@ -73,6 +81,8 @@ fun ChapterNavigator(
     onPageIndexChange: (Int) -> Unit,
     onPageIndexChangeFinished: () -> Unit,
     modifier: Modifier = Modifier,
+    barStyle: BarStyle = BarStyle.TRANSLUCENT,
+    backdrop: Backdrop? = null,
 ) {
     val haptic = LocalHapticFeedback.current
 
@@ -104,14 +114,43 @@ fun ChapterNavigator(
     // pill lines up with it.
     val mainAxisPadding = if (isTabletUi) 24.dp else 12.dp
 
-    // Match with toolbar background color set in ReaderActivity
-    val backgroundColor = MiuixTheme.colorScheme.surfaceContainer
-        .copy(alpha = if (isSystemInDarkTheme()) 0.9f else 0.95f)
+    // Same frosted material as the reader bars and the bottom bar: in
+    // liquid glass mode the slider pill blurs the page behind it,
+    // otherwise it keeps the solid/translucent surface of the global
+    // bar style.
+    val glassBackdrop = if (barStyle == BarStyle.LIQUID_GLASS) backdrop else null
+    val isGlass = glassBackdrop != null
+    val surfaceContainer = MiuixTheme.colorScheme.surfaceContainer
+    val containerColor = when {
+        isGlass -> surfaceContainer.copy(alpha = MiuixGlassSurfaceAlpha)
+        barStyle == BarStyle.OPAQUE -> surfaceContainer
+        else -> surfaceContainer.copy(alpha = 0.75f)
+    }
+    val sliderShape = remember { RoundedCornerShape(24.dp) }
+    val highlight = if (isGlass) rememberTiltBrightHighlight() else null
+    val sliderBackground = if (isGlass) {
+        Modifier.drawBackdrop(
+            backdrop = glassBackdrop,
+            shape = { sliderShape },
+            effects = {
+                vibrancy()
+                blur(MiuixGlassBlurRadius.toPx(), MiuixGlassBlurRadius.toPx())
+                lens(
+                    refractionHeight = 24.dp.toPx(),
+                    refractionAmount = 24.dp.toPx(),
+                )
+            },
+            highlight = { highlight?.copy(alpha = 0.75f) },
+            onDrawSurface = { drawRect(containerColor) },
+        )
+    } else {
+        Modifier.background(containerColor, sliderShape)
+    }
     // The disabled container keeps its default faint colour, so a
     // missing previous/next chapter reads as disabled instead of
     // looking identical to an enabled button.
     val buttonColor = IconButtonDefaults.filledIconButtonColors(
-        containerColor = backgroundColor,
+        containerColor = containerColor,
     )
 
     val onPageChange: (Int) -> Unit = { onPageIndexChange(it - 1) }
@@ -130,7 +169,7 @@ fun ChapterNavigator(
             onPageChangeFinished = onPageIndexChangeFinished,
             interactionSource = interactionSource,
             mainAxisPadding = mainAxisPadding,
-            backgroundColor = backgroundColor,
+            sliderBackground = sliderBackground,
             buttonColor = buttonColor,
             modifier = modifier,
         )
@@ -147,7 +186,7 @@ fun ChapterNavigator(
             onPageChangeFinished = onPageIndexChangeFinished,
             interactionSource = interactionSource,
             mainAxisPadding = mainAxisPadding,
-            backgroundColor = backgroundColor,
+            sliderBackground = sliderBackground,
             buttonColor = buttonColor,
             modifier = modifier,
         )
@@ -168,7 +207,7 @@ fun HorizontalChapterNavigator(
     onPageChangeFinished: () -> Unit,
     interactionSource: MutableInteractionSource,
     mainAxisPadding: Dp,
-    backgroundColor: Color,
+    sliderBackground: Modifier,
     buttonColor: IconButtonColors,
     modifier: Modifier = Modifier,
 ) {
@@ -201,7 +240,7 @@ fun HorizontalChapterNavigator(
                         modifier = Modifier
                             .weight(1f)
                             .clip(RoundedCornerShape(24.dp))
-                            .background(backgroundColor)
+                            .then(sliderBackground)
                             .padding(horizontal = 16.dp),
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
@@ -257,7 +296,7 @@ fun VerticalChapterNavigator(
     onPageChangeFinished: () -> Unit,
     interactionSource: MutableInteractionSource,
     mainAxisPadding: Dp,
-    backgroundColor: Color,
+    sliderBackground: Modifier,
     buttonColor: IconButtonColors,
     modifier: Modifier = Modifier,
 ) {
@@ -284,7 +323,7 @@ fun VerticalChapterNavigator(
                 modifier = Modifier
                     .weight(1f)
                     .clip(RoundedCornerShape(24.dp))
-                    .background(backgroundColor)
+                    .then(sliderBackground)
                     .padding(vertical = 16.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {

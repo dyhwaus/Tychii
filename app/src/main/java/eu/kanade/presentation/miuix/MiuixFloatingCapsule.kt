@@ -56,7 +56,7 @@ fun MiuixFloatingCapsule(
     val containerColor = when (barStyle) {
         BarStyle.OPAQUE -> surfaceContainer
         BarStyle.TRANSLUCENT -> surfaceContainer.copy(alpha = 0.75f)
-        BarStyle.LIQUID_GLASS -> surfaceContainer.copy(alpha = 0.4f)
+        BarStyle.LIQUID_GLASS -> surfaceContainer.copy(alpha = MiuixGlassSurfaceAlpha)
     }
     // A vertical pill: the icon buttons are ~40.dp wide, so 24.dp is
     // (close to) half the width — a capsule radius. RoundedCornerShape,
@@ -73,7 +73,7 @@ fun MiuixFloatingCapsule(
                     shape = { shape },
                     effects = {
                         vibrancy()
-                        blur(4.dp.toPx(), 4.dp.toPx())
+                        blur(MiuixGlassBlurRadius.toPx(), MiuixGlassBlurRadius.toPx())
                         // The lens is what makes this liquid glass rather
                         // than plain frosted blur — same refraction as
                         // the bottom bar. It only works on a

@@ -48,7 +48,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.dropShadow
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.shadow.Shadow
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.layout.onSizeChanged
@@ -71,6 +73,9 @@ import eu.kanade.presentation.manga.components.MangaChapterListItem
 import eu.kanade.presentation.manga.components.MangaInfoBox
 import eu.kanade.presentation.manga.components.MangaToolbar
 import eu.kanade.presentation.manga.components.MissingChapterCountListItem
+import eu.kanade.presentation.miuix.MiuixGlassBlurRadius
+import eu.kanade.presentation.miuix.MiuixGlassSurfaceAlpha
+import eu.kanade.presentation.miuix.lens
 import eu.kanade.presentation.miuix.rememberTiltBrightHighlight
 import eu.kanade.presentation.miuix.vibrancy
 import eu.kanade.presentation.theme.isMiuixGlassSupported
@@ -277,25 +282,43 @@ private fun MangaStartButton(
     val containerColor = when (barStyle) {
         BarStyle.OPAQUE -> surfaceContainer
         BarStyle.TRANSLUCENT -> surfaceContainer.copy(alpha = 0.75f)
-        BarStyle.LIQUID_GLASS -> surfaceContainer.copy(alpha = 0.4f)
+        BarStyle.LIQUID_GLASS -> surfaceContainer.copy(alpha = MiuixGlassSurfaceAlpha)
     }
     // Fully rounded at 56.dp tall; RoundedCornerShape, not CircleShape,
     // so the backdrop shape stays a CornerBasedShape.
     val shape = remember { RoundedCornerShape(28.dp) }
     val highlight = if (isGlass) rememberTiltBrightHighlight() else null
+    // The button used to be the only floating glass piece without the
+    // bar's lens refraction and drop shadow, so it read as a flat
+    // translucent pill instead of glass. Same 24.dp refraction and
+    // 10.dp shadow as the bottom bar now.
+    val isDark = isSystemInDarkTheme()
     Box(
         modifier = modifier.then(
             if (isGlass) {
-                Modifier.drawBackdrop(
-                    backdrop = backdrop,
-                    shape = { shape },
-                    effects = {
-                        vibrancy()
-                        blur(4.dp.toPx(), 4.dp.toPx())
-                    },
-                    highlight = { highlight?.copy(alpha = 0.75f) },
-                    onDrawSurface = { drawRect(containerColor) },
-                )
+                Modifier
+                    .dropShadow(
+                        shape = shape,
+                        shadow = Shadow(
+                            radius = 10.dp,
+                            color = Color.Black,
+                            alpha = if (isDark) 0.2f else 0.1f,
+                        ),
+                    )
+                    .drawBackdrop(
+                        backdrop = backdrop,
+                        shape = { shape },
+                        effects = {
+                            vibrancy()
+                            blur(MiuixGlassBlurRadius.toPx(), MiuixGlassBlurRadius.toPx())
+                            lens(
+                                refractionHeight = 24.dp.toPx(),
+                                refractionAmount = 24.dp.toPx(),
+                            )
+                        },
+                        highlight = { highlight?.copy(alpha = 0.75f) },
+                        onDrawSurface = { drawRect(containerColor) },
+                    )
             } else {
                 Modifier.background(containerColor, shape)
             },

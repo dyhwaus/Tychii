@@ -47,7 +47,7 @@ fun MiuixCapsuleTitle(
     val containerColor = when (barStyle) {
         BarStyle.OPAQUE -> surfaceContainer
         BarStyle.TRANSLUCENT -> surfaceContainer.copy(alpha = 0.75f)
-        BarStyle.LIQUID_GLASS -> surfaceContainer.copy(alpha = 0.4f)
+        BarStyle.LIQUID_GLASS -> surfaceContainer.copy(alpha = MiuixGlassSurfaceAlpha)
     }
     // ~40.dp tall pill (titleMedium + 8.dp vertical padding): 20.dp is a
     // perfect capsule radius. RoundedCornerShape, not CircleShape, so the
@@ -64,7 +64,7 @@ fun MiuixCapsuleTitle(
                     shape = { shape },
                     effects = {
                         vibrancy()
-                        blur(4.dp.toPx(), 4.dp.toPx())
+                        blur(MiuixGlassBlurRadius.toPx(), MiuixGlassBlurRadius.toPx())
                     },
                     highlight = { highlight?.copy(alpha = 0.75f) },
                     onDrawSurface = { drawRect(containerColor) },

@@ -9,7 +9,6 @@ import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -27,19 +26,29 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
+import eu.kanade.domain.ui.model.BarStyle
 import eu.kanade.presentation.miuix.FloatMotion
+import eu.kanade.presentation.miuix.MiuixGlassBlurRadius
+import eu.kanade.presentation.miuix.MiuixGlassSurfaceAlpha
+import eu.kanade.presentation.miuix.lens
+import eu.kanade.presentation.miuix.rememberTiltBrightHighlight
+import eu.kanade.presentation.miuix.vibrancy
 import eu.kanade.presentation.reader.components.ChapterNavigator
 import eu.kanade.presentation.reader.components.ChapterNavigatorType
 import eu.kanade.presentation.util.isTabletUi
 import eu.kanade.tachiyomi.ui.reader.setting.ReaderOrientation
 import eu.kanade.tachiyomi.ui.reader.setting.ReadingMode
 import tachiyomi.presentation.core.components.material.padding
+import top.yukonga.miuix.kmp.blur.Backdrop
+import top.yukonga.miuix.kmp.blur.blur
+import top.yukonga.miuix.kmp.blur.drawBackdrop
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 
 
@@ -75,15 +84,45 @@ fun ReaderAppBars(
     cropEnabled: Boolean,
     onClickCropBorder: () -> Unit,
     onClickSettings: () -> Unit,
+    barStyle: BarStyle = BarStyle.TRANSLUCENT,
+    backdrop: Backdrop? = null,
 ) {
-    // Miuix surface, same translucency as before: the bars float over
-    // the manga page, so they stay slightly see-through. Both bars are
-    // floating pills now — the same capsule language as the title and
+    // The bars float over the manga page: in liquid glass mode they use
+    // the same frosted material as the bottom bar and capsules (blur +
+    // vibrancy + lens + tilt highlight over a surface veil), otherwise
+    // the solid/translucent surface of the global bar style. Both bars
+    // are floating pills now — the same capsule language as the title and
     // action capsules elsewhere — instead of full-width sharp bands,
     // with the chapter navigator pill lined up on the same side
     // margins.
-    val backgroundColor = MiuixTheme.colorScheme.surfaceContainer
-        .copy(alpha = if (isSystemInDarkTheme()) 0.9f else 0.95f)
+    val glassBackdrop = if (barStyle == BarStyle.LIQUID_GLASS) backdrop else null
+    val isGlass = glassBackdrop != null
+    val surfaceContainer = MiuixTheme.colorScheme.surfaceContainer
+    val containerColor = when {
+        isGlass -> surfaceContainer.copy(alpha = MiuixGlassSurfaceAlpha)
+        barStyle == BarStyle.OPAQUE -> surfaceContainer
+        else -> surfaceContainer.copy(alpha = 0.75f)
+    }
+    val pillShape = remember { RoundedCornerShape(24.dp) }
+    val highlight = if (isGlass) rememberTiltBrightHighlight() else null
+    val pillBackground = if (isGlass) {
+        Modifier.drawBackdrop(
+            backdrop = glassBackdrop,
+            shape = { pillShape },
+            effects = {
+                vibrancy()
+                blur(MiuixGlassBlurRadius.toPx(), MiuixGlassBlurRadius.toPx())
+                lens(
+                    refractionHeight = 24.dp.toPx(),
+                    refractionAmount = 24.dp.toPx(),
+                )
+            },
+            highlight = { highlight?.copy(alpha = 0.75f) },
+            onDrawSurface = { drawRect(containerColor) },
+        )
+    } else {
+        Modifier.background(containerColor, pillShape)
+    }
     val sidePadding = if (isTabletUi()) 24.dp else 12.dp
 
     Column(modifier = Modifier.fillMaxHeight()) {
@@ -96,8 +135,8 @@ fun ReaderAppBars(
                 modifier = Modifier
                     .statusBarsPadding()
                     .padding(top = 8.dp, start = sidePadding, end = sidePadding)
-                    .clip(RoundedCornerShape(24.dp))
-                    .background(backgroundColor)
+                    .clip(pillShape)
+                    .then(pillBackground)
                     .clickable(onClick = onClickTopAppBar),
                 mangaTitle = mangaTitle,
                 chapterTitle = chapterTitle,
@@ -140,6 +179,8 @@ fun ReaderAppBars(
                                     totalPages = totalPages,
                                     onPageIndexChange = onPageIndexChange,
                                     onPageIndexChangeFinished = onPageIndexChangeFinished,
+                                    barStyle = barStyle,
+                                    backdrop = backdrop,
                                 )
                             }
                         }
@@ -168,6 +209,8 @@ fun ReaderAppBars(
                         totalPages = totalPages,
                         onPageIndexChange = onPageIndexChange,
                         onPageIndexChangeFinished = onPageIndexChangeFinished,
+                        barStyle = barStyle,
+                        backdrop = backdrop,
                     )
                 }
                 ReaderBottomBar(
@@ -175,8 +218,8 @@ fun ReaderAppBars(
                         .fillMaxWidth()
                         .windowInsetsPadding(WindowInsets.navigationBars)
                         .padding(start = sidePadding, end = sidePadding, bottom = 8.dp)
-                        .clip(RoundedCornerShape(24.dp))
-                        .background(backgroundColor),
+                        .clip(pillShape)
+                        .then(pillBackground),
                     readingMode = readingMode,
                     onClickReadingMode = onClickReadingMode,
                     orientation = orientation,

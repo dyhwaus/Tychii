@@ -129,7 +129,7 @@ internal fun MiuixLiquidBottomBar(
     val tabContentColor = MiuixTheme.colorScheme.onSurface
     val surfaceContainer = MiuixTheme.colorScheme.surfaceContainer
     val containerColor = if (isBlurEnabled) {
-        surfaceContainer.copy(0.4f)
+        surfaceContainer.copy(alpha = MiuixGlassSurfaceAlpha)
     } else {
         surfaceContainer.copy(alpha = containerAlpha)
     }
@@ -268,7 +268,7 @@ internal fun MiuixLiquidBottomBar(
                             shape = { pillShape },
                             effects = {
                                 vibrancy()
-                                blur(4.dp.toPx(), 4.dp.toPx())
+                                blur(MiuixGlassBlurRadius.toPx(), MiuixGlassBlurRadius.toPx())
                                 lens(
                                     refractionHeight = 24.dp.toPx(),
                                     refractionAmount = 24.dp.toPx(),
