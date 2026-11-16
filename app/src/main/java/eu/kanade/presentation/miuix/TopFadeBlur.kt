@@ -50,7 +50,7 @@ fun TopFadeBlur(
         0f to color,
         1f to color.copy(alpha = 0f),
     )
-    val blurRadius = with(LocalDensity.current) { 8.dp.toPx() }
+    val blurRadius = with(LocalDensity.current) { 12.dp.toPx() }
     Box(
         modifier = modifier
             .fillMaxWidth()
