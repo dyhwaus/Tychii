@@ -272,6 +272,8 @@ internal fun MiuixLiquidBottomBar(
                                 lens(
                                     refractionHeight = 24.dp.toPx(),
                                     refractionAmount = 24.dp.toPx(),
+                                    depthEffect = true,
+                                    chromaticAberration = MiuixGlassChromaticAberration,
                                 )
                             },
                             highlight = { baseHighlight.copy(alpha = 0.75f) },
@@ -319,14 +321,10 @@ internal fun MiuixLiquidBottomBar(
                         .then(dampedDragAnimation.modifier)
                         .drawBackdrop(
                             // The pill refracts the page backdrop directly.
-                            // (An earlier version also refracted a second,
-                            // invisible accent-colored layer so the pill
-                            // showed the selected tab's color inside it;
-                            // that duplicate full glass pass — vibrancy +
-                            // blur + lens on the whole bar, every frame —
-                            // cost too much GPU time for a subtle effect,
-                            // so it was removed. The selected icon itself
-                            // is still drawn in the accent color.)
+                            // Its selection colour comes from the accent
+                            // tint in onDrawSurface below — one drawRect,
+                            // not a second glass pass (an earlier version
+                            // did the second pass; too much GPU time).
                             backdrop = backdrop,
                             shape = { pillShape },
                             effects = {
@@ -335,7 +333,7 @@ internal fun MiuixLiquidBottomBar(
                                     refractionHeight = 10.dp.toPx() * progress,
                                     refractionAmount = 14.dp.toPx() * progress,
                                     depthEffect = true,
-                                    chromaticAberration = 0.5f,
+                                    chromaticAberration = MiuixGlassChromaticAberration,
                                 )
                             },
                             highlight = {
@@ -350,14 +348,10 @@ internal fun MiuixLiquidBottomBar(
                             },
                             onDrawSurface = {
                                 val progress = dampedDragAnimation.pressProgress
-                                drawRect(
-                                    color = if (!isDark) {
-                                        Color.Black.copy(alpha = 0.1f)
-                                    } else {
-                                        Color.White.copy(alpha = 0.1f)
-                                    },
-                                    alpha = 1f - progress,
-                                )
+                                // 选中的底色：一层半透明主题蓝，盖在折射后
+                                // 的页面上。之前只有 0.1f 的黑/白纱，pill
+                                // 在底栏里像一块透明的洞，选没选看不出来。
+                                drawRect(accentColor.copy(alpha = 0.2f))
                                 drawRect(Color.Black.copy(alpha = 0.03f * progress))
                             },
                         )

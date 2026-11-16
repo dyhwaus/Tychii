@@ -82,6 +82,8 @@ fun MiuixFloatingCapsule(
                         lens(
                             refractionHeight = 24.dp.toPx(),
                             refractionAmount = 24.dp.toPx(),
+                            depthEffect = true,
+                            chromaticAberration = MiuixGlassChromaticAberration,
                         )
                     },
                     highlight = { highlight?.copy(alpha = 0.75f) },

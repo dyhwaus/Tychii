@@ -61,10 +61,12 @@ val MiuixGlassSpecular: Highlight = Highlight(
  * 磨砂强度：所有浮动玻璃件共用——底栏、标题胶囊、侧边胶囊、漫画开始
  * 按钮、阅读器顶栏/底栏/章节导航。一个地方调，全局一起变，免得各处
  * 漂移。8.dp 是顶部渐隐在最强处已经用的半径；0.55 的面纱让字在密
- * 集列表上仍可读，同时页面内容还透得出来。
+ * 集列表上仍可读，同时页面内容还透得出来。0.5 的色散是选中小 pill
+ * 已经在用的值，边缘带一点点棱镜色边；标题胶囊没有透镜，不受影响。
  */
 val MiuixGlassBlurRadius = 8.dp
 const val MiuixGlassSurfaceAlpha = 0.55f
+const val MiuixGlassChromaticAberration = 0.5f
 
 // 主光源的参考位置与"重力方向可忽略"的阈值（|g_xy| > 0.1，约 6° 倾斜），
 // 与 miuix 内部 HighlightStyle 的 LIGHT_REF 保持一致。

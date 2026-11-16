@@ -74,6 +74,7 @@ import eu.kanade.presentation.manga.components.MangaInfoBox
 import eu.kanade.presentation.manga.components.MangaToolbar
 import eu.kanade.presentation.manga.components.MissingChapterCountListItem
 import eu.kanade.presentation.miuix.MiuixGlassBlurRadius
+import eu.kanade.presentation.miuix.MiuixGlassChromaticAberration
 import eu.kanade.presentation.miuix.MiuixGlassSurfaceAlpha
 import eu.kanade.presentation.miuix.lens
 import eu.kanade.presentation.miuix.rememberTiltBrightHighlight
@@ -314,6 +315,8 @@ private fun MangaStartButton(
                             lens(
                                 refractionHeight = 24.dp.toPx(),
                                 refractionAmount = 24.dp.toPx(),
+                                depthEffect = true,
+                                chromaticAberration = MiuixGlassChromaticAberration,
                             )
                         },
                         highlight = { highlight?.copy(alpha = 0.75f) },

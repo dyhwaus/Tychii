@@ -36,6 +36,7 @@ import androidx.compose.ui.unit.dp
 import eu.kanade.domain.ui.model.BarStyle
 import eu.kanade.presentation.miuix.FloatMotion
 import eu.kanade.presentation.miuix.MiuixGlassBlurRadius
+import eu.kanade.presentation.miuix.MiuixGlassChromaticAberration
 import eu.kanade.presentation.miuix.MiuixGlassSurfaceAlpha
 import eu.kanade.presentation.miuix.lens
 import eu.kanade.presentation.miuix.rememberTiltBrightHighlight
@@ -115,6 +116,8 @@ fun ReaderAppBars(
                 lens(
                     refractionHeight = 24.dp.toPx(),
                     refractionAmount = 24.dp.toPx(),
+                    depthEffect = true,
+                    chromaticAberration = MiuixGlassChromaticAberration,
                 )
             },
             highlight = { highlight?.copy(alpha = 0.75f) },
