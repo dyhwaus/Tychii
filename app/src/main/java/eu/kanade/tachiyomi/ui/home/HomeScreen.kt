@@ -41,7 +41,6 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
@@ -70,7 +69,6 @@ import eu.kanade.presentation.miuix.CapsuleAction
 import eu.kanade.presentation.miuix.FloatMotion
 import eu.kanade.presentation.miuix.MiuixCapsuleTitle
 import eu.kanade.presentation.miuix.MiuixFloatingCapsule
-import eu.kanade.presentation.miuix.MiuixGlassScrollIdleDelayMs
 import eu.kanade.presentation.miuix.TopCapsuleClearance
 import eu.kanade.presentation.miuix.TopFadeBlur
 import eu.kanade.presentation.miuix.TychiiLiquidBar
@@ -86,7 +84,6 @@ import eu.kanade.tachiyomi.ui.manga.MangaScreen
 import eu.kanade.tachiyomi.ui.more.MoreTab
 import eu.kanade.tachiyomi.ui.updates.UpdatesTab
 import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.receiveAsFlow
@@ -196,19 +193,6 @@ object HomeScreen : Screen() {
                 val capsuleHideThresholdPx = with(LocalDensity.current) { 120.dp.toPx() }
                 var capsuleScrollVisible by remember { mutableStateOf(true) }
                 var capsuleScrolledDown by remember { mutableFloatStateOf(0f) }
-                // 滚动时暂停玻璃背景的录制：滚动中页面每帧都在变，录制层
-                // 每帧都要重画整页（等于整页画两遍），是滚动卡顿和耗电
-                // 的大头。停录期间玻璃件采到的还是上一帧——模糊的，本
-                // 来就看不清细节；滚动事件停了 150ms 后恢复录制，玻璃
-                // 重新跟手。
-                var glassPaused by remember { mutableStateOf(false) }
-                var scrollTick by remember { mutableIntStateOf(0) }
-                LaunchedEffect(scrollTick) {
-                    if (scrollTick == 0) return@LaunchedEffect
-                    glassPaused = true
-                    delay(MiuixGlassScrollIdleDelayMs)
-                    glassPaused = false
-                }
                 val capsuleScrollConnection = remember(capsuleHideThresholdPx) {
                     object : NestedScrollConnection {
                         override fun onPostScroll(
@@ -216,8 +200,6 @@ object HomeScreen : Screen() {
                             available: Offset,
                             source: NestedScrollSource,
                         ): Offset {
-                            // 任何滚动事件都算在滚：停下 150ms 才恢复录制。
-                            scrollTick++
                             if (consumed.y < 0f) {
                                 capsuleScrolledDown += -consumed.y
                                 if (capsuleScrolledDown > capsuleHideThresholdPx) {
@@ -257,7 +239,6 @@ object HomeScreen : Screen() {
                 LaunchedEffect(tabNavigator.current) {
                     capsuleScrollVisible = true
                     capsuleScrolledDown = 0f
-                    glassPaused = false
                 }
                 if (tabletUi) {
                     // Tablets keep the Material3 navigation rail; the floating
@@ -330,7 +311,7 @@ object HomeScreen : Screen() {
                                 modifier = Modifier
                                     .padding(paddingValues)
                                     .then(
-                                        if (glassEnabled && !glassPaused) {
+                                        if (glassEnabled) {
                                             Modifier.layerBackdrop(backdrop)
                                         } else {
                                             Modifier

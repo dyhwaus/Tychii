@@ -70,9 +70,6 @@ val MiuixGlassBlurRadius = 8.dp
 const val MiuixGlassSurfaceAlpha = 0.4f
 const val MiuixGlassChromaticAberration = 0.14f
 const val MiuixGlassPillChromaticAberration = 0.5f
-// 滚动停下后，玻璃背景恢复录制前等的空闲时间：滚动事件停了这么久，
-// 才认为真的停下了。
-const val MiuixGlassScrollIdleDelayMs = 150L
 
 // 主光源的参考位置与"重力方向可忽略"的阈值（|g_xy| > 0.1，约 6° 倾斜），
 // 与 miuix 内部 HighlightStyle 的 LIGHT_REF 保持一致。

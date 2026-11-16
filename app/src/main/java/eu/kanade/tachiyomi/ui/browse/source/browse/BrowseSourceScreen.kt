@@ -32,7 +32,6 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -76,7 +75,6 @@ import eu.kanade.presentation.manga.DuplicateMangaDialog
 import eu.kanade.presentation.miuix.CapsuleAction
 import eu.kanade.presentation.miuix.FloatMotion
 import eu.kanade.presentation.miuix.MiuixFloatingCapsule
-import eu.kanade.presentation.miuix.MiuixGlassScrollIdleDelayMs
 import eu.kanade.presentation.miuix.TopFadeBlur
 import eu.kanade.presentation.theme.isMiuixGlassSupported
 import eu.kanade.presentation.util.AssistContentScreen
@@ -88,7 +86,6 @@ import eu.kanade.tachiyomi.ui.manga.MangaScreen
 import eu.kanade.tachiyomi.ui.webview.WebViewScreen
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
@@ -202,17 +199,6 @@ data class BrowseSourceScreen(
         val capsuleHideThresholdPx = with(LocalDensity.current) { 120.dp.toPx() }
         var capsuleScrollVisible by remember { mutableStateOf(true) }
         var capsuleScrolledDown by remember { mutableFloatStateOf(0f) }
-        // 滚动时暂停玻璃背景的录制（和 HomeScreen 一样）：滚动中页面
-        // 每帧都在变，录制层每帧都要重画整页；停录期间胶囊采到的还
-        // 是上一帧，停下 150ms 后恢复录制。
-        var glassPaused by remember { mutableStateOf(false) }
-        var scrollTick by remember { mutableIntStateOf(0) }
-        LaunchedEffect(scrollTick) {
-            if (scrollTick == 0) return@LaunchedEffect
-            glassPaused = true
-            delay(MiuixGlassScrollIdleDelayMs)
-            glassPaused = false
-        }
         val capsuleScrollConnection = remember(capsuleHideThresholdPx) {
             object : NestedScrollConnection {
                 override fun onPostScroll(
@@ -220,8 +206,6 @@ data class BrowseSourceScreen(
                     available: Offset,
                     source: NestedScrollSource,
                 ): Offset {
-                    // 任何滚动事件都算在滚：停下 150ms 才恢复录制。
-                    scrollTick++
                     if (consumed.y < 0f) {
                         capsuleScrolledDown += -consumed.y
                         if (capsuleScrolledDown > capsuleHideThresholdPx) {
@@ -360,7 +344,7 @@ data class BrowseSourceScreen(
                         modifier = Modifier
                             .fillMaxSize()
                             .nestedScroll(capsuleScrollConnection)
-                            .then(if (glassEnabled && !glassPaused) Modifier.layerBackdrop(backdrop) else Modifier),
+                            .then(if (glassEnabled) Modifier.layerBackdrop(backdrop) else Modifier),
                     ) {
                         BrowseSourceContent(
                             source = source,
