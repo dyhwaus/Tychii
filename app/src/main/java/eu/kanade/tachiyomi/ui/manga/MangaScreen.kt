@@ -149,7 +149,6 @@ class MangaScreen(
                 navigateUp = navigator::pop,
                 onChapterClicked = { openChapter(context, it) },
                 onDownloadChapter = viewModel::runChapterDownloadActions.takeIf { !successState.source.isLocalOrStub() },
-                downloadProgressProvider = viewModel::getDownloadProgress,
                 // Tapping again removes the manga straight away — no
                 // second confirmation.
                 onAddToLibraryClicked = {
@@ -180,7 +179,7 @@ class MangaScreen(
                 onTagSearch = { scope.launch { performGenreSearch(navigator, it, viewModel.source!!) } },
                 onFilterButtonClicked = viewModel::showSettingsDialog,
                 onRefresh = viewModel::fetchAllFromSource,
-                onContinueReading = { continueReading(context, viewModel.getNextUnreadChapter()) },
+                onContinueReading = { continueReading(context, viewModel.getNextUnreadChapter() ?: viewModel.getFirstChapter()) },
                 onSearch = { query, global -> scope.launch { performSearch(navigator, query, global) } },
                 onCoverClicked = viewModel::showCoverDialog,
                 onShareClicked = { shareManga(context, viewModel.manga, viewModel.source) }.takeIf { isHttpSource },

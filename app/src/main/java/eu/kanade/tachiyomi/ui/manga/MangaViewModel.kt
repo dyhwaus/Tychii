@@ -6,7 +6,6 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.SnackbarResult
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.ui.util.fastAny
 import androidx.compose.ui.util.fastFilter
 import androidx.compose.ui.util.fastMap
@@ -48,6 +47,7 @@ import eu.kanade.tachiyomi.data.track.TrackerManager
 import eu.kanade.tachiyomi.source.Source
 import eu.kanade.tachiyomi.source.getNameForMangaInfo
 import eu.kanade.tachiyomi.ui.reader.setting.ReaderPreferences
+import eu.kanade.tachiyomi.util.chapter.getFirstChapter
 import eu.kanade.tachiyomi.util.chapter.getNextUnread
 import eu.kanade.tachiyomi.util.removeCovers
 import eu.kanade.tachiyomi.util.system.toast
@@ -203,10 +203,6 @@ class MangaViewModel(
 
     private val downloadStates = MutableStateFlow(emptyMap<Long, Download.State>())
 
-    // Progress ticks often, so only the download indicators that read it recompose instead of every tick rebuilding
-    // the chapter list
-    private val downloadProgress = mutableStateMapOf<Long, Int>()
-
     // A finished chapter leaves the queue, and its last status change can be lost with it, so its state is left to
     // the queried item once it's no longer queued
     private val queuedDownloadStates = combine(downloadStates, downloadManager.queueState) { states, queue ->
@@ -323,13 +319,6 @@ class MangaViewModel(
                 .catch { logcat(LogPriority.ERROR, it) }
                 .collect(::updateDownloadState)
         }
-        viewModelScope.launch(Dispatchers.Default) {
-            downloadManager.progressFlow()
-                .filter { it.manga.id == mangaId }
-                .catch { logcat(LogPriority.ERROR, it) }
-                .collect { downloadProgress[it.chapter.id] = it.progress }
-        }
-
         viewModelScope.launch {
             // The state loads the entry and its chapters anyway, so they aren't queried separately
             val loadedState = state.filterIsInstance<State.Success>().first()
@@ -588,15 +577,6 @@ class MangaViewModel(
                 it + (chapterId to download.status)
             }
         }
-        if (download.status == Download.State.DOWNLOADING) {
-            downloadProgress[chapterId] = download.progress
-        } else {
-            downloadProgress.remove(chapterId)
-        }
-    }
-
-    fun getDownloadProgress(chapterId: Long): Int {
-        return downloadProgress[chapterId] ?: 0
     }
 
     private fun List<Chapter>.toChapterListItems(manga: Manga): List<ChapterList.Item> {
@@ -668,6 +648,15 @@ class MangaViewModel(
     fun getNextUnreadChapter(): Chapter? {
         val successState = successState ?: return null
         return successState.chapters.getNextUnread(successState.manga, successState.downloadedOnly)
+    }
+
+    /**
+     * Returns the first chapter in reading order, or null if there are no chapters.
+     * Used to restart a manga whose chapters are all read.
+     */
+    fun getFirstChapter(): Chapter? {
+        val successState = successState ?: return null
+        return successState.chapters.getFirstChapter(successState.manga, successState.downloadedOnly)
     }
 
     private fun getUnreadChapters(): List<Chapter> {

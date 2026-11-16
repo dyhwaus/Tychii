@@ -35,3 +35,17 @@ fun List<ChapterList.Item>.getNextUnread(manga: Manga, downloadedOnly: Boolean):
         }
     }?.chapter
 }
+
+/**
+ * Gets the first chapter in reading order, with filters and sorting applied.
+ * Used to restart a manga whose chapters are all read.
+ */
+fun List<ChapterList.Item>.getFirstChapter(manga: Manga, downloadedOnly: Boolean): Chapter? {
+    return applyFilters(manga, downloadedOnly).let { chapters ->
+        if (manga.sortDescending()) {
+            chapters.lastOrNull()?.chapter
+        } else {
+            chapters.firstOrNull()?.chapter
+        }
+    }
+}
