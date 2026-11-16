@@ -1,5 +1,6 @@
 package eu.kanade.presentation.manga.components
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -7,6 +8,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.sizeIn
+import androidx.compose.foundation.shape.RectangleShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
@@ -20,8 +22,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.style.TextOverflow
@@ -45,6 +49,7 @@ import tachiyomi.presentation.core.components.material.SECONDARY_ALPHA
 import tachiyomi.presentation.core.i18n.stringResource
 import tachiyomi.presentation.core.util.selectedBackground
 import top.yukonga.miuix.kmp.basic.HorizontalDivider
+import top.yukonga.miuix.kmp.theme.MiuixTheme
 
 @Composable
 fun MangaChapterListItem(
@@ -65,6 +70,9 @@ fun MangaChapterListItem(
     // Inset divider under the row, Miuix list style. The caller hides it
     // after the last chapter.
     showDivider: Boolean = false,
+    // The card corner shape for this row: rounded on the section's outer
+    // corners only (first/last row), supplied by the list.
+    cardShape: Shape = RectangleShape,
 ) {
     val start = getSwipeAction(
         action = chapterSwipeStartAction,
@@ -85,13 +93,22 @@ fun MangaChapterListItem(
 
     // No Miuix equivalent for swipe actions: the swipe box stays as-is,
     // only the row inside is Miuix-styled (inset divider below).
-    Column {
+    // The chapter section is one Miuix card: each row paints the card
+    // surface, with the outer corners rounded only on the first and last
+    // rows, so the section reads as a single card while the list stays
+    // lazy. The 12.dp side margin matches the other cards on this page.
+    Column(
+        modifier = Modifier
+            .padding(horizontal = 12.dp)
+            .background(MiuixTheme.colorScheme.surfaceContainer, cardShape)
+            .clip(cardShape),
+    ) {
         SwipeableActionsBox(
             modifier = Modifier.clipToBounds(),
             startActions = listOfNotNull(start),
             endActions = listOfNotNull(end),
             swipeThreshold = swipeActionThreshold,
-            backgroundUntilSwipeThreshold = MaterialTheme.colorScheme.surfaceContainerLowest,
+            backgroundUntilSwipeThreshold = MiuixTheme.colorScheme.surfaceContainer,
         ) {
             Row(
                 modifier = modifier
@@ -100,7 +117,7 @@ fun MangaChapterListItem(
                         onClick = onClick,
                         onLongClick = onLongClick,
                     )
-                    .padding(start = 16.dp, top = 16.dp, end = 8.dp, bottom = 16.dp),
+                    .padding(start = 16.dp, top = 16.dp, end = 16.dp, bottom = 16.dp),
             ) {
             Column(
                 modifier = Modifier.weight(1f),

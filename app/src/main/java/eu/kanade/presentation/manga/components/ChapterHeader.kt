@@ -34,7 +34,10 @@ fun ChapterHeader(
                 enabled = enabled,
                 onClick = onClick,
             )
-            .padding(start = 16.dp, top = 12.dp, end = 16.dp, bottom = 8.dp),
+            // 28.dp is SmallTitle's horizontal margin, so the title lines
+            // up with the chapter titles (12.dp card inset + 16.dp row
+            // padding).
+            .padding(start = 28.dp, top = 12.dp, end = 28.dp, bottom = 8.dp),
         verticalArrangement = Arrangement.spacedBy(MaterialTheme.padding.extraSmall),
     ) {
         // Miuix section title: small subtitle style, like the group headers

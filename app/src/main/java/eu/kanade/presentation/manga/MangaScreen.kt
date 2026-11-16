@@ -102,6 +102,7 @@ import tachiyomi.presentation.core.i18n.stringResource
 import tachiyomi.presentation.core.util.collectAsState
 import tachiyomi.presentation.core.util.shouldExpandFAB
 import tachiyomi.source.local.isLocal
+import top.yukonga.miuix.kmp.basic.CardDefaults
 import top.yukonga.miuix.kmp.basic.Scaffold
 import top.yukonga.miuix.kmp.blur.LayerBackdrop
 import top.yukonga.miuix.kmp.blur.blur
@@ -931,10 +932,20 @@ private fun LazyListScope.sharedChapterItems(
         contentType = { _, _ -> MangaScreenItem.CHAPTER },
     ) { index, item ->
         val haptic = LocalHapticFeedback.current
+        // One Miuix card for the whole chapter section: each row paints
+        // the card surface, with the outer corners rounded only on the
+        // first and last rows, so the section reads as a single card
+        // while the list stays lazy.
+        val cardShape = RoundedCornerShape(
+            topStart = if (index == 0) CardDefaults.CornerRadius else 0.dp,
+            topEnd = if (index == 0) CardDefaults.CornerRadius else 0.dp,
+            bottomEnd = if (index == chapters.lastIndex) CardDefaults.CornerRadius else 0.dp,
+            bottomStart = if (index == chapters.lastIndex) CardDefaults.CornerRadius else 0.dp,
+        )
 
         when (item) {
             is ChapterList.MissingCount -> {
-                MissingChapterCountListItem(count = item.count)
+                MissingChapterCountListItem(count = item.count, cardShape = cardShape)
             }
             is ChapterList.Item -> {
                 MangaChapterListItem(
@@ -981,6 +992,7 @@ private fun LazyListScope.sharedChapterItems(
                     // and not before a missing-count row.
                     showDivider = index < chapters.lastIndex &&
                         chapters[index + 1] is ChapterList.Item,
+                    cardShape = cardShape,
                 )
             }
         }
