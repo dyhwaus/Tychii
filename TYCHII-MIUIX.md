@@ -1889,6 +1889,28 @@ Untested — needs a rebuild: check the selected tab reads as frosted
 the unselected tabs still show the bar's clearer glass, and scrolling
 stays smooth with the extra blur pass.
 
+## Start button is frosted glass too (2026-11-16)
+
+The user asked for the manga detail start button to be frosted glass
+as well. It already blurred the page behind it, but its veil was
+primaryContainer at 0.75 alpha — mostly a solid pastel pill, with
+only a hint of the blurred page showing through.
+
+Fix, code cbc2e00a: in liquid-glass mode the veil now uses the shared
+alpha (0.4), so the blurred page shows through like frosted glass.
+The veil colour stays primaryContainer, not the shared
+surfaceContainer: surfaceContainer is the same colour as the page
+background in this theme, so it could never lift the button off the
+page (that is what made it read as a dark smudge before, fixed by
+a6bc6a6c). Translucent mode keeps 0.75 — there is no blur there, and
+the label needs the opacity — and opaque mode stays solid. Blur,
+lens, tilt highlight and drop shadow are unchanged, and the icon and
+label (onPrimaryContainer) stay crisp on top.
+
+Untested — needs a rebuild: check the button reads as a frosted pill
+(blurred page visible through a pale pink / olive veil, label crisp)
+in both themes, and that it still stands out from the page behind it.
+
 ## Build fixes
 
 - 2026-11-16: the chapter-card change imported `RectangleShape` from
