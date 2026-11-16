@@ -32,6 +32,7 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.Shadow
 import androidx.compose.ui.layout.boundsInWindow
 import androidx.compose.ui.layout.onGloballyPositioned
@@ -42,6 +43,10 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import eu.kanade.domain.ui.model.BarStyle
 import eu.kanade.presentation.manga.components.MangaCover
+import eu.kanade.presentation.miuix.MetalEngravedIcon
+import eu.kanade.presentation.miuix.metalEngravedShadow
+import eu.kanade.presentation.miuix.metalIsDark
+import eu.kanade.presentation.miuix.metalSurface
 import eu.kanade.presentation.theme.isMiuixGlassSupported
 import mihon.app.di.appGraph
 import mihon.icons.materialsymbols.MaterialSymbols
@@ -77,7 +82,8 @@ private const val GRID_SELECTED_COVER_ALPHA = 0.76f
 
 /**
  * Layout of grid list item as a PiliPlus-style card: the cover, with
- * the title on a frosted glass strip over its bottom edge.
+ * the title on a strip over its bottom edge — frosted glass, or
+ * brushed metal in metal mode.
  * Accepts null [title] for a cover-only view.
  */
 @Composable
@@ -111,6 +117,7 @@ fun MangaCompactGridItem(
         val context = LocalContext.current
         val barStyle by remember { context.appGraph.uiPreferences.barStyle }.collectAsState()
         val isGlass = barStyle == BarStyle.LIQUID_GLASS && isMiuixGlassSupported
+        val isMetal = barStyle == BarStyle.METAL
         // The title lives on the cover now, so the card is the cover
         // itself — no surface behind it. The strip stays crisp when
         // the cover dims on select.
@@ -153,6 +160,7 @@ fun MangaCompactGridItem(
                     maxLines = 2,
                     onClickContinueReading = onClickContinueReading,
                     modifier = Modifier.align(Alignment.BottomCenter),
+                    isMetal = isMetal,
                 )
             }
         }
@@ -164,7 +172,9 @@ fun MangaCompactGridItem(
  * at the top, with a rim light along its top edge — the launcher
  * icon's frosted disc in strip form. No real blur: the strip sits
  * inside the page's recorded backdrop layer, where glass would
- * recurse (see the floating bar).
+ * recurse (see the floating bar). In metal mode it is a brushed
+ * metal strip with the title engraved and no rim light — the metal
+ * chamfer is the top edge.
  */
 @Composable
 private fun CoverTitleStrip(
@@ -172,27 +182,39 @@ private fun CoverTitleStrip(
     maxLines: Int,
     onClickContinueReading: (() -> Unit)?,
     modifier: Modifier = Modifier,
+    isMetal: Boolean = false,
 ) {
     val veil = MiuixTheme.colorScheme.surface
+    val metalDark = metalIsDark()
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .background(
-                Brush.verticalGradient(
-                    colors = listOf(
-                        veil.copy(alpha = 0.45f),
-                        veil.copy(alpha = 0.8f),
-                    ),
-                ),
+            .then(
+                if (isMetal) {
+                    // Square corners: the card's clip rounds the
+                    // strip's bottom edge to the card's 8.dp.
+                    Modifier.metalSurface(RectangleShape, metalDark)
+                } else {
+                    Modifier.background(
+                        Brush.verticalGradient(
+                            colors = listOf(
+                                veil.copy(alpha = 0.45f),
+                                veil.copy(alpha = 0.8f),
+                            ),
+                        ),
+                    )
+                },
             ),
     ) {
-        Box(
-            modifier = Modifier
-                .align(Alignment.TopCenter)
-                .fillMaxWidth()
-                .height(1.dp)
-                .background(Color.White.copy(alpha = 0.35f)),
-        )
+        if (!isMetal) {
+            Box(
+                modifier = Modifier
+                    .align(Alignment.TopCenter)
+                    .fillMaxWidth()
+                    .height(1.dp)
+                    .background(Color.White.copy(alpha = 0.35f)),
+            )
+        }
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -207,11 +229,15 @@ private fun CoverTitleStrip(
                 overflow = TextOverflow.Ellipsis,
                 style = MaterialTheme.typography.bodyMedium.copy(
                     fontWeight = FontWeight.Medium,
-                    shadow = Shadow(
-                        color = veil.copy(alpha = 0.5f),
-                        blurRadius = 6f,
-                        offset = Offset(0f, 1f),
-                    ),
+                    shadow = if (isMetal) {
+                        metalEngravedShadow(metalDark)
+                    } else {
+                        Shadow(
+                            color = veil.copy(alpha = 0.5f),
+                            blurRadius = 6f,
+                            offset = Offset(0f, 1f),
+                        )
+                    },
                 ),
             )
             if (onClickContinueReading != null) {
@@ -220,6 +246,7 @@ private fun CoverTitleStrip(
                     iconSize = ContinueReadingButtonIconSizeLarge,
                     onClick = onClickContinueReading,
                     modifier = Modifier.padding(start = 8.dp),
+                    isMetal = isMetal,
                 )
             }
         }
@@ -387,22 +414,47 @@ private fun ContinueReadingButton(
     iconSize: Dp,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
+    isMetal: Boolean = false,
 ) {
-    Box(modifier = modifier) {
+    val metalDark = metalIsDark()
+    // On a metal strip the button is a metal disc with an engraved
+    // icon; elsewhere it keeps its primaryContainer pill. The icon
+    // keeps the resume colour in both, like the detail page's start
+    // button.
+    val iconTint = contentColorFor(MaterialTheme.colorScheme.primaryContainer)
+    Box(
+        modifier = modifier.then(
+            if (isMetal) Modifier.metalSurface(RoundedCornerShape(12.dp), metalDark) else Modifier,
+        ),
+    ) {
         IconButton(
             onClick = onClick,
             modifier = Modifier.size(size),
             minWidth = size,
             minHeight = size,
-            backgroundColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.9f),
+            backgroundColor = if (isMetal) {
+                Color.Transparent
+            } else {
+                MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.9f)
+            },
             cornerRadius = 12.dp,
         ) {
-            Icon(
-                imageVector = MaterialSymbols.RoundedFilled.PlayArrow,
-                contentDescription = stringResource(MR.strings.action_resume),
-                tint = contentColorFor(MaterialTheme.colorScheme.primaryContainer),
-                modifier = Modifier.size(iconSize),
-            )
+            if (isMetal) {
+                MetalEngravedIcon(
+                    imageVector = MaterialSymbols.RoundedFilled.PlayArrow,
+                    contentDescription = stringResource(MR.strings.action_resume),
+                    tint = iconTint,
+                    isDark = metalDark,
+                    modifier = Modifier.size(iconSize),
+                )
+            } else {
+                Icon(
+                    imageVector = MaterialSymbols.RoundedFilled.PlayArrow,
+                    contentDescription = stringResource(MR.strings.action_resume),
+                    tint = iconTint,
+                    modifier = Modifier.size(iconSize),
+                )
+            }
         }
     }
 }
