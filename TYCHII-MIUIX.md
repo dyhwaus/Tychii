@@ -2167,6 +2167,32 @@ in both themes (bright bands, no visible brushing, engraved text
 still legible on the brighter base) and that the glass modes are
 untouched.
 
+## Metal retuned to satin aluminum alloy (2026-11-16)
+
+The user asked to try aluminum alloy instead of chrome. Chrome is a
+polished mirror (banded reflections, no grain); aluminum is a satin
+face — even colour, fine grain, soft edges. Same file, same callers
+(code 027ab59d):
+
+- Base: the five-stop chrome bands are gone, back to a two-stop soft
+  gradient — but brighter and flatter than the original brushed
+  steel. Light: #F3F4F6 → #DCDEE1. Dark (anodised): #34373B →
+  #222427.
+- Grain: the fine lines are back, but subtler than the brushed
+  steel's — alpha 0.01–0.03 (was 0.02–0.07), same 2.dp spacing and
+  deterministic per-line hash, so the satin stays stable across
+  frames.
+- Chamfer: softer than chrome — top edge white 0.7 → 0.4, bottom
+  edge black 0.45 → 0.3.
+- Sheen: white 0.1 → 0.06, same top-left diagonal.
+- Unchanged: the engraving, the recess colours, the shadows, and
+  every caller. The chrome band values are recorded here only; the
+  code keeps one metal recipe at a time.
+
+Untested — needs a rebuild: check the metal reads as satin aluminum
+in both themes (even, bright, fine grain, no mirror bands) and that
+the glass modes are untouched.
+
 ## Build fixes
 
 - 2026-11-16: the metal material used the wrong `Shadow`: there are
