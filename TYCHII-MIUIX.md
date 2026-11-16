@@ -1724,6 +1724,26 @@ rebuild: open a fully-read manga from the Library and check the
 button is there and starts from chapter 1; check a chapter row has
 no download button but still swipes to download.
 
+## Start button gets the FAB's primaryContainer veil (2026-11-16)
+
+The user said the start button was very dark and looked odd. Root
+cause, verified against the theme: the button's veil was
+surfaceContainer at the shared alpha, but in this theme
+surfaceContainer is the same color as the page background (Miuix
+stock scheme: dark #242424 / #242424, light white / white), so no
+veil alpha can ever lift it off the page — it was a dark smudge that
+only got worse when the shared veil dropped to 0.26. Fix: the button
+now uses the original FAB's primaryContainer instead of the shared
+veil — solid in opaque mode, 0.75 alpha in translucent and glass
+modes, so a hint of the blurred page still shows through — and the
+icon and label use onPrimaryContainer (M3 FAB convention). Blur,
+lens, tilt highlight and drop shadow are unchanged; the button is the
+only glass piece that does not follow the shared veil, and a comment
+in the code records why. The now-unused MiuixGlassSurfaceAlpha and
+MiuixTheme imports are removed from MangaScreen.kt. Untested — needs
+a rebuild: the button should read as a pale pink (light) / olive
+(dark) pill with dark-red / pale-yellow text.
+
 ## Build fixes
 
 - 2026-11-14: the Explore capsule called `stringResource(...)` for the
