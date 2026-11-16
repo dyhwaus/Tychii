@@ -2109,6 +2109,32 @@ Untested — needs a rebuild: open a source's Explore page and check the
 Popular / Latest chips read as metal in metal mode (engraved, legible)
 and as frosted glass in glass mode, in both themes.
 
+## Manga card title strip follows the bar material (2026-11-16)
+
+The user asked for the manga cards to use the same material as the
+global bar style. The card itself is the cover image, so the material
+surface on it is the title strip over the cover's bottom edge.
+
+Done in code 9a1c9fd0, in CommonMangaItem.kt (the shared card, so
+Library, Updates, History, Explore and search all get it — the card
+already read the bar style itself for the glass selection veil, and
+now also takes isMetal from the same read). In metal mode the strip
+is a brushed-metal surface (square corners — the card's clip rounds
+the strip's bottom edge to the card's 8.dp), the rim light is skipped
+(the metal chamfer is the top edge), the title is engraved, and the
+continue-reading button on the strip is a metal disc with an engraved
+play icon, keeping the resume colour like the detail page's start
+button. In liquid glass mode the strip is unchanged — it is already
+the frosted look, and a real blur is impossible there (the strip sits
+inside the page's recorded backdrop layer, where glass would recurse).
+Opaque and translucent are unchanged. The list-mode rows are not
+cards — they stay a plain row on the page background, so they are
+untouched (their continue button keeps the primaryContainer pill).
+
+Untested — needs a rebuild: check the strip reads as metal in metal
+mode (engraved title legible, the continue button a metal disc) and
+is unchanged in glass mode, in both themes.
+
 ## Build fixes
 
 - 2026-11-16: the metal material used the wrong `Shadow`: there are
