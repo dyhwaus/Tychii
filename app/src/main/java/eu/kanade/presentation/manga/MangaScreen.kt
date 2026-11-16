@@ -519,7 +519,11 @@ private fun MangaScreenSmallImpl(
             refreshing = state.isRefreshingData,
             onRefresh = onRefresh,
             enabled = !isAnySelected,
-            modifier = Modifier.then(if (barStyle == BarStyle.LIQUID_GLASS) Modifier.layerBackdrop(backdrop) else Modifier),
+            // 滚动时暂停玻璃背景的录制：章节滚动中页面每帧都在变，
+            // 录制层每帧都要重画整页；停录期间开始按钮采到的还是
+            // 上一帧，停下后恢复录制。isScrollInProgress 在拖动和
+            // 惯性滚动时都为真。
+            modifier = Modifier.then(if (barStyle == BarStyle.LIQUID_GLASS && !chapterListState.isScrollInProgress) Modifier.layerBackdrop(backdrop) else Modifier),
             indicatorPadding = PaddingValues(top = topPadding),
         ) {
             val layoutDirection = LocalLayoutDirection.current
@@ -773,7 +777,8 @@ fun MangaScreenLargeImpl(
             refreshing = state.isRefreshingData,
             onRefresh = onRefresh,
             enabled = !isAnySelected,
-            modifier = Modifier.then(if (barStyle == BarStyle.LIQUID_GLASS) Modifier.layerBackdrop(backdrop) else Modifier),
+            // 滚动时暂停玻璃背景的录制（和小布局一样）。
+            modifier = Modifier.then(if (barStyle == BarStyle.LIQUID_GLASS && !chapterListState.isScrollInProgress) Modifier.layerBackdrop(backdrop) else Modifier),
             indicatorPadding = PaddingValues(
                 start = insetPadding.calculateStartPadding(layoutDirection),
                 top = with(density) { topBarHeight.toDp() },
