@@ -1744,6 +1744,31 @@ MiuixTheme imports are removed from MangaScreen.kt. Untested — needs
 a rebuild: the button should read as a pale pink (light) / olive
 (dark) pill with dark-red / pale-yellow text.
 
+## Chapter list in a Miuix card (2026-11-16)
+
+The user picked the grouped-card direction for the chapter list
+(the other options offered were a flat polish pass and grouping by
+scanlator). The chapter section is now one Miuix card: each row
+paints the card surface (Miuix surfaceContainer, the same color the
+settings and detail-page cards use), 16.dp outer corners via
+CardDefaults.CornerRadius, 12.dp side margins matching the detail
+page's other cards, and the existing inset dividers between rows.
+The list stays lazy — there is no single Card wrapping the rows
+(that would compose every chapter at once); instead the list computes
+one corner shape per row (rounded on the first/last row's outer
+corners only) and each row draws the card surface clipped to it, so
+the section reads as a single card. The swipe box's background is now
+the card surface too, so a swiped row still reveals the card, and
+the missing-chapters gap row gets the same dressing (its dimming
+alpha applies to the inner content only, not the card surface). The
+row's end padding is 16.dp now, symmetric (the 8.dp was for the
+removed download button). The ChapterHeader's side padding moved from
+16.dp to 28.dp — SmallTitle's horizontal margin — so the title lines
+up with the chapter titles (12.dp card inset + 16.dp row padding).
+Untested — needs a rebuild: check the card reads as one piece over a
+long list (first/last corners, dividers, selection tint, swipe
+actions, and the missing-chapters row all on the card surface).
+
 ## Build fixes
 
 - 2026-11-14: the Explore capsule called `stringResource(...)` for the
