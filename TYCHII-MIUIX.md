@@ -1911,6 +1911,52 @@ Untested — needs a rebuild: check the button reads as a frosted pill
 (blurred page visible through a pale pink / olive veil, label crisp)
 in both themes, and that it still stands out from the page behind it.
 
+## Pause glass backdrop recording while scrolling (2026-11-16)
+
+The user asked to optimise smoothness and reduce power, and picked
+the recommended way: degrade the glass while scrolling, restore it at
+rest (the other options were to lower the blur radius / drop a blur
+pass, or a checklist first).
+
+What the audit found: Miuix's blur already does the standard
+optimisations (adaptive downscale, cached RenderEffect and colour
+controls), the app's lens() already early-outs at zero refraction and
+for interior pixels, and the tilt highlight is already snapped to a
+0.05 grid. The remaining cost is inherent to live blur: while a page
+scrolls, its content changes every frame, so the backdrop layer is
+re-recorded every frame — the whole page is drawn twice per frame
+(once to the screen, once into the layer), then blurred. Lowering the
+blur radius would not stop that re-recording, which is the dominant
+cost, so the lever is to pause the recording while the page moves.
+
+How it works, code a640952a:
+- HomeScreen and the Explore page: the existing nested-scroll
+  connection (which already observes scrolling for the capsule) bumps
+  a scroll tick on every scroll event; a LaunchedEffect sets
+  glassPaused while events keep coming and clears it 150ms after the
+  last one (MiuixGlassScrollIdleDelayMs in LiquidGlass.kt). While
+  paused the content Box drops its layerBackdrop modifier, so nothing
+  re-records; the bar, capsules and top fade keep sampling the backdrop
+  and show its last frame — blurred, so the frozen frame is hard to
+  tell from live while the list moves. Switching tabs clears
+  glassPaused, so a new tab never starts on a stale frame.
+- Manga detail page (both layouts): the chapter list owns its own
+  LazyListState, so the PullRefresh layerBackdrop is gated directly on
+  !chapterListState.isScrollInProgress — true during a drag and during
+  a fling, false once settled. No debounce needed there.
+- The reader is untouched: page turns are discrete, not continuous
+  scrolling, so its backdrop re-records once per turn.
+
+Not done: lowering the blur radius or dropping a blur pass (the user
+first tapped that option, then chose this one instead). The glass look
+at rest is unchanged — same blur 8.dp, veil 0.4, lens.
+
+Untested — needs a rebuild: scroll a long Library list and a long
+chapter list and check scrolling feels lighter, the bar and capsules
+still read as frosted while scrolling (frozen frame, not black or
+transparent), and that the glass goes live again within a beat of
+stopping.
+
 ## Build fixes
 
 - 2026-11-16: the chapter-card change imported `RectangleShape` from
