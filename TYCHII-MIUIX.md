@@ -1651,6 +1651,17 @@ much GPU time), in the same alpha family as the non-glass pill
 busy covers (depth + dispersion cost), and whether the pill reads as
 the selected tab in both themes.
 
+## Top fade blur 12.dp (2026-11-16)
+
+The top fade's progressive blur was 8.dp — a first guess from when
+the fade was added. The user asked for the top-of-page shadow to be
+12, so the fade's blur radius is now 12.dp (TopFadeBlur.kt only; the
+shared glass recipe stays at 8.dp for the floating pieces). The
+fade's veil gradient and its height (72.dp on tab pages, 48.dp on
+Explore) are unchanged. Untested — needs a rebuild: check the fade
+over busy covers and whether 12.dp costs anything noticeable while
+scrolling.
+
 ## Build fixes
 
 - 2026-11-14: the Explore capsule called `stringResource(...)` for the
