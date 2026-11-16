@@ -75,7 +75,6 @@ import eu.kanade.presentation.manga.components.MangaToolbar
 import eu.kanade.presentation.manga.components.MissingChapterCountListItem
 import eu.kanade.presentation.miuix.MiuixGlassBlurRadius
 import eu.kanade.presentation.miuix.MiuixGlassChromaticAberration
-import eu.kanade.presentation.miuix.MiuixGlassSurfaceAlpha
 import eu.kanade.presentation.miuix.lens
 import eu.kanade.presentation.miuix.rememberTiltBrightHighlight
 import eu.kanade.presentation.miuix.vibrancy
@@ -109,7 +108,6 @@ import top.yukonga.miuix.kmp.blur.blur
 import top.yukonga.miuix.kmp.blur.drawBackdrop
 import top.yukonga.miuix.kmp.blur.layerBackdrop
 import top.yukonga.miuix.kmp.blur.rememberLayerBackdrop
-import top.yukonga.miuix.kmp.theme.MiuixTheme
 import kotlin.time.Instant
 
 @Composable
@@ -276,11 +274,17 @@ private fun MangaStartButton(
     modifier: Modifier = Modifier,
 ) {
     val isGlass = barStyle == BarStyle.LIQUID_GLASS
-    val surfaceContainer = MiuixTheme.colorScheme.surfaceContainer
+    // The button is a call to action, not a passive bar, so it keeps the
+    // original FAB's primaryContainer instead of the shared glass veil:
+    // surfaceContainer is the same color as the page background in this
+    // theme, so the shared veil can never lift the button off the page —
+    // that is why it read as a dark smudge. 0.75 keeps a hint of the
+    // blurred page behind it while the container color does the work.
+    val primaryContainer = MaterialTheme.colorScheme.primaryContainer
     val containerColor = when (barStyle) {
-        BarStyle.OPAQUE -> surfaceContainer
-        BarStyle.TRANSLUCENT -> surfaceContainer.copy(alpha = 0.75f)
-        BarStyle.LIQUID_GLASS -> surfaceContainer.copy(alpha = MiuixGlassSurfaceAlpha)
+        BarStyle.OPAQUE -> primaryContainer
+        BarStyle.TRANSLUCENT -> primaryContainer.copy(alpha = 0.75f)
+        BarStyle.LIQUID_GLASS -> primaryContainer.copy(alpha = 0.75f)
     }
     // Fully rounded at 56.dp tall; RoundedCornerShape, not CircleShape,
     // so the backdrop shape stays a CornerBasedShape.
@@ -332,7 +336,7 @@ private fun MangaStartButton(
             Icon(
                 imageVector = MaterialSymbols.RoundedFilled.PlayArrow,
                 contentDescription = null,
-                tint = MiuixTheme.colorScheme.onSurface,
+                tint = MaterialTheme.colorScheme.onPrimaryContainer,
             )
             AnimatedVisibility(
                 visible = expanded,
@@ -342,7 +346,7 @@ private fun MangaStartButton(
                 Text(
                     text = label,
                     modifier = Modifier.padding(start = 8.dp),
-                    color = MiuixTheme.colorScheme.onSurface,
+                    color = MaterialTheme.colorScheme.onPrimaryContainer,
                     style = MaterialTheme.typography.labelLarge,
                 )
             }
