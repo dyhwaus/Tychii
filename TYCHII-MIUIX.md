@@ -1985,6 +1985,25 @@ Audit of the other places, done read-only before picking a next step:
 Untested — the revert itself needs a rebuild to confirm the rendering
 problem is gone.
 
+## Library lists get stable item keys (2026-11-16)
+
+After the scroll-pause revert the user picked the Library-key fix
+from the audit. Both Library lists called items() with a contentType
+but no key, so items were matched by index: a sort, filter, category
+change or new update rematched and recomposed every visible card or
+row instead of keeping each manga's own composition (and its loaded
+cover).
+
+Fix, code ae7b41d4: key = { it.libraryManga.manga.id } in
+LibraryCompactGrid and LibraryList (the manga database id, stable
+across list changes). Updates and History already had keys, so nothing
+changes there. No visual change — the lists look the same; they just
+stop redoing work when the list changes.
+
+Untested — needs a rebuild: switch sort order or category and check
+the list updates without the visible cards flickering or reloading
+their covers.
+
 ## Build fixes
 
 - 2026-11-16: the chapter-card change imported `RectangleShape` from
