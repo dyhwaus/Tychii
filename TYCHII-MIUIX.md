@@ -1694,6 +1694,36 @@ recipe while keeping their 24.dp lens. Untested — needs a rebuild:
 check the lighter veil over busy covers (text legibility), the
 capsule's shallow lens on the title, and the capsule press spring.
 
+## Chapter download button removed; start button always shows (2026-11-16)
+
+Two manga-detail fixes in one push. First, the per-chapter download
+button is gone: the ChapterDownloadIndicator is removed from
+MangaChapterListItem, along with its three parameters and the
+downloadProgressProvider threading through the presentation screen
+(four parameter declarations, four pass-throughs, the item call-site
+arguments) and the ui call-site argument; the ViewModel's progress
+plumbing went with it (the downloadProgress map, the progressFlow
+collect, the progress lines in updateDownloadState, getDownloadProgress
+and the mutableStateMapOf import). The download state itself stays:
+the swipe-to-download gesture still works (it reads downloadState,
+not progress), batch download from the selection menu is untouched,
+and the Updates page still shows its own download indicators
+(ChapterDownloadIndicator.kt stays for that page). Second, the start
+button: it used to hide whenever a manga had no unread chapters —
+original Mihon behaviour (`isFABVisible = hasUnreadChapters`), which
+is why opening a finished manga from the Library showed no button at
+all. It now shows whenever the manga has chapters
+(`state.chapters.isNotEmpty()`), in both the small and large layouts;
+the label is "继续" only when some chapters are read and some are
+not, otherwise "开始". Tapping it opens the next unread chapter as
+before, and when everything is read it falls back to the first
+chapter in reading order — new getFirstChapter() on the ViewModel
+and on List<ChapterList.Item> (same filters and sort as
+getNextUnread), wired into onContinueReading. Untested — needs a
+rebuild: open a fully-read manga from the Library and check the
+button is there and starts from chapter 1; check a chapter row has
+no download button but still swipes to download.
+
 ## Build fixes
 
 - 2026-11-14: the Explore capsule called `stringResource(...)` for the
