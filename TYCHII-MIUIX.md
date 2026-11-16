@@ -2053,6 +2053,39 @@ reader bars read as brushed metal in both themes, the selected tab
 reads as a recess with a crisp icon, the engraved text is legible,
 and the glass options still work when switched back.
 
+## Metal mode: independent switch buttons instead of the capsule (2026-11-16)
+
+The user asked for the metal navigation bar to change from a capsule
+to independent floating buttons, each popping out when pressed like a
+switch. One correction first: there are 5 tabs, not 4 (Library,
+Updates, History, Browse, More), so there are 5 buttons — 4 when the
+Updates tab is hidden.
+
+Done in code d2c0df39: new `presentation/miuix/MetalTabBar.kt`
+(`MetalTabButtons` + `MetalTabButton`). TychiiLiquidBar renders the
+buttons in metal mode and the capsule in every other mode. Each button
+is 56.dp tall, 28.dp corners, weight(1f) with 8.dp gaps, in the same
+12.dp/8.dp outer padding as the capsule. The selected button is raised
+(4.dp up, shadow 10.dp→14.dp and deeper, 4% larger) on a spring
+(dampingRatio 0.6, stiffness 500 — a little overshoot, like a switch
+snapping into place); tapping sinks it slightly first (the capsule's
+press spring, 0.975). Labels follow the show-labels setting, badges
+stay on the buttons, icons and labels are engraved. No pill, so no
+drag-to-switch — tap only; re-tapping a tab still means reselect
+(e.g. Library opens its settings dialog).
+
+The shadow sits outside the motion (like the capsule): the button
+rises while its shadow stays on the page and grows. The metal capsule
+treatment from 7b68b6b3 is gone — MiuixLiquidBottomBar lost its isMetal
+parameter and its metal base/pill branches, and the metalRecess
+modifier is deleted (the recess colour values stay, used by the
+chapter navigator's buttons). The glass capsule is untouched.
+
+Untested — needs a rebuild: switch to Metal and check the five buttons
+read as separate metal switches in both themes, the selected one pops
+out with a spring when tapped, the old one settles back, labels and
+badges are right, and the glass bar still works when switched back.
+
 ## Build fixes
 
 - 2026-11-16: the chapter-card change imported `RectangleShape` from
