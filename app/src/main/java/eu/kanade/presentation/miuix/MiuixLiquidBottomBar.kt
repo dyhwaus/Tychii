@@ -8,8 +8,9 @@
 // 2) 深浅色不再从 SukiSU 的主题工具取，而是由调用方传入 `isDark`（本项目跟随应用内设置）；
 // 3) 折射/内阴影/增艳复用本项目已移植的 ui/miuix/LiquidGlass.kt 与 LiquidInnerShadow.kt。
 // 4) 选中 pill 采样 WeKite 式 CombinedBackdrop（页面 + 已染色的选中层），
-//    透镜与面纱按 WeKite 的参数；但选中层只录图标，不做第二遍模糊
-//    （早先版本做过，GPU 开销太大）。
+//    透镜与面纱按 WeKite 的参数；选中层录制时先做一遍磨砂（模糊 +
+//    面纱），所以 pill 是磨砂质感而非通透的——图标是录制层的内容，
+//    仍清晰。这是第二遍模糊，只覆盖 pill 大小的一条。
 // 5) pill 在内容 Row 之上（WeKite 的层叠）：只有这样 pill 的拖动手势
 //    才收得到触摸——内容 Row 盖在上面时，触摸根本到不了 pill。pill
 //    盖住选中 tab 后，点按/长按靠 DampedDragAnimation 的 onTap/
@@ -344,10 +345,11 @@ internal fun MiuixLiquidBottomBar(
             // on top of the indicator pill.
         }
 
-        // 选中层：把 tab 内容再画一遍（全部按选中态的强调色），录进
-        // tabsBackdrop，供 pill 的 CombinedBackdrop 采样。只录图标，
-        // 不做第二遍模糊——早先版本做过整层玻璃，GPU 开销太大，这里
-        // 只录内容，折射由 pill 自己的透镜做。alpha 0f 且清掉语义，
+        // 选中层：先画一层磨砂玻璃（模糊的页面 + 面纱），再叠上按
+        // 选中态染色的 tab 内容，录进 tabsBackdrop，供 pill 的
+        // CombinedBackdrop 采样——pill 采到的就是磨砂页 + 清晰图标。
+        // 这是第二遍模糊（底栏本身已经模糊过一次页面），只覆盖 pill
+        // 大小的一条；WeKite 也是这么做的。alpha 0f 且清掉语义，
         // 不参与点击；尺寸与位置和 pill 一致（56.dp 高、左右各 4.dp），
         // 这样 pill 采到的图标正好落在它下面。
         if (isBlurEnabled) {
@@ -357,6 +359,20 @@ internal fun MiuixLiquidBottomBar(
                     .alpha(0f)
                     .layerBackdrop(tabsBackdrop)
                     .graphicsLayer { translationX = panelOffset }
+                    .drawBackdrop(
+                        backdrop = backdrop,
+                        shape = { pillShape },
+                        effects = {
+                            vibrancy()
+                            blur(MiuixGlassBlurRadius.toPx(), MiuixGlassBlurRadius.toPx())
+                            // 和底栏本身一样的透镜：24/24，不带 depth 与色散。
+                            lens(
+                                refractionHeight = 24.dp.toPx(),
+                                refractionAmount = 24.dp.toPx(),
+                            )
+                        },
+                        onDrawSurface = { drawRect(containerColor) },
+                    )
                     .height(56.dp)
                     .padding(horizontal = 4.dp)
                     .fillMaxWidth(),
