@@ -2641,11 +2641,44 @@ Done in code f5b068e3, in `CoverTitleStrip`
   halo), the continue-reading button on the strip is
   untouched, and list-mode rows are not cards.
 
+The glow colour was later changed to white (see the next
+section) — the blurred copy is now `MetalGlowColor`, not the
+theme colour.
+
 Untested — needs a rebuild: check the card titles read as
 carved letters glowing in the theme colour in both themes,
 and that the glow is not too strong against a bright cover.
 The blur radius and alpha live inline in `CoverTitleStrip`
 (6.dp, 0.8) if they need tuning.
+
+## Metal: the glow is white everywhere (2026-11-18)
+
+The user asked for the metal glow to be white everywhere,
+whatever the Monet theme is. Done in code 725e3e84 (4
+files). New shared `MetalGlowColor` in `MetalMaterial.kt`
+(`Color.White`, always — metal is colourless, its light is
+white light, not the theme colour), used at all three glow
+sites in metal mode:
+
+- `MetalTabBar`: the selected tab's radial wash and blurred
+  icon copy. The `accent` local (Miuix primary) is gone, and
+  the now-unused `MiuixTheme` import with it.
+- `MiuixFloatingCapsule`: an active action's wash and blurred
+  halo. The action's tint still marks which action is
+  active (the gate is now a `glowing` Boolean) — only the
+  glow colour changed. The non-metal branch still tints the
+  icon with the action tint.
+- `CoverTitleStrip`: the card title's blurred copy. The
+  glass-mode title, the continue-reading button's resume
+  colour and list-mode rows are untouched, as is every glow
+  in glass mode (the glass selected tab still glows in the
+  theme colour).
+
+Untested — needs a rebuild: check the selected tab, an
+active tool and the card titles all glow white in both
+themes, and that the white reads against the light
+aluminium in the light theme (the alphas are unchanged:
+wash 0.25, blurred copy 0.8).
 
 ## Build fixes
 
