@@ -45,7 +45,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import eu.kanade.presentation.util.Tab
 import kotlinx.coroutines.launch
-import top.yukonga.miuix.kmp.theme.MiuixTheme
 
 /** 一排独立的金属悬浮按钮，一个 tab 一个，均分宽度。 */
 @Composable
@@ -96,9 +95,8 @@ private fun MetalTabButton(
     val pressScale = remember { Animatable(1f) }
     val pressScope = rememberCoroutineScope()
     val shape = remember { RoundedCornerShape(28.dp) }
-    // 选中的才发光：辉光用主题色（和玻璃底栏的选中态同一个
-    // Miuix primary），图标和标签本身不再带任何颜色。
-    val accent = MiuixTheme.colorScheme.primary
+    // 选中的才发光：辉光是白色的，不跟主题色；图标和标签
+    // 本身不再带任何颜色。
     Box(
         modifier = modifier
             .height(56.dp)
@@ -119,13 +117,13 @@ private fun MetalTabButton(
             .metalSurface(shape, isDark)
             .clip(shape)
             .drawBehind {
-                // 选中的辉光：一池主题色的光落在按钮中央，
+                // 选中的辉光：一池白色的光落在按钮中央，
                 // 跟着弹起的程度淡入淡出；不选中时没有。
                 if (raise > 0.01f) {
                     drawRect(
                         brush = Brush.radialGradient(
                             colors = listOf(
-                                accent.copy(alpha = 0.25f * raise),
+                                MetalGlowColor.copy(alpha = 0.25f * raise),
                                 Color.Transparent,
                             ),
                             center = Offset(size.width / 2f, size.height / 2f),
@@ -156,12 +154,12 @@ private fun MetalTabButton(
                 badge = { badge?.invoke() },
             ) {
                 Box {
-                    // 辉光晕：模糊的主题色图标衬在刻字后面，
+                    // 辉光晕：模糊的白色图标衬在刻字后面，
                     // 像灯丝亮起来；不选中时 alpha 为 0。
                     Icon(
                         painter = tab.options.icon!!,
                         contentDescription = null,
-                        tint = accent,
+                        tint = MetalGlowColor,
                         modifier = Modifier
                             .size(24.dp)
                             .blur(6.dp)

@@ -132,15 +132,16 @@ fun MiuixFloatingCapsule(
             ) {
                 if (isMetal) {
                     // 工具图标也是无色刻字；正在生效的项（原来
-                    // 传了 accent tint 的）才发光，和底栏一样。
-                    val glow = action.tint
+                    // 传了 accent tint 的）才发光，和底栏一样；
+                    // 光是白色的，不跟主题色。
+                    val glowing = action.tint != null
                     Box(
                         modifier = Modifier.drawBehind {
-                            if (glow != null) {
+                            if (glowing) {
                                 drawRect(
                                     brush = Brush.radialGradient(
                                         colors = listOf(
-                                            glow.copy(alpha = 0.25f),
+                                            MetalGlowColor.copy(alpha = 0.25f),
                                             Color.Transparent,
                                         ),
                                         center = Offset(size.width / 2f, size.height / 2f),
@@ -150,11 +151,11 @@ fun MiuixFloatingCapsule(
                             }
                         },
                     ) {
-                        if (glow != null) {
+                        if (glowing) {
                             Icon(
                                 imageVector = action.icon,
                                 contentDescription = null,
-                                tint = glow,
+                                tint = MetalGlowColor,
                                 modifier = Modifier.blur(6.dp).alpha(0.8f),
                             )
                         }

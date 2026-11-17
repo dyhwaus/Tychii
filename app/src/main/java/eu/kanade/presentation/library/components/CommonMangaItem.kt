@@ -46,6 +46,7 @@ import eu.kanade.domain.ui.model.BarStyle
 import eu.kanade.presentation.manga.components.MangaCover
 import eu.kanade.presentation.miuix.MetalEngravedIcon
 import eu.kanade.presentation.miuix.MetalEngravedText
+import eu.kanade.presentation.miuix.MetalGlowColor
 import eu.kanade.presentation.miuix.metalIsDark
 import eu.kanade.presentation.miuix.metalSurface
 import eu.kanade.presentation.theme.Typefaces
@@ -176,8 +177,8 @@ fun MangaCompactGridItem(
  * inside the page's recorded backdrop layer, where glass would
  * recurse (see the floating bar). In metal mode it is a brushed
  * metal strip with the title engraved and no rim light — the metal
- * chamfer is the top edge — and the title always glows in the
- * theme colour, a blurred accent copy behind the carving.
+ * chamfer is the top edge — and the title always glows white, a
+ * blurred white copy behind the carving.
  */
 @Composable
 private fun CoverTitleStrip(
@@ -225,13 +226,11 @@ private fun CoverTitleStrip(
             verticalAlignment = Alignment.CenterVertically,
         ) {
             if (isMetal) {
-                // The title glows in the theme colour, always: a
-                // blurred accent copy of the same text behind the
-                // carving, like the selected tab's halo. The
-                // carving punches the glyph bodies out of its own
-                // layer, so the glow shows through the letters as
-                // well as around them.
-                val accent = MiuixTheme.colorScheme.primary
+                // The title glows white, always: a blurred white
+                // copy of the same text behind the carving, like
+                // the selected tab's halo. The carving punches the
+                // glyph bodies out of its own layer, so the glow
+                // shows through the letters as well as around them.
                 val titleStyle = MaterialTheme.typography.bodyMedium.copy(
                     fontWeight = FontWeight.Medium,
                     fontFamily = Typefaces.mtrSong,
@@ -240,7 +239,7 @@ private fun CoverTitleStrip(
                     Text(
                         text = title,
                         style = titleStyle,
-                        color = accent,
+                        color = MetalGlowColor,
                         minLines = 2,
                         maxLines = maxLines,
                         overflow = TextOverflow.Ellipsis,

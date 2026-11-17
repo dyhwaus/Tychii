@@ -152,6 +152,13 @@ fun metalCarvedDark(isDark: Boolean): Color =
 fun metalCarvedLight(isDark: Boolean): Color =
     Color.White.copy(alpha = if (isDark) 0.5f else 0.85f)
 
+/**
+ * The glow colour in metal mode: white, always, whatever the
+ * theme accent is. Metal is colourless — its light is white
+ * light, not the theme colour.
+ */
+val MetalGlowColor: Color = Color.White
+
 /** 刻字的阴影：直接套在文字的 TextStyle 上。 */
 fun metalEngravedShadow(isDark: Boolean): Shadow =
     Shadow(color = metalEngravedBurr(isDark), offset = Offset(0f, 1f), blurRadius = 0f)
