@@ -50,7 +50,7 @@ import eu.kanade.tachiyomi.ui.reader.ReaderActivity
 import eu.kanade.tachiyomi.util.system.isReleaseBuildType
 import eu.kanade.tachiyomi.util.system.workManager
 import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.receiveAsFlow
@@ -88,8 +88,9 @@ data object LibraryTab : Tab {
             )
         }
 
+    // Re-tapping Library does nothing: the old settings sheet
+    // used to open here, and the user asked for it to go.
     override suspend fun onReselect(navigator: Navigator) {
-        requestOpenSettingsSheet()
     }
 
     @Composable
@@ -451,15 +452,10 @@ data object LibraryTab : Tab {
 
         LaunchedEffect(Unit) {
             launch { queryEvent.receiveAsFlow().collect(viewModel::search) }
-            launch { requestSettingsSheetEvent.receiveAsFlow().collectLatest { viewModel.showSettingsDialog() } }
         }
     }
 
     // For invoking search from other screen
     private val queryEvent = Channel<String>()
     suspend fun search(query: String) = queryEvent.send(query)
-
-    // For opening settings sheet in LibraryController
-    private val requestSettingsSheetEvent = Channel<Unit>()
-    private suspend fun requestOpenSettingsSheet() = requestSettingsSheetEvent.send(Unit)
 }
