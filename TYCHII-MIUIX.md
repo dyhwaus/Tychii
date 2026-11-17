@@ -2498,6 +2498,20 @@ Explore chips keep theirs).
 
 ## Build fixes
 
+- 2026-11-18: after the carved nav bar and capsules landed,
+  the tab and tool icons vanished entirely. The cause was the
+  punch-out blend mode in `MetalCarvedIcon`: `BlendMode.Clear`
+  on a RenderNode layer erases the layer's whole rectangle,
+  both edge copies included — so the icon disappeared. The
+  card titles were fine because their Clear lives inside a
+  draw call (`drawText`), where it erases only the glyph
+  shapes. Fixed by using `BlendMode.DstOut` for the icon
+  punch-out instead (172d6b45): DstOut erases only where the
+  glyph covers (destination × (1 - source alpha)), which is
+  the correct mode for a layer-level knockout. Lesson: Clear
+  and DstOut are not interchangeable — Clear is for
+  draw-call-level erasing, DstOut for layer-level.
+
 - 2026-11-17: the glow gradients used `size.center`, but the
   float `Size` has no `center` property — only `IntSize` does
   — so both call sites failed with "Unresolved reference
