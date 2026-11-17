@@ -34,6 +34,7 @@ import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.draw.dropShadow
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
@@ -127,7 +128,7 @@ private fun MetalTabButton(
                                 accent.copy(alpha = 0.25f * raise),
                                 Color.Transparent,
                             ),
-                            center = size.center,
+                            center = Offset(size.width / 2f, size.height / 2f),
                             radius = size.minDimension * 0.9f,
                         ),
                     )

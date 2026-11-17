@@ -15,6 +15,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.Color
@@ -142,7 +143,7 @@ fun MiuixFloatingCapsule(
                                             glow.copy(alpha = 0.25f),
                                             Color.Transparent,
                                         ),
-                                        center = size.center,
+                                        center = Offset(size.width / 2f, size.height / 2f),
                                         radius = size.minDimension * 0.9f,
                                     ),
                                 )
