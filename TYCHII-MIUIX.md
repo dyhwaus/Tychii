@@ -2649,6 +2649,28 @@ The blur radius and alpha live inline in `CoverTitleStrip`
 
 ## Build fixes
 
+- 2026-11-18: the shelf backdrop's dispersion failed to
+  compile — `Assignment type mismatch: actual type is
+  'android.graphics.RenderEffect?', but
+  'androidx.compose.ui.graphics.RenderEffect?' was expected`
+  (LibraryShelf.kt:678). The backdrop created the effect with
+  the framework types (`android.graphics.RuntimeShader` +
+  `RenderEffect.createRuntimeShaderEffect`), but
+  `graphicsLayer { renderEffect }` takes Compose's own
+  `RenderEffect` — the two types are unrelated, and the
+  framework one does not convert implicitly. Fixed by using
+  Compose's types instead (71d2a28b): the two
+  `android.graphics` imports are now
+  `androidx.compose.ui.graphics.RenderEffect` /
+  `RuntimeShader`; the creation code is unchanged, since
+  Compose's `RuntimeShader(shaderString)`,
+  `setFloatUniform` and
+  `RenderEffect.createRuntimeShaderEffect(shader, "content")`
+  mirror the framework API. Lesson: for a `graphicsLayer`
+  effect, always use the Compose `RenderEffect` type — the
+  framework `RenderEffect` is only for direct framework
+  calls, and the earlier note saying "use the framework
+  directly" for a plain composable was wrong on this point.
 - 2026-11-18: after the carved nav bar and capsules landed,
   the tab and tool icons vanished entirely. The cause was the
   punch-out blend mode in `MetalCarvedIcon`: `BlendMode.Clear`
