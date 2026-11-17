@@ -2420,6 +2420,17 @@ still render (fallback).
 
 ## Build fixes
 
+- 2026-11-17: the colorless engraving called `drawText` inside a
+  `Canvas` lambda without importing it, so all three calls failed
+  with "Unresolved reference 'drawText'" (MetalMaterial:234-236).
+  `drawText` is a top-level extension on `DrawScope`, not a member
+  — the Canvas receiver does not bring it into scope, exactly
+  like `clipPath` (which the same file already imports). Fixed by
+  adding `import androidx.compose.ui.graphics.drawscope.drawText`
+  (3157f3c4). Line numbers matched the remote exactly, so it was
+  a real error in the current copy. Lesson: a DrawScope extension
+  always needs its own import, receiver or not.
+
 - 2026-11-17: the shelf fixes added `calculateTopPadding` and
   `calculateBottomPadding` imports from
   `androidx.compose.foundation.layout` to LibraryPager.kt, but
