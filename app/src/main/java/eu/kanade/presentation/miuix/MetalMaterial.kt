@@ -227,8 +227,11 @@ fun MetalEngravedText(
         Canvas(modifier = Modifier.matchParentSize()) {
             val result = layout ?: return@Canvas
             val edge = 1.dp.toPx()
-            val dark = Color.Black.copy(alpha = if (isDark) 0.4f else 0.35f)
-            val light = metalEngravedBurr(isDark)
+            // Card titles read deeper than the shared burr: the
+            // glyph interior is bare metal, so the two edges
+            // carry all of the contrast.
+            val dark = Color.Black.copy(alpha = if (isDark) 0.65f else 0.6f)
+            val light = Color.White.copy(alpha = if (isDark) 0.5f else 0.85f)
             // Offscreen layer: Clear only erases the edge copies
             // inside it, never the metal beneath.
             drawContext.canvas.saveLayer(Rect(Offset.Zero, size), Paint())
