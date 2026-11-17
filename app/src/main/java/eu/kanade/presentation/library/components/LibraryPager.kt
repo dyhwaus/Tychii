@@ -108,6 +108,29 @@ fun LibraryPager(
                     onCoverPositioned = onCoverPositioned,
                 )
             }
+            LibraryDisplayMode.Shelf -> {
+                LibraryCompactGrid(
+                    items = items,
+                    showTitle = true,
+                    columns = columns,
+                    contentPadding = contentPadding,
+                    selection = selection,
+                    onClick = onClickManga,
+                    onLongClick = onLongClickManga,
+                    onClickContinueReading = onClickContinueReading,
+                    searchQuery = searchQuery,
+                    onGlobalSearchClicked = onGlobalSearchClicked,
+                    onCoverPositioned = onCoverPositioned,
+                    shelfHeader = {
+                        LibraryShelfHeader(
+                            items = items,
+                            selection = selection,
+                            onClick = onClickManga,
+                            onLongClick = onLongClickManga,
+                        )
+                    },
+                )
+            }
         }
     }
 }

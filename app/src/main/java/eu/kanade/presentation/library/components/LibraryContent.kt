@@ -27,6 +27,7 @@ import kotlinx.coroutines.launch
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.automirroredrounded.Sort
 import mihon.icons.materialsymbols.automirroredroundedfilled.ViewList
+import mihon.icons.materialsymbols.rounded.Book
 import mihon.icons.materialsymbols.rounded.FilterList
 import mihon.icons.materialsymbols.rounded.Search
 import mihon.icons.materialsymbols.roundedfilled.ViewCompact
@@ -151,6 +152,7 @@ fun LibraryContent(
                         CapsuleAction(
                             icon = when (displayMode) {
                                 LibraryDisplayMode.List -> MaterialSymbols.AutoMirroredRoundedFilled.ViewList
+                                LibraryDisplayMode.Shelf -> MaterialSymbols.Rounded.Book
                                 LibraryDisplayMode.CompactGrid,
                                 LibraryDisplayMode.CoverOnlyGrid,
                                 -> MaterialSymbols.RoundedFilled.ViewCompact

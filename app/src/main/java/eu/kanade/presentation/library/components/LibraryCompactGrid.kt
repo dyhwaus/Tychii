@@ -2,6 +2,7 @@ package eu.kanade.presentation.library.components
 
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridItemSpan
 import androidx.compose.foundation.lazy.staggeredgrid.items
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -22,6 +23,9 @@ internal fun LibraryCompactGrid(
     searchQuery: String?,
     onGlobalSearchClicked: () -> Unit,
     onCoverPositioned: (Long, Float) -> Unit,
+    // Shelf mode's header (spine strip + focused cover), drawn as a
+    // full-width item above the cards. Null for the plain grids.
+    shelfHeader: (@Composable () -> Unit)? = null,
 ) {
     LazyLibraryGrid(
         modifier = Modifier.fillMaxSize(),
@@ -29,6 +33,15 @@ internal fun LibraryCompactGrid(
         contentPadding = contentPadding,
     ) {
         globalSearchItem(searchQuery, onGlobalSearchClicked)
+
+        if (shelfHeader != null) {
+            item(
+                span = StaggeredGridItemSpan.FullLine,
+                contentType = "library_shelf_header",
+            ) {
+                shelfHeader()
+            }
+        }
 
         items(
             items = items,

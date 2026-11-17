@@ -119,6 +119,9 @@
     <string name="action_display_comfortable_grid">Comfortable grid</string>
     <string name="action_display_list">List</string>
     <string name="action_display_cover_only_grid">Cover-only grid</string>
+    <string name="action_display_shelf">3D shelf</string>
+    <string name="action_shelf_previous">Previous book</string>
+    <string name="action_shelf_next">Next book</string>
     <string name="action_display_download_badge">Downloaded chapters</string>
     <string name="action_display_unread_badge">Unread chapters</string>
     <string name="action_display_local_badge">Local source</string>

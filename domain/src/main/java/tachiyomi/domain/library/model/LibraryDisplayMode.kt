@@ -5,6 +5,9 @@ sealed interface LibraryDisplayMode {
     data object CompactGrid : LibraryDisplayMode
     data object List : LibraryDisplayMode
     data object CoverOnlyGrid : LibraryDisplayMode
+    // Wenku8-style 3D shelf: a spine strip with the focused book's
+    // cover pulled out above it, over the compact grid.
+    data object Shelf : LibraryDisplayMode
 
     object Serializer {
         fun deserialize(serialized: String): LibraryDisplayMode {
@@ -17,7 +20,7 @@ sealed interface LibraryDisplayMode {
     }
 
     companion object {
-        val values by lazy { setOf(CompactGrid, List, CoverOnlyGrid) }
+        val values by lazy { setOf(CompactGrid, List, CoverOnlyGrid, Shelf) }
         val default = CompactGrid
 
         fun deserialize(serialized: String): LibraryDisplayMode {
@@ -29,6 +32,7 @@ sealed interface LibraryDisplayMode {
                 "COMPACT_GRID" -> CompactGrid
                 "COVER_ONLY_GRID" -> CoverOnlyGrid
                 "LIST" -> List
+                "SHELF" -> Shelf
                 else -> default
             }
         }
@@ -39,6 +43,7 @@ sealed interface LibraryDisplayMode {
             CompactGrid -> "COMPACT_GRID"
             CoverOnlyGrid -> "COVER_ONLY_GRID"
             List -> "LIST"
+            Shelf -> "SHELF"
         }
     }
 }

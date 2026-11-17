@@ -546,6 +546,9 @@
     <string name="on_hiatus">休刊中</string>
     <string name="action_show_manga">显示作品</string>
     <string name="action_display_cover_only_grid">封面网格</string>
+    <string name="action_display_shelf">立体书架</string>
+    <string name="action_shelf_previous">上一本</string>
+    <string name="action_shelf_next">下一本</string>
     <string name="pref_landscape_zoom">自动放大横向图片</string>
     <string name="pref_navigate_pan">图片放大时先平移再翻页</string>
     <string name="pref_update_only_started">跳过尚未开始阅读的作品</string>

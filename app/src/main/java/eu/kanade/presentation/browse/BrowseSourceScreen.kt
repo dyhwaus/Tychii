@@ -124,7 +124,7 @@ fun BrowseSourceContent(
                 onMangaLongClick = onMangaLongClick,
             )
         }
-        LibraryDisplayMode.CompactGrid, LibraryDisplayMode.CoverOnlyGrid -> {
+        LibraryDisplayMode.CompactGrid, LibraryDisplayMode.CoverOnlyGrid, LibraryDisplayMode.Shelf -> {
             BrowseSourceCompactGrid(
                 mangaList = mangaList,
                 columns = columns,
