@@ -2381,6 +2381,43 @@ neighbour centres it, tapping the centre opens it, prev/next
 loop without sweeping across, and the plank still reads in
 metal and glass modes.
 
+## Metal card titles: colorless engraving in MTR Song (2026-11-17)
+
+The user asked for the metal card titles to be colorless, so the
+letters read as carved into the metal, and set in the MTR
+Song-style font they sent in (FAKE-MTRSong 80's Special V4).
+Done in code 6da2cf6b:
+
+- `MetalEngravedText` no longer paints a main glyph. An
+  invisible `Text` (transparent color, shadow cleared) lays the
+  box out, and a `Canvas` on top draws the two carved edges —
+  a dark copy 1.dp above, a light copy 1.dp below (the same
+  alphas as before: dark Black 0.35 light / 0.4 dark, light
+  `metalEngravedBurr` 0.55 / 0.28) — then punches the glyph body
+  out of them with `BlendMode.Clear` inside a `saveLayer`, so
+  the interior stays metal on both themes. The layout is
+  captured from the sizing Text via `onTextLayout`, so wrapping
+  and ellipsis match a plain Text exactly. The `color` parameter
+  is gone (its only caller never passed one); the bar and capsule
+  titles still use the single-shadow engraving, untouched.
+- The title font in metal mode is now `Typefaces.mtrSong`
+  (`Font(R.font.mtr_song)`, single weight) — the user's
+  GangTieSongTiSpecial TTF, 5.2 MB, 9,372 glyphs. Glyphs it
+  lacks fall back to the default font per glyph. Glass mode
+  keeps M PLUS Rounded 1c.
+- The TTF itself is NOT in the repo: the GitHub push only
+  carries UTF-8 files, no binary contents, so a font file cannot
+  be pushed through it. Before building, copy the TTF the user
+  sent to `app/src/main/res/font/mtr_song.ttf` — without it the
+  build fails on the missing `R.font.mtr_song`. The APK grows by
+  about 5 MB.
+
+Untested — needs a rebuild (with the font file in place): check
+the card titles read as carved letters in both themes — metal
+showing through the glyphs, dark top edge, light bottom edge —
+in the MTR Song face, and that titles with glyphs the font lacks
+still render (fallback).
+
 ## Build fixes
 
 - 2026-11-17: the shelf fixes added `calculateTopPadding` and
