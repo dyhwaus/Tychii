@@ -2420,16 +2420,29 @@ still render (fallback).
 
 ## Build fixes
 
+- 2026-11-17: the `drawText` fix above imported it from the wrong
+  package — `androidx.compose.ui.graphics.drawscope.drawText`
+  does not exist, so the import itself failed with "Unresolved
+  reference 'drawText'" at MetalMaterial:43, and the three calls
+  still failed (now at 235-237, shifted by the added import
+  line). The `drawText` extensions live in
+  `androidx.compose.ui.text`, not `drawscope` (the official docs'
+  own sample imports `androidx.compose.ui.text.drawText`).
+  Fixed by moving the import there (571759f0). Lesson: an
+  extension's package is not its receiver's package — `clipPath`
+  really is in `drawscope`, `drawText` really is in `ui.text`;
+  check the docs instead of guessing from the receiver.
+
 - 2026-11-17: the colorless engraving called `drawText` inside a
   `Canvas` lambda without importing it, so all three calls failed
   with "Unresolved reference 'drawText'" (MetalMaterial:234-236).
   `drawText` is a top-level extension on `DrawScope`, not a member
   — the Canvas receiver does not bring it into scope, exactly
-  like `clipPath` (which the same file already imports). Fixed by
-  adding `import androidx.compose.ui.graphics.drawscope.drawText`
-  (3157f3c4). Line numbers matched the remote exactly, so it was
-  a real error in the current copy. Lesson: a DrawScope extension
-  always needs its own import, receiver or not.
+  like `clipPath` (which the same file already imports). The
+  first fix (3157f3c4) added the import from the wrong package —
+  see the bullet above. Line numbers matched the remote exactly,
+  so it was a real error in the current copy. Lesson: a DrawScope
+  extension always needs its own import, receiver or not.
 
 - 2026-11-17: the shelf fixes added `calculateTopPadding` and
   `calculateBottomPadding` imports from
