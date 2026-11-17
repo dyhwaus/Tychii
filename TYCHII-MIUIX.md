@@ -2337,6 +2337,18 @@ changed.
 
 ## Build fixes
 
+- 2026-11-17: the shelf fixes added `calculateTopPadding` and
+  `calculateBottomPadding` imports from
+  `androidx.compose.foundation.layout` to LibraryPager.kt, but
+  those two do not exist as extensions — they are members of the
+  `PaddingValues` interface itself (only `calculateStartPadding` /
+  `calculateEndPadding` live in `foundation.layout`, which is why
+  LibraryContent.kt and MangaScreen.kt import those two and call
+  the other two bare). Both call sites were already correct; the
+  fix was deleting the two import lines (dc1b7e44). The error
+  lines (7, 8) matched the remote exactly, so it was a real error
+  in the current copy.
+
 - 2026-11-16: the metal material used the wrong `Shadow`: there are
   two classes with that name — `androidx.compose.ui.graphics.Shadow`
   (the text shadow `TextStyle` takes) and
