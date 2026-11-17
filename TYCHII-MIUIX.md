@@ -2619,6 +2619,34 @@ unchanged. If the blur or the dispersion reads too strong or
 too weak, the two constants at the top of `LibraryShelf.kt`
 (`BackdropBlurRadius`, `BackdropDispersion`) are the knobs.
 
+## Library: metal card titles always glow (2026-11-18)
+
+The user asked for the manga card's title to be carved and
+glowing too, and picked always-on over glowing only when
+selected. The title was already carved in metal mode
+(`MetalEngravedText`, MTR Song, colorless); the glow is new.
+Done in code f5b068e3, in `CoverTitleStrip`
+(`CommonMangaItem.kt`), metal mode only:
+
+- The carved title now sits in a `Box` over a blurred accent
+  copy of the same text — same style, same lines, theme
+  colour (`MiuixTheme.colorScheme.primary`), 6.dp blur,
+  0.8 alpha — the same halo the selected tab's icon has. The
+  carving punches the glyph bodies out of its own layer, so
+  the glow shows through the letters as well as around them:
+  carved letters lit from inside in the theme colour.
+- The shared card is used everywhere (Library, Updates,
+  History, Explore, search), so every card title glows. The
+  glass-mode title is untouched (plain text with its soft
+  halo), the continue-reading button on the strip is
+  untouched, and list-mode rows are not cards.
+
+Untested — needs a rebuild: check the card titles read as
+carved letters glowing in the theme colour in both themes,
+and that the glow is not too strong against a bright cover.
+The blur radius and alpha live inline in `CoverTitleStrip`
+(6.dp, 0.8) if they need tuning.
+
 ## Build fixes
 
 - 2026-11-18: after the carved nav bar and capsules landed,
