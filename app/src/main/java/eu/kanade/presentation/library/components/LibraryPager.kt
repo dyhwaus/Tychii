@@ -110,13 +110,16 @@ fun LibraryPager(
                 )
             }
             LibraryDisplayMode.Shelf -> {
-                // Pinned above the grid: the staggered grid has no
-                // sticky headers, so the shelf lives outside it and
-                // the grid scrolls beneath it.
-                Column(
+                // Carousel only, centred in the middle of the
+                // content area: the grid below it is gone.
+                Box(
                     modifier = Modifier
                         .fillMaxSize()
-                        .padding(top = contentPadding.calculateTopPadding()),
+                        .padding(
+                            top = contentPadding.calculateTopPadding(),
+                            bottom = contentPadding.calculateBottomPadding(),
+                        ),
+                    contentAlignment = Alignment.Center,
                 ) {
                     LibraryShelfHeader(
                         items = items,
@@ -124,23 +127,6 @@ fun LibraryPager(
                         onClick = onClickManga,
                         onLongClick = onLongClickManga,
                     )
-                    Box(modifier = Modifier.weight(1f)) {
-                        LibraryCompactGrid(
-                            items = items,
-                            showTitle = true,
-                            columns = columns,
-                            contentPadding = PaddingValues(
-                                bottom = contentPadding.calculateBottomPadding(),
-                            ),
-                            selection = selection,
-                            onClick = onClickManga,
-                            onLongClick = onLongClickManga,
-                            onClickContinueReading = onClickContinueReading,
-                            searchQuery = searchQuery,
-                            onGlobalSearchClicked = onGlobalSearchClicked,
-                            onCoverPositioned = onCoverPositioned,
-                        )
-                    }
                 }
             }
         }
