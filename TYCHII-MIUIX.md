@@ -2518,6 +2518,60 @@ still in the floating capsule.
 Untested — needs a rebuild: re-tap Library and check nothing
 opens; check the other four tabs still do what they did.
 
+## Library: shelf — detail panel under the carousel (2026-11-18)
+
+The user asked to go back to the carousel-on-top arrangement,
+but with the focused manga's detail page below it instead of
+the grid of all manga. The full detail page can't be embedded
+as-is — it is a whole screen with its own ViewModel and chapter
+list, and embedding it would mean nested scrolling plus a
+chapter load on every swipe — so the panel below is a detail
+summary, not the page itself. Done in code 052a98fd:
+
+- New `LibraryShelf` composable (`LibraryShelf.kt`): the Shelf
+  branch is a `Column` again — carousel pinned on top, detail
+  panel in a `weight(1f)` box below. The header reports its
+  focused item up through a new `onFocusedChange` callback
+  (`LaunchedEffect(focused)`), so the panel follows the
+  carousel's focus, including sort/filter changes.
+- `LibraryShelfDetail`: two Miuix Cards (12.dp side margins,
+  like the detail page). The first holds the description (3
+  lines, ellipsis), a meta row (status text — the same SManga
+  mapping as the detail header — unread count, total chapters)
+  and a start/resume button; the second holds the newest five
+  chapters (by chapter number, with the relative date, read
+  ones dimmed), each opening the reader on tap. Tapping the
+  info card opens the full detail page; the centred cover does
+  too, as before.
+- Chapters come from the database via a new
+  `LibraryViewModel.getChapters(manga)` (one line over the
+  existing `GetChaptersByMangaId`, scanlator filter on),
+  threaded down as `onGetChapters` through LibraryTab →
+  LibraryContent → LibraryPager. The panel reloads on every
+  focus change (loading spinner while it loads) and resets its
+  own scroll position to the top.
+- The start button reuses the Library's existing
+  `onClickContinueReading` (next unread chapter, or the "no
+  next chapter" snackbar when all are read); its label is
+  开始 when nothing or everything is read, 继续 when partially
+  read. It is a solid primaryContainer pill — solid, never
+  glass: the panel sits inside the recorded backdrop layer, so
+  a drawBackdrop here would recurse. In metal mode it is the
+  brushed-metal surface with an engraved label.
+- While selecting, the panel goes quiet: no start button, no
+  chapter taps, no tap-through to the detail page (cover taps
+  still toggle selection, as before).
+- Side benefit: the panel scrolls, so pull-to-refresh works in
+  Shelf mode again (it stopped working when the grid went away
+  in the carousel-only change).
+
+Untested — needs a rebuild: swipe the carousel and check the
+panel below follows the focus (description, counts, chapters),
+the start button opens the next unread chapter, tapping a
+chapter row opens that chapter, tapping the card or the cover
+opens the full detail page, and switching to grid/list is
+unchanged.
+
 ## Build fixes
 
 - 2026-11-18: after the carved nav bar and capsules landed,
