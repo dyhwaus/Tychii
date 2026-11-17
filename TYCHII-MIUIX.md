@@ -2642,14 +2642,33 @@ Done in code f5b068e3, in `CoverTitleStrip`
   untouched, and list-mode rows are not cards.
 
 The glow colour was later changed to white (see the next
-section) — the blurred copy is now `MetalGlowColor`, not the
-theme colour.
+section), and then the glow was removed entirely (code
+746a2860): the user decided the card should not glow, and
+asked how to improve the title's readability instead. The
+title is back to the plain colourless carving.
 
-Untested — needs a rebuild: check the card titles read as
-carved letters glowing in the theme colour in both themes,
-and that the glow is not too strong against a bright cover.
-The blur radius and alpha live inline in `CoverTitleStrip`
-(6.dp, 0.8) if they need tuning.
+## Metal: card title readability, without the glow (2026-11-18)
+
+Open question, no code yet. With the glow gone, the metal
+card title is a colourless carving again: its interior is
+the same metal as the strip, so only the two 1.dp carved
+edges carry the letterforms. Three directions were offered
+(favourite: the faint fill):
+
+- Faint body fill, card title only: keep the carving, and
+  put a solid, unblurred copy of the text behind it in a
+  faint dark (light theme) / light (dark theme) — the
+  letters gain a body, like an ink-filled engraving, while
+  staying monochrome. Same `Box` layering the glow used.
+- Deeper and thicker carving, global: the edge offsets from
+  1.dp to 2.dp and/or stronger alphas in the shared
+  `MetalEngravedText` helpers — but the edges were already
+  deepened once (7b08f965), and it would change every carved
+  piece (tab labels, capsule title, icons), with a risk of
+  reading stamped-on.
+- Solid ink title, card title only: the title becomes plain
+  dark / light text on the metal, no carving — maximum
+  readability, but the carved-metal character is gone.
 
 ## Metal: the glow is white everywhere (2026-11-18)
 
