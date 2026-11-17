@@ -1,30 +1,26 @@
 package eu.kanade.presentation.library.components
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.combinedClickable
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.requiredWidth
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.itemsIndexed
-import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.remember
@@ -32,13 +28,11 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.draw.shadow
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
+import androidx.compose.ui.graphics.TransformOrigin
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import eu.kanade.domain.ui.model.BarStyle
@@ -56,19 +50,21 @@ import tachiyomi.domain.manga.model.MangaCover as MangaCoverModel
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.i18n.stringResource
 import tachiyomi.presentation.core.util.collectAsState
-import kotlin.math.roundToInt
+import kotlin.math.abs
 
-private val SpineWidth = 26.dp
-private val SpineHeight = 150.dp
 private val FocusedCoverWidth = 124.dp
-private val SpineShape = RoundedCornerShape(4.dp)
+private val FocusedCoverHeight = 186.dp
+private val CarouselPageSpacing = 12.dp
+// Neighbours shrink to this and fade to this at one page away.
+private const val NeighbourScale = 0.78f
+private const val NeighbourAlpha = 0.35f
 
 /**
- * Wenku8-style 3D shelf, pinned above the Library grid in Shelf
- * mode: the category's books stand as narrow spines on a plank,
- * and the focused book's cover is pulled out above them. The grid
- * below stays the browsing surface, so this is a header, not a
- * replacement for it.
+ * Carousel shelf, pinned above the Library grid in Shelf mode:
+ * the focused manga's cover sits in the middle, its neighbours
+ * peeking in on both sides — smaller and dimmer toward the
+ * screen edges, standing on the same plank. Swiping moves
+ * between books; the grid below stays the browsing surface.
  */
 @Composable
 internal fun LibraryShelfHeader(
@@ -78,9 +74,7 @@ internal fun LibraryShelfHeader(
     onLongClick: (LibraryManga) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val listState = rememberLazyListState()
     val scope = rememberCoroutineScope()
-    val density = LocalDensity.current
     // Focus is a manga id, not an index: a sort or filter change
     // keeps the same book focused, and a book that left the list
     // falls back to the first one instead of pointing at whatever
@@ -103,87 +97,105 @@ internal fun LibraryShelfHeader(
     val focusedManga = focused.libraryManga.manga
     val selecting = selection.isNotEmpty()
 
-    // Loops around, and scrolls the strip so the focused spine
-    // lands in the middle — a negative scrollOffset puts the
-    // item that far past the viewport's start edge.
+    val pagerState = rememberPagerState(
+        initialPage = focusedIndex,
+        pageCount = { items.size },
+    )
+    // The pager is the source of truth while swiping; keep the
+    // focused id in step with the settled page.
+    LaunchedEffect(pagerState.currentPage) {
+        val page = pagerState.currentPage
+        if (page in items.indices) {
+            focusedMangaId = items[page].libraryManga.manga.id
+        }
+    }
+
+    // Loops around. A wrap jumps instantly instead of animating
+    // across every page in between.
     fun focus(index: Int) {
         val size = items.size
         if (size == 0) return
         val next = ((index % size) + size) % size
-        focusedMangaId = items[next].libraryManga.manga.id
         scope.launch {
-            val viewportWidth = listState.layoutInfo.viewportSize.width
-            val itemWidth = with(density) { SpineWidth.toPx() }.roundToInt()
-            listState.animateScrollToItem(next, -((viewportWidth - itemWidth) / 2))
+            if (next == pagerState.currentPage) return@launch
+            if (abs(next - pagerState.currentPage) > 1) {
+                pagerState.scrollToPage(next)
+            } else {
+                pagerState.animateScrollToPage(next)
+            }
         }
     }
 
     Column(modifier = modifier.fillMaxWidth()) {
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(top = 4.dp),
-            contentAlignment = Alignment.Center,
-        ) {
-            // Tap and long-press both live on this wrapper: the
-            // cover itself only takes an onClick, so a long-press
-            // for selection has to come from here.
-            Box(
+        BoxWithConstraints(modifier = Modifier.fillMaxWidth()) {
+            // Half the leftover width on each side, so the focused
+            // page sits dead centre with one neighbour peeking in
+            // on each side.
+            val sidePadding = ((maxWidth - FocusedCoverWidth) / 2).coerceAtLeast(0.dp)
+            HorizontalPager(
+                state = pagerState,
                 modifier = Modifier
-                    .shadow(4.dp, RoundedCornerShape(8.dp))
-                    .combinedClickable(
-                        onClick = { onClick(focused.libraryManga) },
-                        onLongClick = { onLongClick(focused.libraryManga) },
-                    ),
-            ) {
-                MangaCover.Book(
-                    modifier = Modifier.width(FocusedCoverWidth),
-                    data = MangaCoverModel(
-                        mangaId = focusedManga.id,
-                        sourceId = focusedManga.source,
-                        isMangaFavorite = focusedManga.favorite,
-                        url = focusedManga.thumbnailUrl,
-                        lastModified = focusedManga.coverLastModified,
-                    ),
-                    shape = RoundedCornerShape(8.dp),
-                )
-            }
-        }
-
-        LazyRow(
-            state = listState,
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(SpineHeight)
-                .padding(top = 12.dp),
-            contentPadding = PaddingValues(horizontal = 16.dp),
-            horizontalArrangement = Arrangement.spacedBy(6.dp),
-        ) {
-            itemsIndexed(
-                items = items,
-                key = { _, item -> item.libraryManga.manga.id },
-            ) { index, libraryItem ->
+                    .fillMaxWidth()
+                    .height(FocusedCoverHeight),
+                contentPadding = PaddingValues(horizontal = sidePadding),
+                pageSpacing = CarouselPageSpacing,
+            ) { page ->
+                val libraryItem = items.getOrNull(page) ?: return@HorizontalPager
                 val manga = libraryItem.libraryManga.manga
-                ShelfSpine(
-                    title = manga.title,
-                    unreadCount = libraryItem.unreadCount,
-                    isFocused = index == focusedIndex,
-                    isSelected = manga.id in selection,
-                    isMetal = isMetal,
-                    metalDark = metalDark,
-                    onClick = {
-                        if (selecting) {
-                            onClick(libraryItem.libraryManga)
-                        } else {
-                            focus(index)
-                        }
-                    },
-                    onLongClick = { onLongClick(libraryItem.libraryManga) },
-                )
+                // 0 on the centred page, ±1 on the neighbours,
+                // fractional while dragging.
+                val pageOffset = (pagerState.currentPage - page) +
+                    pagerState.currentPageOffsetFraction
+                val distance = abs(pageOffset).coerceIn(0f, 1f)
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.BottomCenter,
+                ) {
+                    // Tap and long-press both live on this wrapper:
+                    // the cover itself only takes an onClick, so a
+                    // long-press for selection has to come from
+                    // here.
+                    Box(
+                        modifier = Modifier
+                            .shadow(4.dp, RoundedCornerShape(8.dp))
+                            .graphicsLayer {
+                                // Shrink toward the bottom edge, so
+                                // every cover keeps standing on the
+                                // plank.
+                                val scale = 1f - (1f - NeighbourScale) * distance
+                                scaleX = scale
+                                scaleY = scale
+                                alpha = 1f - (1f - NeighbourAlpha) * distance
+                                transformOrigin = TransformOrigin(0.5f, 1f)
+                            }
+                            .combinedClickable(
+                                onClick = {
+                                    when {
+                                        selecting -> onClick(libraryItem.libraryManga)
+                                        page == pagerState.currentPage -> onClick(libraryItem.libraryManga)
+                                        else -> focus(page)
+                                    }
+                                },
+                                onLongClick = { onLongClick(libraryItem.libraryManga) },
+                            ),
+                    ) {
+                        MangaCover.Book(
+                            modifier = Modifier.width(FocusedCoverWidth),
+                            data = MangaCoverModel(
+                                mangaId = manga.id,
+                                sourceId = manga.source,
+                                isMangaFavorite = manga.favorite,
+                                url = manga.thumbnailUrl,
+                                lastModified = manga.coverLastModified,
+                            ),
+                            shape = RoundedCornerShape(8.dp),
+                        )
+                    }
+                }
             }
         }
 
-        // The plank the spines stand on.
+        // The plank the covers stand on.
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -240,76 +252,6 @@ internal fun LibraryShelfHeader(
                     contentDescription = stringResource(MR.strings.action_shelf_next),
                 )
             }
-        }
-    }
-}
-
-@Composable
-private fun ShelfSpine(
-    title: String,
-    unreadCount: Long,
-    isFocused: Boolean,
-    isSelected: Boolean,
-    isMetal: Boolean,
-    metalDark: Boolean,
-    onClick: () -> Unit,
-    onLongClick: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    Box(
-        modifier = modifier
-            .width(SpineWidth)
-            .height(SpineHeight)
-            .then(if (isFocused) Modifier.offset(y = (-8).dp) else Modifier)
-            .clip(SpineShape)
-            .then(
-                if (isMetal) {
-                    Modifier.metalSurface(SpineShape, metalDark)
-                } else {
-                    Modifier.background(
-                        when {
-                            isSelected -> MaterialTheme.colorScheme.secondaryContainer
-                            isFocused -> MaterialTheme.colorScheme.surfaceContainerHigh
-                            else -> MaterialTheme.colorScheme.surfaceContainer
-                        },
-                    )
-                },
-            )
-            .border(
-                width = if (isFocused || isSelected) 1.dp else 0.75.dp,
-                color = when {
-                    isSelected -> MaterialTheme.colorScheme.secondary
-                    isFocused -> MaterialTheme.colorScheme.primary
-                    isMetal -> Color.Transparent
-                    else -> MaterialTheme.colorScheme.outline
-                },
-                shape = SpineShape,
-            )
-            .combinedClickable(onClick = onClick, onLongClick = onLongClick),
-    ) {
-        // Vertical title: laid out horizontally, then turned
-        // clockwise so it reads top to bottom. requiredWidth keeps
-        // the long layout from being clamped to the spine's width.
-        Text(
-            text = title,
-            modifier = Modifier
-                .align(Alignment.Center)
-                .requiredWidth(SpineHeight - 24.dp)
-                .rotate(90f),
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-            style = MaterialTheme.typography.labelMedium,
-            color = MaterialTheme.colorScheme.onSurface,
-        )
-        if (unreadCount > 0) {
-            Box(
-                modifier = Modifier
-                    .align(Alignment.TopCenter)
-                    .padding(top = 6.dp)
-                    .size(6.dp)
-                    .clip(CircleShape)
-                    .background(MaterialTheme.colorScheme.primary),
-            )
         }
     }
 }
