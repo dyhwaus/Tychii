@@ -2269,28 +2269,28 @@ existing grid/list modes untouched:
   below — it first lived inside the grid as a full-width item,
   then moved out, since the staggered grid has no sticky
   headers). The grid below stays the same cards, badges,
-  selection and continue-reading button: a 124.dp-wide
-  focused cover pulled out above a strip of 26.dp × 150.dp
-  spines, the spines standing on a 6.dp plank. Spines show the
-  title vertically (laid out horizontally, `requiredWidth` +
-  `rotate(90f)`, so it reads top to bottom) and an unread dot;
-  the focused spine is raised 8.dp with a primary outline.
-  Below: title, author (or source name), `n / total`, and
-  prev/next chevrons that loop around (`action_shelf_previous` /
-  `action_shelf_next`).
-- Behaviour mirrors the grid: tapping a spine focuses it, tapping
-  the focused cover opens the manga; while selecting, taps toggle
-  selection instead, and long-press selects. Spines follow the
-  global material (brushed metal in metal mode, surfaceContainer
+  selection and continue-reading button. It first showed the
+  books as a strip of vertical spines with the focused cover
+  pulled out above them; the user then asked for a carousel
+  instead (see the carousel section below), so the spines are
+  gone. Below the carousel: title, author (or source name),
+  `n / total`, and prev/next chevrons that loop around
+  (`action_shelf_previous` / `action_shelf_next`).
+- Behaviour mirrors the grid: tapping the centred cover opens
+  the manga, tapping a neighbour brings it to the centre; while
+  selecting, taps toggle selection instead, and long-press
+  selects. The plank under the carousel follows the global
+  material (brushed metal in metal mode, surfaceContainerHigh
   otherwise); there is no real blur in the header, for the same
   recursion reason as the title strip.
 - Explore keeps its grid: `BrowseSourceScreen` maps Shelf to the
   compact-grid branch, since the shelf is a Library-only mode.
 
 Untested — needs a rebuild: switch the Library to 立体书架 and
-check the spines read as a shelf (vertical titles, focused spine
-raised, cover pulled out), prev/next loop, tapping a spine focuses
-it, tapping the cover opens the manga, and switching back to the
+check the carousel reads (centred cover, neighbours peeking in
+smaller and dimmer, all standing on the plank), swiping moves
+between books, prev/next loop, tapping a neighbour centres it,
+tapping the cover opens the manga, and switching back to the
 grid/list modes is unchanged. Also check a category with one book
 (prev/next stay on it) and the metal/glass modes.
 
@@ -2334,6 +2334,52 @@ focus stays on the same book; tap an edge spine and check it
 rolls to the middle; scroll the grid and check the shelf stays
 pinned at the top; switch back to grid/list and check nothing
 changed.
+
+The spine strip itself was replaced by the carousel later the
+same day (next section); the focus-by-id and pinned-header fixes
+carried over, the spine-centring one was superseded by the
+pager's own scrolling.
+
+## Library: shelf becomes a carousel (2026-11-17)
+
+The user asked for the shelf to look like a carousel: one manga
+in the middle, the others behind it on both sides, fading in and
+out at the screen edges, swipeable to the matching manga. They
+picked the flat Pager carousel over a tilted Cover Flow and over
+keeping the spine strip as well. Done in code bac145a5:
+
+- `LibraryShelfHeader` is now a `HorizontalPager` (the spine
+  strip and its `ShelfSpine` composable are deleted). Each page
+  is a 124.dp cover (186.dp tall at 2:3); `contentPadding` is
+  half the leftover width on each side (via `BoxWithConstraints`,
+  clamped at 0.dp), so the focused page sits dead centre with
+  one neighbour peeking in on each side, `pageSpacing` 12.dp.
+- Neighbours shrink and fade with their distance from the
+  centre: `pageOffset = (currentPage - page) +
+  currentPageOffsetFraction`, distance clamped to 0..1, scale
+  1 → 0.78, alpha 1 → 0.35, in a `graphicsLayer` with
+  `transformOrigin = (0.5f, 1f)` so every cover keeps standing
+  on the plank. Pages are bottom-aligned in the 186.dp pager.
+- The pager is the source of truth while swiping:
+  `LaunchedEffect(pagerState.currentPage)` copies the settled
+  page's manga id into `focusedMangaId` (focus-by-id from the
+  earlier fix, kept as-is). The info row (title, author,
+  `n / total`) follows it.
+- Tapping a neighbour centres it (`focus(page)`); tapping the
+  centred cover opens the manga; while selecting, taps toggle
+  selection on any page; long-press selects from any page (the
+  tap/long-press pair still lives on a `combinedClickable`
+  wrapper, since the cover only takes an `onClick`).
+- Prev/next still loop: `focus()` wraps with modulo, and a wrap
+  uses `scrollToPage` (instant) instead of `animateScrollToPage`,
+  which would sweep across every page in between.
+
+Untested — needs a rebuild: swipe the carousel and check the
+neighbours fade and shrink toward the edges, the settled cover
+is full-size, the info row follows the page, tapping a
+neighbour centres it, tapping the centre opens it, prev/next
+loop without sweeping across, and the plank still reads in
+metal and glass modes.
 
 ## Build fixes
 
