@@ -2670,6 +2670,22 @@ edges carry the letterforms. Three directions were offered
   dark / light text on the metal, no carving — maximum
   readability, but the carved-metal character is gone.
 
+The user picked the faint fill. Done in code 191abe8e, in
+`CoverTitleStrip` (`CommonMangaItem.kt`), metal mode only:
+new shared `metalCarvedFill(isDark)` in `MetalMaterial.kt`
+(Black 0.2 in the light theme, White 0.2 in the dark
+theme), and the carved title now sits in a `Box` over a
+solid, unblurred copy of the same text in that colour — the
+carving punches the glyph bodies out of its own layer, so
+the fill shows through the letters, confined to the glyph
+shapes, with no halo around them. The tab labels, capsule
+title and icons are untouched (the fill is card-title only).
+
+Untested — needs a rebuild: check the card titles read
+clearly in both themes while still looking carved, and that
+0.2 is not too faint or too strong. The alpha lives in
+`metalCarvedFill` in `MetalMaterial.kt` if it needs tuning.
+
 ## Metal: the glow is white everywhere (2026-11-18)
 
 The user asked for the metal glow to be white everywhere,
