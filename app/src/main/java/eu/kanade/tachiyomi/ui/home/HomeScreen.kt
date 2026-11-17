@@ -388,9 +388,6 @@ object HomeScreen : Screen() {
                                         it::class == tabNavigator.current::class
                                     }
                                 },
-                                onTabSelected = { index ->
-                                    tabNavigator.current = tabs[index]
-                                },
                                 onTabClick = { tab ->
                                     if (tabNavigator.current::class == tab::class) {
                                         scope.launch { tab.onReselect(navigator) }

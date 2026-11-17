@@ -44,7 +44,6 @@ import top.yukonga.miuix.kmp.theme.MiuixTheme
 fun TychiiLiquidBar(
     tabs: List<Tab>,
     selectedIndex: () -> Int,
-    onTabSelected: (Int) -> Unit,
     onTabClick: (Tab) -> Unit,
     showLabels: Boolean,
     barStyle: BarStyle,
@@ -73,13 +72,7 @@ fun TychiiLiquidBar(
             )
         } else {
             MiuixLiquidBottomBar(
-                selectedIndex = selectedIndex,
-                onSelected = onTabSelected,
-                // pill 盖住已选中的 tab，点按它就是重选，走 onTabClick
-                //（和直接点 tab 一样，比如书架 tab 重 点开设置）。
-                onTabReselected = { index -> onTabClick(tabs[index]) },
                 backdrop = backdrop,
-                tabsCount = tabs.size,
                 isDark = isDark,
                 isBlurEnabled = barStyle == BarStyle.LIQUID_GLASS,
                 containerAlpha = when (barStyle) {
@@ -96,16 +89,12 @@ fun TychiiLiquidBar(
                     val selected = selectedIndex() == index
                     val badge = tabBadge(tab)
                     FloatingBottomBarItem(
-                        // A tap goes through onTabClick (which handles re-select);
-                        // the bar's onSelected only fires when the animated index
-                        // actually changes, so the two never double-fire.
+                        // A tap goes through onTabClick, which handles
+                        // both switching and re-selecting.
                         onClick = { onTabClick(tab) },
                         modifier = Modifier.widthIn(min = 64.dp),
                     ) {
-                        // 选中层录制时全部 tab 都按选中态画，这样 pill 滑到哪，
-                        // 折射出来的图标都是强调色（WeKite 的做法）。
-                        val forceActive = LocalBottomBarForceActiveTab.current
-                        val tint = if (selected || forceActive) {
+                        val tint = if (selected) {
                             MiuixTheme.colorScheme.primary
                         } else {
                             MiuixTheme.colorScheme.onSurface
