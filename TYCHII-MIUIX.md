@@ -83,9 +83,10 @@ RuntimeShader) + specular highlight + device-tilt light. Bar in
   (an accent-colored copy of the tab content, alpha 0f, existing only
   so the selected pill could refract the accent color inside it) ran
   a full duplicate glass pass — vibrancy + blur + lens on the whole
-  bar, every frame — so it was removed; the pill now refracts the page
-  backdrop directly (`liquid/CombinedBackdrop.kt` is now unused). The
-  selected icon itself is still drawn in the accent color. The backdrop
+  bar, every frame — so it was removed. (That second pass came back
+  on 2026-11-16 with the WeKite draggable pill, and went away again
+  with the pill on 2026-11-18 — see "Liquid bar: the draggable pill
+  is gone".) The selected icon itself is still drawn in the accent color. The backdrop
   itself is still re-recorded every scroll frame (inherent to liquid
   glass); if lag remains, the next lever is the lens refraction.
 - Deliberately NOT ported: Wenku8Reader's main-screen Miuix components
@@ -2714,6 +2715,49 @@ active tool and the card titles all glow white in both
 themes, and that the white reads against the light
 aluminium in the light theme (the alphas are unchanged:
 wash 0.25, blurred copy 0.8).
+
+## Liquid bar: the draggable pill is gone (2026-11-18)
+
+The user reported a delay and lag when tapping between nav
+tabs, and said to remove the drag pill if that would help.
+Done in code 3b7d226a (plus five file deletions). The pill
+was the likely cause, from the code (nothing here is
+measured — the cloud build cannot run the app):
+
+- The pill needed a second, invisible glass pass: the active
+  overlay Row drew the whole tab strip a second time (all
+  tabs forced active) through blur + lens into `tabsBackdrop`,
+  only so the pill's `CombinedBackdrop` could sample it.
+- The pill itself re-drew its own glass (blur + lens +
+  highlight + inner shadow) every frame of its spring
+  animation to the new tab.
+- Both sat on top of the base bar's own glass pass and the
+  page backdrop re-recording that every tab switch already
+  triggers.
+
+With the pill gone, the bar is one glass capsule again and
+the tab content draws straight in it; the selected tab is
+shown only by its accent tint (icon + label in Miuix
+primary), which the content Row already did. Taps go
+straight to the tab clickables — `onTabClick` handles both
+switching and re-selecting — so drag-to-switch is gone, and
+with it `onSelected` / `onTabSelected` (HomeScreen no longer
+passes it) and `LocalBottomBarForceActiveTab`. Deleted as
+dead: `liquid/DampedDragAnimation.kt`,
+`liquid/DragGestureInspector.kt`,
+`liquid/CombinedBackdrop.kt`,
+`liquid/InteractiveHighlight.kt`, `LiquidInnerShadow.kt`
+(the inner shadow was pill-only; the bar's own glass still
+uses `LiquidGlass.kt`). The five deletions raced (parallel
+calls based on the same parent) and three failed with "not
+a fast forward" — retried one at a time.
+
+Untested — needs a rebuild: check the tap delay and lag
+between tabs are gone. If lag remains, the remaining
+suspects are the base bar's own glass pass and the page
+composition + backdrop re-recording on switch. The pill can
+be restored from the commit history (3b7d226a is the
+removal) if the user ever wants it back.
 
 ## Build fixes
 
