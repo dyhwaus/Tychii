@@ -2265,10 +2265,11 @@ existing grid/list modes untouched:
   display chips, as 立体书架 (`action_display_shelf`; base
   "3D shelf"). The capsule shows a Book icon for it.
 - New `LibraryShelfHeader` (`presentation/library/components/
-  LibraryShelf.kt`), drawn as a full-width item at the top of
-  the compact grid (via a new optional `shelfHeader` slot on
-  `LibraryCompactGrid`, so the grid below stays the same cards,
-  badges, selection and continue-reading button): a 124.dp-wide
+  LibraryShelf.kt`), pinned above the compact grid (see the fixes
+  below — it first lived inside the grid as a full-width item,
+  then moved out, since the staggered grid has no sticky
+  headers). The grid below stays the same cards, badges,
+  selection and continue-reading button: a 124.dp-wide
   focused cover pulled out above a strip of 26.dp × 150.dp
   spines, the spines standing on a 6.dp plank. Spines show the
   title vertically (laid out horizontally, `requiredWidth` +
@@ -2292,6 +2293,47 @@ raised, cover pulled out), prev/next loop, tapping a spine focuses
 it, tapping the cover opens the manga, and switching back to the
 grid/list modes is unchanged. Also check a category with one book
 (prev/next stay on it) and the metal/glass modes.
+
+## Library: shelf — four small fixes (2026-11-17)
+
+The user picked "fix the four small issues first" after a
+read-only review of the shelf mode. Done in code b761fc49:
+
+- Focused cover long-press: `MangaCover.Book` only takes an
+  `onClick`, so the tap/long-press pair now lives on a
+  `combinedClickable` wrapper around the cover instead, and the
+  cover's own `onClick` is dropped (it would double-fire).
+  Long-pressing the focused cover starts selection, like
+  long-pressing a spine or a grid card.
+- Focus is a manga id, not an index: `focusedMangaId`
+  (`mutableLongStateOf(-1L)`, -1 = first item) with the index
+  derived from it (`indexOfFirst` on the id, falling back to 0
+  when the book left the list). A sort or filter change now keeps
+  the same book focused instead of pointing at whatever slid
+  into the old index; switching categories is a fresh page
+  composition anyway.
+- Tapping a spine centres it: `focus()` scrolls the strip with
+  `animateScrollToItem(index, -((viewportWidth - itemWidth) / 2))`
+  — a negative scrollOffset puts the item's start that far inside
+  the viewport, so the focused spine lands in the middle. The
+  viewport width comes from `listState.layoutInfo.viewportSize`
+  (px), the spine width from `SpineWidth` via `LocalDensity`.
+  Prev/next get the same centring for free, since they go
+  through `focus()`.
+- Pinned header: the header is no longer a full-width item inside
+  the grid (it scrolled away with it). The Shelf branch in
+  `LibraryPager` is now a `Column` — header on top with the
+  page's top capsule clearance as padding, the grid in a
+  `weight(1f)` `Box` below it, scrolling under the header. The
+  `shelfHeader` slot on `LibraryCompactGrid` is gone again, so
+  the grid is back to its plain form.
+
+Untested — needs a rebuild: long-press the focused cover and
+check selection starts; sort or filter the Library and check the
+focus stays on the same book; tap an edge spine and check it
+rolls to the middle; scroll the grid and check the shelf stays
+pinned at the top; switch back to grid/list and check nothing
+changed.
 
 ## Build fixes
 
