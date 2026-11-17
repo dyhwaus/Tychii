@@ -2496,6 +2496,28 @@ title reads carved, an active tool icon glows, and nothing
 else changed colour (start button, card continue button,
 Explore chips keep theirs).
 
+## Library: re-tapping the tab no longer opens the settings sheet (2026-11-18)
+
+The user reported that re-tapping Library while on the shelf
+page opened the old Mihon settings sheet (the Material3
+Filter/Sort/Display dialog), and asked to remove it after
+checking the other tabs: Updates re-tap opens the download
+queue, History resumes the last chapter read, Browse opens
+global search, More opens the Settings screen — none of them
+opens a menu. Done in code 46f02ac2: `LibraryTab.onReselect`
+is now an empty override (kept, with a comment, so the
+decision is visible), and the now-dead
+`requestSettingsSheetEvent` channel, `requestOpenSettingsSheet`
+and its collector are gone. The dialog itself stays: the
+tablet toolbar's Filter button still opens it via
+`showSettingsDialog`. Consequence on phones: the columns and
+badge checkboxes lived only in that dialog, so they are no
+longer reachable there — filter, sort and display mode are
+still in the floating capsule.
+
+Untested — needs a rebuild: re-tap Library and check nothing
+opens; check the other four tabs still do what they did.
+
 ## Build fixes
 
 - 2026-11-18: after the carved nav bar and capsules landed,
