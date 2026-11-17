@@ -1,5 +1,7 @@
 package eu.kanade.presentation.library.components
 
+import android.graphics.RenderEffect
+import android.graphics.RuntimeShader
 import android.os.Build
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.core.tween
@@ -45,9 +47,8 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.RectangleShape
-import androidx.compose.ui.graphics.RenderEffect
-import androidx.compose.ui.graphics.RuntimeShader
 import androidx.compose.ui.graphics.TransformOrigin
+import androidx.compose.ui.graphics.asComposeRenderEffect
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
@@ -657,6 +658,8 @@ private fun ShelfCarouselBackdrop(
     // The effect is created once per backdrop size, with the
     // uniforms set before creation: createRuntimeShaderEffect
     // snapshots them, so changing them later would do nothing.
+    // graphicsLayer takes Compose's RenderEffect, so the
+    // framework effect is wrapped with asComposeRenderEffect.
     val dispersionEffect = remember(sizePx, dispersionPx) {
         if (!isRuntimeShaderSupported()) {
             null
@@ -665,6 +668,7 @@ private fun ShelfCarouselBackdrop(
             shader.setFloatUniform("size", sizePx.width, sizePx.height)
             shader.setFloatUniform("dispersion", dispersionPx)
             RenderEffect.createRuntimeShaderEffect(shader, "content")
+                .asComposeRenderEffect()
         }
     }
     Box(modifier = modifier) {
