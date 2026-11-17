@@ -2244,6 +2244,55 @@ Untested — needs a rebuild: check the metal reads as a physical
 object in both themes (bright top face, hard edge, soft shadow) and
 that the glass modes are untouched.
 
+## Library: 3D shelf display mode (2026-11-17)
+
+The user linked mikufoxxx/Wenku8_Flutter and asked for the
+bookshelf cards in that arrangement. What Wenku8 actually does
+(read from its `ArchiveFileCarousel` + `BookCollectionMode`, and
+its discovery screenshot): books stand as narrow vertical spines
+in a row, the focused book is pulled out showing its full cover,
+below it the title, author and a 01/04 pager with arrows — and its
+default library mode is shelf on top with a list (or grid) below.
+It is Flutter, so nothing was ported; the arrangement was rebuilt
+in Compose.
+
+Done in code 1a980a4b, as a new Library display mode, keeping the
+existing grid/list modes untouched:
+
+- New `LibraryDisplayMode.Shelf` (`SHELF` in the serializer;
+  old saved values still map as before). It appears in the
+  capsule's display dropdown and in Settings → Appearance's
+  display chips, as 立体书架 (`action_display_shelf`; base
+  "3D shelf"). The capsule shows a Book icon for it.
+- New `LibraryShelfHeader` (`presentation/library/components/
+  LibraryShelf.kt`), drawn as a full-width item at the top of
+  the compact grid (via a new optional `shelfHeader` slot on
+  `LibraryCompactGrid`, so the grid below stays the same cards,
+  badges, selection and continue-reading button): a 124.dp-wide
+  focused cover pulled out above a strip of 26.dp × 150.dp
+  spines, the spines standing on a 6.dp plank. Spines show the
+  title vertically (laid out horizontally, `requiredWidth` +
+  `rotate(90f)`, so it reads top to bottom) and an unread dot;
+  the focused spine is raised 8.dp with a primary outline.
+  Below: title, author (or source name), `n / total`, and
+  prev/next chevrons that loop around (`action_shelf_previous` /
+  `action_shelf_next`).
+- Behaviour mirrors the grid: tapping a spine focuses it, tapping
+  the focused cover opens the manga; while selecting, taps toggle
+  selection instead, and long-press selects. Spines follow the
+  global material (brushed metal in metal mode, surfaceContainer
+  otherwise); there is no real blur in the header, for the same
+  recursion reason as the title strip.
+- Explore keeps its grid: `BrowseSourceScreen` maps Shelf to the
+  compact-grid branch, since the shelf is a Library-only mode.
+
+Untested — needs a rebuild: switch the Library to 立体书架 and
+check the spines read as a shelf (vertical titles, focused spine
+raised, cover pulled out), prev/next loop, tapping a spine focuses
+it, tapping the cover opens the manga, and switching back to the
+grid/list modes is unchanged. Also check a category with one book
+(prev/next stay on it) and the metal/glass modes.
+
 ## Build fixes
 
 - 2026-11-16: the metal material used the wrong `Shadow`: there are
