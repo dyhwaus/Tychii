@@ -45,6 +45,7 @@ import eu.kanade.domain.ui.model.BarStyle
 import eu.kanade.presentation.manga.components.MangaCover
 import eu.kanade.presentation.miuix.MetalEngravedIcon
 import eu.kanade.presentation.miuix.MetalEngravedText
+import eu.kanade.presentation.miuix.metalCarvedFill
 import eu.kanade.presentation.miuix.metalIsDark
 import eu.kanade.presentation.miuix.metalSurface
 import eu.kanade.presentation.theme.Typefaces
@@ -223,17 +224,36 @@ private fun CoverTitleStrip(
             verticalAlignment = Alignment.CenterVertically,
         ) {
             if (isMetal) {
-                MetalEngravedText(
-                    text = title,
-                    modifier = Modifier.weight(1f),
-                    style = MaterialTheme.typography.bodyMedium.copy(
-                        fontWeight = FontWeight.Medium,
-                        fontFamily = Typefaces.mtrSong,
-                    ),
-                    isDark = metalDark,
-                    minLines = 2,
-                    maxLines = maxLines,
+                // The title is carved, and the glyphs are filled
+                // with a faint dark (light theme) / light (dark
+                // theme) — like an ink-filled engraving. The fill
+                // is a solid copy of the same text behind the
+                // carving, not blurred: the carving punches the
+                // glyph bodies out of its own layer, so the fill
+                // shows through the letters.
+                val titleStyle = MaterialTheme.typography.bodyMedium.copy(
+                    fontWeight = FontWeight.Medium,
+                    fontFamily = Typefaces.mtrSong,
                 )
+                Box(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = title,
+                        style = titleStyle,
+                        color = metalCarvedFill(metalDark),
+                        minLines = 2,
+                        maxLines = maxLines,
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.fillMaxWidth(),
+                    )
+                    MetalEngravedText(
+                        text = title,
+                        modifier = Modifier.fillMaxWidth(),
+                        style = titleStyle,
+                        isDark = metalDark,
+                        minLines = 2,
+                        maxLines = maxLines,
+                    )
+                }
             } else {
                 Text(
                     text = title,

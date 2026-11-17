@@ -153,6 +153,15 @@ fun metalCarvedLight(isDark: Boolean): Color =
     Color.White.copy(alpha = if (isDark) 0.5f else 0.85f)
 
 /**
+ * A faint body fill for carved text: the glyphs are filled
+ * with a whisper of dark (light theme) / light (dark theme),
+ * like an ink-filled engraving, so the letterforms read
+ * against the metal instead of being the metal itself.
+ */
+fun metalCarvedFill(isDark: Boolean): Color =
+    if (isDark) Color.White.copy(alpha = 0.2f) else Color.Black.copy(alpha = 0.2f)
+
+/**
  * The glow colour in metal mode: white, always, whatever the
  * theme accent is. Metal is colourless — its light is white
  * light, not the theme colour.
