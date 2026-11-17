@@ -2451,6 +2451,51 @@ and the Clear punch-out are untouched.
 Untested — needs a rebuild: check the titles read clearly in
 both themes without looking stamped-on.
 
+## Metal: nav bar and capsules carved, selected tab glows (2026-11-17)
+
+The user asked for the metal mode's navigation bar and tool
+capsule to lose their colour too, carved like the manga card
+titles, with only the selected one glowing — in the theme
+colour. They picked the theme-colour glow over a white glow
+and over touching only the nav bar. Done in code e727504a:
+
+- New `MetalCarvedIcon` (MetalMaterial.kt, ImageVector and
+  Painter overloads): the colourless icon twin of
+  `MetalEngravedText` — dark edge 1.dp above, light edge 1.dp
+  below, the glyph body punched out with `BlendMode.Clear`
+  inside an offscreen layer, so the interior stays metal. The
+  two edge alphas are now shared helpers `metalCarvedDark` /
+  `metalCarvedLight` (Black 0.6 / 0.65, White 0.85 / 0.5),
+  which `MetalEngravedText` uses too. The old
+  `MetalEngravedIcon` stays for the pieces that keep their
+  colour (card continue button, detail start button, Explore
+  chips). Caveat: the Clear punch-out relies on a RenderNode
+  blendMode, which needs API 29+ — below that the main icon
+  draws solid black (readable, but not carved).
+- `MetalTabBar`: the tab icon is a `MetalCarvedIcon`, the label
+  a `MetalEngravedText` — no `tint` any more. The selected tab
+  glows in `MiuixTheme.colorScheme.primary` (the same accent
+  the glass bar's selected tab already uses): a radial wash
+  behind the whole button content plus a blurred accent copy
+  of the icon behind the carving, both faded by the `raise`
+  animation, so the glow arrives with the pop-up. Unselected
+  tabs are plain carved metal.
+- `MiuixCapsuleTitle`: the title is a `MetalEngravedText` in
+  metal mode only — other bar styles keep the plain Text.
+  No selection state, so no glow.
+- `MiuixFloatingCapsule`: the tool icons are
+  `MetalCarvedIcon`s in metal mode; an action that carries an
+  accent tint (i.e. currently active, e.g. filters on) glows
+  in that tint instead — same wash + blurred halo, static
+  rather than animated.
+
+Untested — needs a rebuild: check the tab icons and labels
+read as carved metal in both themes, the selected tab glows
+in the theme colour (wash + halo, fading with the pop), the
+title reads carved, an active tool icon glows, and nothing
+else changed colour (start button, card continue button,
+Explore chips keep theirs).
+
 ## Build fixes
 
 - 2026-11-17: the `drawText` fix above imported it from the wrong
