@@ -1,7 +1,6 @@
 package eu.kanade.presentation.library.components
 
 import android.content.res.Configuration
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
@@ -22,8 +21,10 @@ import androidx.compose.ui.unit.dp
 import eu.kanade.core.preference.PreferenceMutableState
 import eu.kanade.tachiyomi.ui.library.LibraryItem
 import tachiyomi.domain.category.model.Category
+import tachiyomi.domain.chapter.model.Chapter
 import tachiyomi.domain.library.model.LibraryDisplayMode
 import tachiyomi.domain.library.model.LibraryManga
+import tachiyomi.domain.manga.model.Manga
 import tachiyomi.i18n.MR
 import eu.kanade.presentation.components.QuietEmptyScreen
 import tachiyomi.presentation.core.util.plus
@@ -43,6 +44,7 @@ fun LibraryPager(
     onClickManga: (Category, LibraryManga) -> Unit,
     onLongClickManga: (Category, LibraryManga) -> Unit,
     onClickContinueReading: ((LibraryManga) -> Unit)?,
+    onGetChapters: suspend (Manga) -> List<Chapter>,
     onCoverPositioned: (Long, Float) -> Unit,
 ) {
     HorizontalPager(
@@ -110,24 +112,23 @@ fun LibraryPager(
                 )
             }
             LibraryDisplayMode.Shelf -> {
-                // Carousel only, centred in the middle of the
-                // content area: the grid below it is gone.
-                Box(
+                // Back to the carousel on top, but the grid below
+                // is gone: the focused manga's detail panel lives
+                // under it now.
+                LibraryShelf(
+                    items = items,
+                    selection = selection,
+                    onClick = onClickManga,
+                    onLongClick = onLongClickManga,
+                    onClickContinueReading = onClickContinueReading,
+                    onGetChapters = onGetChapters,
                     modifier = Modifier
                         .fillMaxSize()
                         .padding(
                             top = contentPadding.calculateTopPadding(),
                             bottom = contentPadding.calculateBottomPadding(),
                         ),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    LibraryShelfHeader(
-                        items = items,
-                        selection = selection,
-                        onClick = onClickManga,
-                        onLongClick = onLongClickManga,
-                    )
-                }
+                )
             }
         }
     }

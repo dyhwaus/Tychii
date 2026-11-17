@@ -32,9 +32,11 @@ import mihon.icons.materialsymbols.rounded.FilterList
 import mihon.icons.materialsymbols.rounded.Search
 import mihon.icons.materialsymbols.roundedfilled.ViewCompact
 import tachiyomi.domain.category.model.Category
+import tachiyomi.domain.chapter.model.Chapter
 import tachiyomi.domain.library.model.LibraryDisplayMode
 import tachiyomi.domain.library.model.LibraryManga
 import tachiyomi.domain.library.model.LibrarySort
+import tachiyomi.domain.manga.model.Manga
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.components.material.PullRefresh
 import tachiyomi.presentation.core.i18n.stringResource
@@ -52,6 +54,7 @@ fun LibraryContent(
     onChangeCurrentPage: (Int) -> Unit,
     onClickManga: (Long) -> Unit,
     onContinueReadingClicked: ((LibraryManga) -> Unit)?,
+    onGetChapters: suspend (Manga) -> List<Chapter>,
     onToggleSelection: (Category, LibraryManga) -> Unit,
     onToggleRangeSelection: (Category, LibraryManga) -> Unit,
     onSelectionAnchorChange: (Float) -> Unit,
@@ -234,6 +237,7 @@ fun LibraryContent(
                     onToggleRangeSelection(category, manga)
                 },
                 onClickContinueReading = onContinueReadingClicked,
+                onGetChapters = onGetChapters,
             )
         }
 

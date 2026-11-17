@@ -1,7 +1,9 @@
 package eu.kanade.presentation.library.components
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
@@ -11,23 +13,31 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ProvideTextStyle
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableLongStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.TransformOrigin
@@ -36,20 +46,31 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import eu.kanade.domain.ui.model.BarStyle
+import eu.kanade.presentation.components.relativeDateText
+import eu.kanade.presentation.manga.components.DotSeparatorText
 import eu.kanade.presentation.manga.components.MangaCover
+import eu.kanade.presentation.miuix.MetalEngravedText
 import eu.kanade.presentation.miuix.metalIsDark
 import eu.kanade.presentation.miuix.metalSurface
+import eu.kanade.tachiyomi.source.model.SManga
 import eu.kanade.tachiyomi.ui.library.LibraryItem
+import eu.kanade.tachiyomi.ui.reader.ReaderActivity
 import kotlinx.coroutines.launch
 import mihon.app.di.appGraph
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.rounded.KeyboardArrowLeft
 import mihon.icons.materialsymbols.rounded.KeyboardArrowRight
+import tachiyomi.domain.chapter.model.Chapter
 import tachiyomi.domain.library.model.LibraryManga
+import tachiyomi.domain.manga.model.Manga
 import tachiyomi.domain.manga.model.MangaCover as MangaCoverModel
 import tachiyomi.i18n.MR
+import tachiyomi.presentation.core.components.material.DISABLED_ALPHA
+import tachiyomi.presentation.core.components.material.SECONDARY_ALPHA
 import tachiyomi.presentation.core.i18n.stringResource
 import tachiyomi.presentation.core.util.collectAsState
+import top.yukonga.miuix.kmp.basic.Card
+import top.yukonga.miuix.kmp.basic.HorizontalDivider
 import kotlin.math.abs
 
 private val FocusedCoverWidth = 124.dp
@@ -58,13 +79,15 @@ private val CarouselPageSpacing = 12.dp
 // Neighbours shrink to this and fade to this at one page away.
 private const val NeighbourScale = 0.78f
 private const val NeighbourAlpha = 0.35f
+// How many of the newest chapters the detail panel shows.
+private const val LatestChapterCount = 5
 
 /**
- * Carousel shelf, pinned above the Library grid in Shelf mode:
- * the focused manga's cover sits in the middle, its neighbours
- * peeking in on both sides — smaller and dimmer toward the
- * screen edges, standing on the same plank. Swiping moves
- * between books; the grid below stays the browsing surface.
+ * Carousel shelf, pinned above the focused manga's detail panel
+ * in Shelf mode: the focused manga's cover sits in the middle,
+ * its neighbours peeking in on both sides — smaller and dimmer
+ * toward the screen edges, standing on the same plank. Swiping
+ * moves between books; the detail panel below follows the focus.
  */
 @Composable
 internal fun LibraryShelfHeader(
@@ -72,6 +95,7 @@ internal fun LibraryShelfHeader(
     selection: Set<Long>,
     onClick: (LibraryManga) -> Unit,
     onLongClick: (LibraryManga) -> Unit,
+    onFocusedChange: (LibraryItem?) -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
     val scope = rememberCoroutineScope()
@@ -93,6 +117,7 @@ internal fun LibraryShelfHeader(
     val metalDark = metalIsDark()
 
     val focused = items.getOrNull(focusedIndex)
+    LaunchedEffect(focused) { onFocusedChange(focused) }
     if (focused == null) return
     val focusedManga = focused.libraryManga.manga
     val selecting = selection.isNotEmpty()
@@ -253,5 +278,289 @@ internal fun LibraryShelfHeader(
                 )
             }
         }
+    }
+}
+
+/**
+ * Shelf mode: the carousel on top, the focused manga's detail
+ * panel below it. The panel follows the carousel's focus; the
+ * grid is gone entirely.
+ */
+@Composable
+internal fun LibraryShelf(
+    items: List<LibraryItem>,
+    selection: Set<Long>,
+    onClick: (LibraryManga) -> Unit,
+    onLongClick: (LibraryManga) -> Unit,
+    onClickContinueReading: ((LibraryManga) -> Unit)?,
+    onGetChapters: suspend (Manga) -> List<Chapter>,
+    modifier: Modifier = Modifier,
+) {
+    var focusedItem by remember { mutableStateOf<LibraryItem?>(null) }
+    val selecting = selection.isNotEmpty()
+    Column(modifier = modifier.fillMaxSize()) {
+        LibraryShelfHeader(
+            items = items,
+            selection = selection,
+            onClick = onClick,
+            onLongClick = onLongClick,
+            onFocusedChange = { focusedItem = it },
+        )
+        Box(modifier = Modifier.weight(1f)) {
+            val item = focusedItem
+            if (item != null) {
+                LibraryShelfDetail(
+                    item = item,
+                    selecting = selecting,
+                    onGetChapters = onGetChapters,
+                    onClickContinueReading = onClickContinueReading,
+                    onOpenDetail = { onClick(item.libraryManga) },
+                    modifier = Modifier.fillMaxSize(),
+                )
+            }
+        }
+    }
+}
+
+/**
+ * The focused manga's detail panel: description, status and
+ * counts, a start/resume button and the latest chapters. The
+ * chapters load from the database when the focus changes; the
+ * panel scrolls on its own under the pinned carousel, and its
+ * scroll position resets on every focus change. While selecting,
+ * the panel goes quiet: no start button, no chapter taps, no
+ * tap-through to the detail page.
+ */
+@Composable
+private fun LibraryShelfDetail(
+    item: LibraryItem,
+    selecting: Boolean,
+    onGetChapters: suspend (Manga) -> List<Chapter>,
+    onClickContinueReading: ((LibraryManga) -> Unit)?,
+    onOpenDetail: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val manga = item.libraryManga.manga
+    val context = LocalContext.current
+    val barStyle by remember { context.appGraph.uiPreferences.barStyle }.collectAsState()
+    val isMetal = barStyle == BarStyle.METAL
+    val metalDark = metalIsDark()
+
+    var chapters by remember(manga.id) { mutableStateOf<List<Chapter>?>(null) }
+    LaunchedEffect(manga.id) {
+        chapters = null
+        chapters = onGetChapters(manga)
+    }
+    val scrollState = rememberScrollState()
+    LaunchedEffect(manga.id) { scrollState.scrollTo(0) }
+
+    val loaded = chapters
+    val latest = loaded?.sortedByDescending { it.chapterNumber }?.take(LatestChapterCount).orEmpty()
+    val anyRead = loaded?.any { it.read } == true
+    val anyUnread = loaded?.any { !it.read } == true
+
+    Column(
+        modifier = modifier
+            .fillMaxSize()
+            .verticalScroll(scrollState)
+            .padding(start = 12.dp, end = 12.dp, top = 4.dp, bottom = 12.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp),
+    ) {
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clickable(enabled = !selecting) { onOpenDetail() },
+            insideMargin = PaddingValues(vertical = 4.dp),
+        ) {
+            Column(
+                modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                val description = manga.description
+                if (!description.isNullOrBlank()) {
+                    Text(
+                        text = description,
+                        style = MaterialTheme.typography.bodyMedium,
+                        maxLines = 3,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                }
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    ProvideTextStyle(
+                        value = MaterialTheme.typography.bodySmall.merge(
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        ),
+                    ) {
+                        Text(
+                            text = mangaStatusText(manga.status),
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                        )
+                        if (item.unreadCount > 0) {
+                            DotSeparatorText()
+                            Text(
+                                text = "${item.unreadCount} ${stringResource(MR.strings.action_filter_unread)}",
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis,
+                            )
+                        }
+                        if (loaded != null && loaded.isNotEmpty()) {
+                            DotSeparatorText()
+                            Text(
+                                text = "${loaded.size} ${stringResource(MR.strings.chapters)}",
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis,
+                            )
+                        }
+                    }
+                }
+                if (loaded != null && loaded.isNotEmpty() && !selecting && onClickContinueReading != null) {
+                    ShelfStartButton(
+                        label = stringResource(
+                            if (anyRead && anyUnread) {
+                                MR.strings.action_resume
+                            } else {
+                                MR.strings.action_start
+                            },
+                        ),
+                        isMetal = isMetal,
+                        metalDark = metalDark,
+                        onClick = { onClickContinueReading(item.libraryManga) },
+                    )
+                }
+            }
+        }
+        if (loaded == null) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(64.dp),
+                contentAlignment = Alignment.Center,
+            ) {
+                CircularProgressIndicator(modifier = Modifier.size(24.dp))
+            }
+        } else if (latest.isNotEmpty()) {
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                insideMargin = PaddingValues(vertical = 4.dp),
+            ) {
+                Column {
+                    Text(
+                        text = stringResource(MR.strings.chapters),
+                        style = MaterialTheme.typography.titleSmall,
+                        modifier = Modifier.padding(start = 16.dp, top = 12.dp, end = 16.dp, bottom = 4.dp),
+                    )
+                    latest.forEachIndexed { index, chapter ->
+                        ShelfChapterRow(
+                            chapter = chapter,
+                            enabled = !selecting,
+                            onClick = {
+                                context.startActivity(
+                                    ReaderActivity.newIntent(context, manga.id, chapter.id),
+                                )
+                            },
+                        )
+                        if (index < latest.lastIndex) {
+                            HorizontalDivider(
+                                modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                            )
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+/**
+ * The start/resume button as a pill in the bar material's
+ * colour: primaryContainer everywhere except metal, where it
+ * is brushed metal with an engraved label. Solid, never glass:
+ * the panel sits inside the recorded backdrop layer, so a
+ * drawBackdrop here would recurse.
+ */
+@Composable
+private fun ShelfStartButton(
+    label: String,
+    isMetal: Boolean,
+    metalDark: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val shape = remember { RoundedCornerShape(28.dp) }
+    Box(
+        modifier = modifier
+            .fillMaxWidth()
+            .height(48.dp)
+            .then(
+                if (isMetal) {
+                    Modifier.metalSurface(shape, metalDark)
+                } else {
+                    Modifier.background(MaterialTheme.colorScheme.primaryContainer, shape)
+                },
+            )
+            .clip(shape)
+            .clickable(onClick = onClick),
+        contentAlignment = Alignment.Center,
+    ) {
+        if (isMetal) {
+            MetalEngravedText(
+                text = label,
+                style = MaterialTheme.typography.titleMedium,
+                isDark = metalDark,
+            )
+        } else {
+            Text(
+                text = label,
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.onPrimaryContainer,
+            )
+        }
+    }
+}
+
+@Composable
+private fun ShelfChapterRow(
+    chapter: Chapter,
+    enabled: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .clickable(enabled = enabled, onClick = onClick)
+            .padding(horizontal = 16.dp, vertical = 10.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = chapter.name,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                style = MaterialTheme.typography.bodyMedium,
+                color = LocalContentColor.current.copy(alpha = if (chapter.read) DISABLED_ALPHA else 1f),
+            )
+            Text(
+                text = relativeDateText(chapter.dateUpload),
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                style = MaterialTheme.typography.bodySmall,
+                color = LocalContentColor.current.copy(alpha = SECONDARY_ALPHA),
+            )
+        }
+    }
+}
+
+@Composable
+private fun mangaStatusText(status: Long): String {
+    return when (status) {
+        SManga.ONGOING.toLong() -> stringResource(MR.strings.ongoing)
+        SManga.COMPLETED.toLong() -> stringResource(MR.strings.completed)
+        SManga.LICENSED.toLong() -> stringResource(MR.strings.licensed)
+        SManga.PUBLISHING_FINISHED.toLong() -> stringResource(MR.strings.publishing_finished)
+        SManga.CANCELLED.toLong() -> stringResource(MR.strings.cancelled)
+        SManga.ON_HIATUS.toLong() -> stringResource(MR.strings.on_hiatus)
+        else -> stringResource(MR.strings.unknown)
     }
 }

@@ -492,6 +492,10 @@ class LibraryViewModel(
         }
     }
 
+    /** Chapters of one manga, for the shelf detail panel. */
+    suspend fun getChapters(manga: Manga): List<Chapter> =
+        getChaptersByMangaId.await(manga.id, applyScanlatorFilter = true)
+
     /**
      * Queues the amount specified of unread chapters from the list of selected manga
      */
