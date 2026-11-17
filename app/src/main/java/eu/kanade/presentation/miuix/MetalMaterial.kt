@@ -209,8 +209,12 @@ fun MetalEngravedIcon(
 
 /**
  * 刻进去的图标（无色版）：和 MetalEngravedText 一样的刻字——
- * 两道错开 1.dp 的边，图标本身用 Clear 抠掉，膛里只剩金属。
- * Clear 靠 RenderNode 的 blendMode（API 29+ 才支持）；低版本
+ * 两道错开 1.dp 的边，图标本身抠掉，膛里只剩金属。
+ * 注意抠字只能用 DstOut，不能用 Clear：Clear 是按图层整个
+ * 矩形擦的，会把两道边一起擦掉、图标直接消失；DstOut 只擦
+ * 字形盖住的地方（目标 × (1 - 来源透明度)）。卡片标题用的
+ * 是画调用里的 Clear——那是按字形擦的，所以没事。
+ * DstOut 靠 RenderNode 的 blendMode（API 29+ 才支持）；低版本
  * 上抠不掉，主图标会画成实心黑——可读，但不是刻字。
  */
 @Composable
@@ -241,7 +245,7 @@ fun MetalCarvedIcon(
             imageVector = imageVector,
             contentDescription = contentDescription,
             tint = Color.Black,
-            modifier = Modifier.graphicsLayer { blendMode = BlendMode.Clear },
+            modifier = Modifier.graphicsLayer { blendMode = BlendMode.DstOut },
         )
     }
 }
@@ -275,7 +279,7 @@ fun MetalCarvedIcon(
             painter = painter,
             contentDescription = contentDescription,
             tint = Color.Black,
-            modifier = Modifier.graphicsLayer { blendMode = BlendMode.Clear },
+            modifier = Modifier.graphicsLayer { blendMode = BlendMode.DstOut },
         )
     }
 }
