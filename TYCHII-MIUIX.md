@@ -2498,6 +2498,16 @@ Explore chips keep theirs).
 
 ## Build fixes
 
+- 2026-11-17: the glow gradients used `size.center`, but the
+  float `Size` has no `center` property — only `IntSize` does
+  — so both call sites failed with "Unresolved reference
+  'center'" (MetalTabBar:130, MiuixFloatingCapsule:145).
+  Fixed by writing the centre out as
+  `Offset(size.width / 2f, size.height / 2f)` in both files,
+  with the `androidx.compose.ui.geometry.Offset` import
+  (342c1b0e). Line numbers matched the remote exactly, so it
+  was a real error in the current copy.
+
 - 2026-11-17: the `drawText` fix above imported it from the wrong
   package — `androidx.compose.ui.graphics.drawscope.drawText`
   does not exist, so the import itself failed with "Unresolved
