@@ -26,7 +26,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
-import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.draw.shadow
@@ -46,7 +45,6 @@ import eu.kanade.domain.ui.model.BarStyle
 import eu.kanade.presentation.manga.components.MangaCover
 import eu.kanade.presentation.miuix.MetalEngravedIcon
 import eu.kanade.presentation.miuix.MetalEngravedText
-import eu.kanade.presentation.miuix.MetalGlowColor
 import eu.kanade.presentation.miuix.metalIsDark
 import eu.kanade.presentation.miuix.metalSurface
 import eu.kanade.presentation.theme.Typefaces
@@ -177,8 +175,7 @@ fun MangaCompactGridItem(
  * inside the page's recorded backdrop layer, where glass would
  * recurse (see the floating bar). In metal mode it is a brushed
  * metal strip with the title engraved and no rim light — the metal
- * chamfer is the top edge — and the title always glows white, a
- * blurred white copy behind the carving.
+ * chamfer is the top edge.
  */
 @Composable
 private fun CoverTitleStrip(
@@ -226,37 +223,17 @@ private fun CoverTitleStrip(
             verticalAlignment = Alignment.CenterVertically,
         ) {
             if (isMetal) {
-                // The title glows white, always: a blurred white
-                // copy of the same text behind the carving, like
-                // the selected tab's halo. The carving punches the
-                // glyph bodies out of its own layer, so the glow
-                // shows through the letters as well as around them.
-                val titleStyle = MaterialTheme.typography.bodyMedium.copy(
-                    fontWeight = FontWeight.Medium,
-                    fontFamily = Typefaces.mtrSong,
+                MetalEngravedText(
+                    text = title,
+                    modifier = Modifier.weight(1f),
+                    style = MaterialTheme.typography.bodyMedium.copy(
+                        fontWeight = FontWeight.Medium,
+                        fontFamily = Typefaces.mtrSong,
+                    ),
+                    isDark = metalDark,
+                    minLines = 2,
+                    maxLines = maxLines,
                 )
-                Box(modifier = Modifier.weight(1f)) {
-                    Text(
-                        text = title,
-                        style = titleStyle,
-                        color = MetalGlowColor,
-                        minLines = 2,
-                        maxLines = maxLines,
-                        overflow = TextOverflow.Ellipsis,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .blur(6.dp)
-                            .alpha(0.8f),
-                    )
-                    MetalEngravedText(
-                        text = title,
-                        modifier = Modifier.fillMaxWidth(),
-                        style = titleStyle,
-                        isDark = metalDark,
-                        minLines = 2,
-                        maxLines = maxLines,
-                    )
-                }
             } else {
                 Text(
                     text = title,
