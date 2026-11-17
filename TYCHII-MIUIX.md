@@ -2381,6 +2381,26 @@ neighbour centres it, tapping the centre opens it, prev/next
 loop without sweeping across, and the plank still reads in
 metal and glass modes.
 
+## Library: shelf — carousel only, centred (2026-11-17)
+
+The user sent a screenshot of the shelf page and asked to drop
+the manga grid below the carousel and keep only the carousel,
+in the middle. Done in code 40956ba9: the Shelf branch in
+`LibraryPager` is now a `Box` filling the screen, padded top
+and bottom by the content padding (capsule clearance above,
+nav-bar clearance below, so the middle is the middle of the
+visible area), with the `LibraryShelfHeader` centred in it —
+the `Column` and the `LibraryCompactGrid` below it are gone.
+The carousel, plank and info row are untouched; the other
+display modes are untouched. Consequence: with no scrollable
+content in Shelf mode, pull-to-refresh no longer triggers
+there — refreshing means switching back to a grid/list or
+using the Updates page.
+
+Untested — needs a rebuild: check the carousel sits in the
+vertical middle of the page, nothing below it, and swiping,
+tapping and prev/next still work as before.
+
 ## Metal card titles: colorless engraving in MTR Song (2026-11-17)
 
 The user asked for the metal card titles to be colorless, so the
