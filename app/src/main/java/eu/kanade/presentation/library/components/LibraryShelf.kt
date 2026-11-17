@@ -1,5 +1,10 @@
 package eu.kanade.presentation.library.components
 
+import android.graphics.RenderEffect
+import android.graphics.RuntimeShader
+import android.os.Build
+import androidx.compose.animation.Crossfade
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
@@ -37,14 +42,19 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import coil3.compose.AsyncImage
 import eu.kanade.domain.ui.model.BarStyle
 import eu.kanade.presentation.components.relativeDateText
 import eu.kanade.presentation.manga.components.DotSeparatorText
@@ -71,6 +81,7 @@ import tachiyomi.presentation.core.i18n.stringResource
 import tachiyomi.presentation.core.util.collectAsState
 import top.yukonga.miuix.kmp.basic.Card
 import top.yukonga.miuix.kmp.basic.HorizontalDivider
+import top.yukonga.miuix.kmp.blur.isRuntimeShaderSupported
 import kotlin.math.abs
 
 private val FocusedCoverWidth = 124.dp
@@ -81,6 +92,39 @@ private const val NeighbourScale = 0.78f
 private const val NeighbourAlpha = 0.35f
 // How many of the newest chapters the detail panel shows.
 private const val LatestChapterCount = 5
+// The carousel backdrop: how blurred the focused cover is, how
+// far its colours bleed outward at the edges, and the plank the
+// covers stand on.
+private val BackdropBlurRadius = 28.dp
+private val BackdropDispersion = 18.dp
+private val PlankHeight = 6.dp
+
+// Radial dispersion for the shelf backdrop: the middle stays
+// clean and the colours bleed outward toward the edges, like
+// light through a prism. Modelled on the liquid-glass lens
+// dispersion shader (LiquidGlass.kt): the image is sampled
+// three times, once per channel, with a radial offset that
+// grows quadratically with the distance from the centre — so it
+// is applied to the already-blurred image and the fringe
+// survives the blur.
+private const val RADIAL_DISPERSION_SHADER = """
+uniform shader content;
+uniform float2 size;
+uniform float dispersion;
+
+half4 main(float2 coord) {
+    float2 center = size * 0.5;
+    float2 d = coord - center;
+    float dist = length(d) / length(center);
+    float2 dir = d / max(length(d), 0.001);
+    float2 offset = dir * dispersion * dist * dist;
+    half4 redSample = content.eval(coord + offset);
+    half4 greenSample = content.eval(coord);
+    half4 blueSample = content.eval(coord - offset);
+    return half4(redSample.r, greenSample.g, blueSample.b,
+                 (redSample.a + greenSample.a + blueSample.a) / 3.0);
+}
+"""
 
 /**
  * Carousel shelf, pinned above the focused manga's detail panel
@@ -225,7 +269,7 @@ internal fun LibraryShelfHeader(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 16.dp)
-                .height(6.dp)
+                .height(PlankHeight)
                 .then(
                     if (isMetal) {
                         Modifier.metalSurface(RectangleShape, metalDark)
@@ -298,25 +342,51 @@ internal fun LibraryShelf(
 ) {
     var focusedItem by remember { mutableStateOf<LibraryItem?>(null) }
     val selecting = selection.isNotEmpty()
-    Column(modifier = modifier.fillMaxSize()) {
-        LibraryShelfHeader(
-            items = items,
-            selection = selection,
-            onClick = onClick,
-            onLongClick = onLongClick,
-            onFocusedChange = { focusedItem = it },
-        )
-        Box(modifier = Modifier.weight(1f)) {
+    // The backdrop needs Android 12 (RenderEffect blur); below
+    // that the carousel keeps its plain background.
+    val backdropEnabled = Build.VERSION.SDK_INT >= Build.VERSION_CODES.S
+    BoxWithConstraints(modifier = modifier.fillMaxSize()) {
+        val density = LocalDensity.current
+        val backdropSizePx = remember(maxWidth, density) {
+            with(density) {
+                Size(maxWidth.toPx(), (FocusedCoverHeight + PlankHeight).toPx())
+            }
+        }
+        Box(modifier = Modifier.fillMaxSize()) {
+            // The backdrop sits behind the header, exactly over
+            // the carousel + plank (186.dp + 6.dp); the info row
+            // and the detail panel below it stay on the plain
+            // page background so they stay legible.
             val item = focusedItem
-            if (item != null) {
-                LibraryShelfDetail(
-                    item = item,
-                    selecting = selecting,
-                    onGetChapters = onGetChapters,
-                    onClickContinueReading = onClickContinueReading,
-                    onOpenDetail = { onClick(item.libraryManga) },
-                    modifier = Modifier.fillMaxSize(),
+            if (backdropEnabled && item != null) {
+                ShelfCarouselBackdrop(
+                    manga = item.libraryManga.manga,
+                    sizePx = backdropSizePx,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(FocusedCoverHeight + PlankHeight),
                 )
+            }
+            Column(modifier = Modifier.fillMaxSize()) {
+                LibraryShelfHeader(
+                    items = items,
+                    selection = selection,
+                    onClick = onClick,
+                    onLongClick = onLongClick,
+                    onFocusedChange = { focusedItem = it },
+                )
+                Box(modifier = Modifier.weight(1f)) {
+                    if (item != null) {
+                        LibraryShelfDetail(
+                            item = item,
+                            selecting = selecting,
+                            onGetChapters = onGetChapters,
+                            onClickContinueReading = onClickContinueReading,
+                            onOpenDetail = { onClick(item.libraryManga) },
+                            modifier = Modifier.fillMaxSize(),
+                        )
+                    }
+                }
             }
         }
     }
@@ -562,5 +632,68 @@ private fun mangaStatusText(status: Long): String {
         SManga.CANCELLED.toLong() -> stringResource(MR.strings.cancelled)
         SManga.ON_HIATUS.toLong() -> stringResource(MR.strings.on_hiatus)
         else -> stringResource(MR.strings.unknown)
+    }
+}
+
+/**
+ * The carousel's background: the focused manga's cover, blurred
+ * and dispersed so its colours bleed outward like light through
+ * a prism, crossfading when the focus changes. The blur is an
+ * inner layer and the dispersion an outer one, so the shader
+ * samples the already-blurred image and the fringe survives the
+ * blur. The dispersion needs Android 13 (RuntimeShader) and is
+ * skipped below it — there the backdrop is just blurred. A thin
+ * veil of the page background keeps the covers legible over a
+ * vivid backdrop.
+ */
+@Composable
+private fun ShelfCarouselBackdrop(
+    manga: Manga,
+    sizePx: Size,
+    modifier: Modifier = Modifier,
+) {
+    val density = LocalDensity.current
+    val dispersionPx = remember(density) { with(density) { BackdropDispersion.toPx() } }
+    // The effect is created once per backdrop size, with the
+    // uniforms set before creation: createRuntimeShaderEffect
+    // snapshots them, so changing them later would do nothing.
+    val dispersionEffect = remember(sizePx, dispersionPx) {
+        if (!isRuntimeShaderSupported()) {
+            null
+        } else {
+            val shader = RuntimeShader(RADIAL_DISPERSION_SHADER)
+            shader.setFloatUniform("size", sizePx.width, sizePx.height)
+            shader.setFloatUniform("dispersion", dispersionPx)
+            RenderEffect.createRuntimeShaderEffect(shader, "content")
+        }
+    }
+    Box(modifier = modifier) {
+        Crossfade(
+            targetState = manga,
+            animationSpec = tween(250),
+            label = "shelf backdrop",
+            modifier = Modifier
+                .matchParentSize()
+                .blur(BackdropBlurRadius)
+                .graphicsLayer { renderEffect = dispersionEffect },
+        ) { backdropManga ->
+            AsyncImage(
+                model = MangaCoverModel(
+                    mangaId = backdropManga.id,
+                    sourceId = backdropManga.source,
+                    isMangaFavorite = backdropManga.favorite,
+                    url = backdropManga.thumbnailUrl,
+                    lastModified = backdropManga.coverLastModified,
+                ),
+                contentDescription = null,
+                modifier = Modifier.matchParentSize(),
+                contentScale = ContentScale.Crop,
+            )
+        }
+        Box(
+            modifier = Modifier
+                .matchParentSize()
+                .background(MaterialTheme.colorScheme.background.copy(alpha = 0.25f)),
+        )
     }
 }
