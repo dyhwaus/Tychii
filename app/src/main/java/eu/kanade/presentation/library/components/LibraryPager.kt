@@ -1,8 +1,11 @@
 package eu.kanade.presentation.library.components
 
 import android.content.res.Configuration
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.calculateBottomPadding
+import androidx.compose.foundation.layout.calculateTopPadding
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -109,27 +112,38 @@ fun LibraryPager(
                 )
             }
             LibraryDisplayMode.Shelf -> {
-                LibraryCompactGrid(
-                    items = items,
-                    showTitle = true,
-                    columns = columns,
-                    contentPadding = contentPadding,
-                    selection = selection,
-                    onClick = onClickManga,
-                    onLongClick = onLongClickManga,
-                    onClickContinueReading = onClickContinueReading,
-                    searchQuery = searchQuery,
-                    onGlobalSearchClicked = onGlobalSearchClicked,
-                    onCoverPositioned = onCoverPositioned,
-                    shelfHeader = {
-                        LibraryShelfHeader(
+                // Pinned above the grid: the staggered grid has no
+                // sticky headers, so the shelf lives outside it and
+                // the grid scrolls beneath it.
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(top = contentPadding.calculateTopPadding()),
+                ) {
+                    LibraryShelfHeader(
+                        items = items,
+                        selection = selection,
+                        onClick = onClickManga,
+                        onLongClick = onLongClickManga,
+                    )
+                    Box(modifier = Modifier.weight(1f)) {
+                        LibraryCompactGrid(
                             items = items,
+                            showTitle = true,
+                            columns = columns,
+                            contentPadding = PaddingValues(
+                                bottom = contentPadding.calculateBottomPadding(),
+                            ),
                             selection = selection,
                             onClick = onClickManga,
                             onLongClick = onLongClickManga,
+                            onClickContinueReading = onClickContinueReading,
+                            searchQuery = searchQuery,
+                            onGlobalSearchClicked = onGlobalSearchClicked,
+                            onCoverPositioned = onCoverPositioned,
                         )
-                    },
-                )
+                    }
+                }
             }
         }
     }

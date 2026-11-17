@@ -26,7 +26,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
@@ -38,6 +38,7 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import eu.kanade.domain.ui.model.BarStyle
@@ -55,6 +56,7 @@ import tachiyomi.domain.manga.model.MangaCover as MangaCoverModel
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.i18n.stringResource
 import tachiyomi.presentation.core.util.collectAsState
+import kotlin.math.roundToInt
 
 private val SpineWidth = 26.dp
 private val SpineHeight = 150.dp
@@ -62,11 +64,11 @@ private val FocusedCoverWidth = 124.dp
 private val SpineShape = RoundedCornerShape(4.dp)
 
 /**
- * Wenku8-style 3D shelf, shown at the top of the Library grid in
- * Shelf mode: the category's books stand as narrow spines on a
- * plank, and the focused book's cover is pulled out above them.
- * The grid below stays the browsing surface, so this is a header,
- * not a replacement for it.
+ * Wenku8-style 3D shelf, pinned above the Library grid in Shelf
+ * mode: the category's books stand as narrow spines on a plank,
+ * and the focused book's cover is pulled out above them. The grid
+ * below stays the browsing surface, so this is a header, not a
+ * replacement for it.
  */
 @Composable
 internal fun LibraryShelfHeader(
@@ -78,24 +80,42 @@ internal fun LibraryShelfHeader(
 ) {
     val listState = rememberLazyListState()
     val scope = rememberCoroutineScope()
-    var focusedIndex by remember { mutableIntStateOf(0) }
+    val density = LocalDensity.current
+    // Focus is a manga id, not an index: a sort or filter change
+    // keeps the same book focused, and a book that left the list
+    // falls back to the first one instead of pointing at whatever
+    // slid into the old index. -1 means "first item".
+    var focusedMangaId by remember { mutableLongStateOf(-1L) }
+    val focusedIndex = if (focusedMangaId == -1L) {
+        0
+    } else {
+        items.indexOfFirst { it.libraryManga.manga.id == focusedMangaId }
+            .takeIf { it >= 0 } ?: 0
+    }
 
     val context = LocalContext.current
     val barStyle by remember { context.appGraph.uiPreferences.barStyle }.collectAsState()
     val isMetal = barStyle == BarStyle.METAL
     val metalDark = metalIsDark()
 
-    val focused = items.getOrNull(focusedIndex.coerceIn(0, (items.size - 1).coerceAtLeast(0)))
+    val focused = items.getOrNull(focusedIndex)
     if (focused == null) return
     val focusedManga = focused.libraryManga.manga
     val selecting = selection.isNotEmpty()
 
+    // Loops around, and scrolls the strip so the focused spine
+    // lands in the middle — a negative scrollOffset puts the
+    // item that far past the viewport's start edge.
     fun focus(index: Int) {
         val size = items.size
         if (size == 0) return
         val next = ((index % size) + size) % size
-        focusedIndex = next
-        scope.launch { listState.animateScrollToItem(next) }
+        focusedMangaId = items[next].libraryManga.manga.id
+        scope.launch {
+            val viewportWidth = listState.layoutInfo.viewportSize.width
+            val itemWidth = with(density) { SpineWidth.toPx() }.roundToInt()
+            listState.animateScrollToItem(next, -((viewportWidth - itemWidth) / 2))
+        }
     }
 
     Column(modifier = modifier.fillMaxWidth()) {
@@ -105,7 +125,17 @@ internal fun LibraryShelfHeader(
                 .padding(top = 4.dp),
             contentAlignment = Alignment.Center,
         ) {
-            Box(modifier = Modifier.shadow(4.dp, RoundedCornerShape(8.dp))) {
+            // Tap and long-press both live on this wrapper: the
+            // cover itself only takes an onClick, so a long-press
+            // for selection has to come from here.
+            Box(
+                modifier = Modifier
+                    .shadow(4.dp, RoundedCornerShape(8.dp))
+                    .combinedClickable(
+                        onClick = { onClick(focused.libraryManga) },
+                        onLongClick = { onLongClick(focused.libraryManga) },
+                    ),
+            ) {
                 MangaCover.Book(
                     modifier = Modifier.width(FocusedCoverWidth),
                     data = MangaCoverModel(
@@ -116,7 +146,6 @@ internal fun LibraryShelfHeader(
                         lastModified = focusedManga.coverLastModified,
                     ),
                     shape = RoundedCornerShape(8.dp),
-                    onClick = { onClick(focused.libraryManga) },
                 )
             }
         }
@@ -146,7 +175,7 @@ internal fun LibraryShelfHeader(
                         if (selecting) {
                             onClick(libraryItem.libraryManga)
                         } else {
-                            focusedIndex = index
+                            focus(index)
                         }
                     },
                     onLongClick = { onLongClick(libraryItem.libraryManga) },
