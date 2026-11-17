@@ -2572,6 +2572,53 @@ chapter row opens that chapter, tapping the card or the cover
 opens the full detail page, and switching to grid/list is
 unchanged.
 
+## Library: shelf — blurred, dispersed cover behind the carousel (2026-11-18)
+
+The user asked for the background behind the upper carousel to
+be the focused manga's blurred cover, its colours dispersing
+outward like light through a prism. Done in code 94b3c031,
+all in `LibraryShelf.kt`:
+
+- New `ShelfCarouselBackdrop`, drawn behind the header in
+  `LibraryShelf` (a `BoxWithConstraints` so the shader knows
+  the pixel size), exactly over the carousel + plank (186.dp +
+  6.dp). The info row and the detail panel below stay on the
+  plain page background so they stay legible.
+- The backdrop is the focused cover itself, loaded with the
+  same Coil model as the carousel covers (`MangaCover` model:
+  manga id, source, favourite, URL, last modified), `Crop` to
+  fill, crossfading (250.ms) when the focus changes. It is
+  blurred 28.dp (`BackdropBlurRadius`).
+- The dispersion is a small AGSL shader
+  (`RADIAL_DISPERSION_SHADER`), modelled on the liquid-glass
+  lens dispersion shader (`LiquidGlass.kt`): the image is
+  sampled three times, once per channel, with a radial offset
+  that grows quadratically with the distance from the centre,
+  so the middle stays clean and the colours bleed outward.
+  It is an outer layer over the blur, so the shader samples
+  the already-blurred image and the fringe survives the blur.
+  The effect is created once per backdrop size with the
+  uniforms set before creation (`createRuntimeShaderEffect`
+  snapshots them). Strength 18.dp (`BackdropDispersion`).
+- Gates: the whole backdrop needs Android 12 (RenderEffect
+  blur); the dispersion needs Android 13 (`RuntimeShader`,
+  `isRuntimeShaderSupported`) and is skipped below it, where
+  the backdrop is just blurred. A thin veil of the page
+  background (0.25 alpha) over the backdrop keeps the covers
+  legible over a vivid cover.
+- The backdrop follows the settled focus, like the info row —
+  it changes when a swipe settles, not during the drag.
+
+Untested — needs a rebuild: swipe the carousel and check the
+background behind it is the focused manga's blurred cover,
+crossfading to the next one, with the colours bleeding outward
+toward the edges (on Android 13+; on Android 12 just the
+blur); check the covers and the plank stay legible over it,
+and that the info row and the detail panel below are
+unchanged. If the blur or the dispersion reads too strong or
+too weak, the two constants at the top of `LibraryShelf.kt`
+(`BackdropBlurRadius`, `BackdropDispersion`) are the knobs.
+
 ## Build fixes
 
 - 2026-11-18: after the carved nav bar and capsules landed,
