@@ -2438,6 +2438,19 @@ showing through the glyphs, dark top edge, light bottom edge —
 in the MTR Song face, and that titles with glyphs the font lacks
 still render (fallback).
 
+The user then asked for the engraving to read deeper, so the
+card titles are easier to read. Done in code 7b08f965: the two
+edge alphas in `MetalEngravedText` are stronger — dark edge
+Black 0.35 → 0.6 light / 0.4 → 0.65 dark, light edge White
+0.55 → 0.85 light / 0.28 → 0.5 dark. They are local values
+now, not the shared `metalEngravedBurr`, so the bar and
+capsule titles and the engraved icons keep their softer
+values — only the card titles changed. The 1.dp edge offset
+and the Clear punch-out are untouched.
+
+Untested — needs a rebuild: check the titles read clearly in
+both themes without looking stamped-on.
+
 ## Build fixes
 
 - 2026-11-17: the `drawText` fix above imported it from the wrong
