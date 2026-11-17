@@ -47,6 +47,7 @@ import eu.kanade.presentation.miuix.MetalEngravedIcon
 import eu.kanade.presentation.miuix.MetalEngravedText
 import eu.kanade.presentation.miuix.metalIsDark
 import eu.kanade.presentation.miuix.metalSurface
+import eu.kanade.presentation.theme.Typefaces
 import eu.kanade.presentation.theme.isMiuixGlassSupported
 import mihon.app.di.appGraph
 import mihon.icons.materialsymbols.MaterialSymbols
@@ -227,6 +228,7 @@ private fun CoverTitleStrip(
                     modifier = Modifier.weight(1f),
                     style = MaterialTheme.typography.bodyMedium.copy(
                         fontWeight = FontWeight.Medium,
+                        fontFamily = Typefaces.mtrSong,
                     ),
                     isDark = metalDark,
                     minLines = 2,

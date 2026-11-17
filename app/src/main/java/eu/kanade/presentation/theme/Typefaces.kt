@@ -27,6 +27,19 @@ object Typefaces {
         Font(R.font.mplus_rounded1c_regular, FontWeight.Normal),
     )
 
+    /**
+     * The user's MTR Song-style font (FAKE-MTRSong 80's Special V4,
+     * a replica of the Hong Kong MTR Song typeface they sent in).
+     * Single weight; used for the metal card titles, where the
+     * letters are carved into the metal. The TTF itself is not in
+     * the repo — it is a binary the GitHub push cannot carry, so it
+     * must be placed at app/src/main/res/font/mtr_song.ttf before
+     * building. Glyphs it lacks fall back to the default font.
+     */
+    val mtrSong = FontFamily(
+        Font(R.font.mtr_song),
+    )
+
     val appTypography = Typography(
         displayLarge = defaultTypography.displayLarge.copy(
             fontFamily = mplusRounded,

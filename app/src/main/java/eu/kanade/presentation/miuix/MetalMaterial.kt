@@ -14,19 +14,26 @@
 
 package eu.kanade.presentation.miuix
 
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.offset
 import androidx.compose.material3.Icon
-import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Rect
+import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Outline
+import androidx.compose.ui.graphics.Paint
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.Shadow
 import androidx.compose.ui.graphics.Shape
@@ -36,6 +43,7 @@ import androidx.compose.ui.graphics.drawscope.clipPath
 import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -189,39 +197,44 @@ fun MetalEngravedIcon(
 }
 
 /**
- * 刻进去的文字：主字 + 上沿暗边 + 下沿亮边——刻痕的横截面，光从
- * 上面来，上暗下亮。单靠 TextStyle 的阴影只有下沿亮边，在亮金属
- * 上几乎看不见，所以再叠一层暗字错开 1px 放在上面。两层字，同一行，
- * 换行与省略和单层字一样。
+ * 刻进去的文字：字本身无色——金属从字形里透出来，只留刻痕的
+ * 两道边：上沿暗边，下沿亮边。主字不画填充色：先在离屏层里画
+ * 两道错开 1.dp 的边，再把字形本身抠掉，字膛里就只剩金属。
+ * 一层看不见的字负责定尺寸与换行，画出来的和单层字一样。
  */
 @Composable
 fun MetalEngravedText(
     text: String,
     modifier: Modifier = Modifier,
-    color: Color = LocalContentColor.current,
     style: TextStyle = LocalTextStyle.current,
     isDark: Boolean,
     minLines: Int = 1,
     maxLines: Int = Int.MAX_VALUE,
     overflow: TextOverflow = TextOverflow.Ellipsis,
 ) {
+    var layout by remember { mutableStateOf<TextLayoutResult?>(null) }
     Box(modifier = modifier) {
         Text(
             text = text,
-            color = Color.Black.copy(alpha = if (isDark) 0.4f else 0.35f),
-            style = style,
+            color = Color.Transparent,
+            style = style.copy(shadow = null),
             minLines = minLines,
             maxLines = maxLines,
             overflow = overflow,
-            modifier = Modifier.offset(y = (-1).dp),
+            onTextLayout = { layout = it },
         )
-        Text(
-            text = text,
-            color = color,
-            style = style.copy(shadow = metalEngravedShadow(isDark)),
-            minLines = minLines,
-            maxLines = maxLines,
-            overflow = overflow,
-        )
+        Canvas(modifier = Modifier.matchParentSize()) {
+            val result = layout ?: return@Canvas
+            val edge = 1.dp.toPx()
+            val dark = Color.Black.copy(alpha = if (isDark) 0.4f else 0.35f)
+            val light = metalEngravedBurr(isDark)
+            // Offscreen layer: Clear only erases the edge copies
+            // inside it, never the metal beneath.
+            drawContext.canvas.saveLayer(Rect(Offset.Zero, size), Paint())
+            drawText(result, topLeft = Offset(0f, -edge), color = dark)
+            drawText(result, topLeft = Offset(0f, edge), color = light)
+            drawText(result, topLeft = Offset.Zero, blendMode = BlendMode.Clear)
+            drawContext.canvas.restore()
+        }
     }
 }
