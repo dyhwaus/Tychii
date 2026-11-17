@@ -32,6 +32,7 @@ import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.CompositingStrategy
 import androidx.compose.ui.graphics.Outline
 import androidx.compose.ui.graphics.Paint
 import androidx.compose.ui.graphics.Path
@@ -40,6 +41,7 @@ import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.drawOutline
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.clipPath
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -142,6 +144,14 @@ fun Modifier.metalSurface(shape: Shape, isDark: Boolean): Modifier = this.then(
 fun metalEngravedBurr(isDark: Boolean): Color =
     Color.White.copy(alpha = if (isDark) 0.28f else 0.55f)
 
+/** 无色刻字两道边的暗边：比共用的毛刺更重，字才够清晰。 */
+fun metalCarvedDark(isDark: Boolean): Color =
+    Color.Black.copy(alpha = if (isDark) 0.65f else 0.6f)
+
+/** 无色刻字两道边的亮边：同上。 */
+fun metalCarvedLight(isDark: Boolean): Color =
+    Color.White.copy(alpha = if (isDark) 0.5f else 0.85f)
+
 /** 刻字的阴影：直接套在文字的 TextStyle 上。 */
 fun metalEngravedShadow(isDark: Boolean): Shadow =
     Shadow(color = metalEngravedBurr(isDark), offset = Offset(0f, 1f), blurRadius = 0f)
@@ -198,6 +208,79 @@ fun MetalEngravedIcon(
 }
 
 /**
+ * 刻进去的图标（无色版）：和 MetalEngravedText 一样的刻字——
+ * 两道错开 1.dp 的边，图标本身用 Clear 抠掉，膛里只剩金属。
+ * Clear 靠 RenderNode 的 blendMode（API 29+ 才支持）；低版本
+ * 上抠不掉，主图标会画成实心黑——可读，但不是刻字。
+ */
+@Composable
+fun MetalCarvedIcon(
+    imageVector: ImageVector,
+    contentDescription: String?,
+    isDark: Boolean,
+    modifier: Modifier = Modifier,
+) {
+    Box(
+        modifier = modifier.graphicsLayer {
+            compositingStrategy = CompositingStrategy.Offscreen
+        },
+    ) {
+        Icon(
+            imageVector = imageVector,
+            contentDescription = null,
+            tint = metalCarvedDark(isDark),
+            modifier = Modifier.offset(y = -1.dp),
+        )
+        Icon(
+            imageVector = imageVector,
+            contentDescription = null,
+            tint = metalCarvedLight(isDark),
+            modifier = Modifier.offset(y = 1.dp),
+        )
+        Icon(
+            imageVector = imageVector,
+            contentDescription = contentDescription,
+            tint = Color.Black,
+            modifier = Modifier.graphicsLayer { blendMode = BlendMode.Clear },
+        )
+    }
+}
+
+/** 同上，Painter 版（底栏的 tab 图标是 Painter）。 */
+@Composable
+fun MetalCarvedIcon(
+    painter: Painter,
+    contentDescription: String?,
+    isDark: Boolean,
+    modifier: Modifier = Modifier,
+) {
+    Box(
+        modifier = modifier.graphicsLayer {
+            compositingStrategy = CompositingStrategy.Offscreen
+        },
+    ) {
+        Icon(
+            painter = painter,
+            contentDescription = null,
+            tint = metalCarvedDark(isDark),
+            modifier = Modifier.offset(y = -1.dp),
+        )
+        Icon(
+            painter = painter,
+            contentDescription = null,
+            tint = metalCarvedLight(isDark),
+            modifier = Modifier.offset(y = 1.dp),
+        )
+        Icon(
+            painter = painter,
+            contentDescription = contentDescription,
+            tint = Color.Black,
+            modifier = Modifier.graphicsLayer { blendMode = BlendMode.Clear },
+        )
+    }
+}
+
+/**
  * 刻进去的文字：字本身无色——金属从字形里透出来，只留刻痕的
  * 两道边：上沿暗边，下沿亮边。主字不画填充色：先在离屏层里画
  * 两道错开 1.dp 的边，再把字形本身抠掉，字膛里就只剩金属。
@@ -227,11 +310,8 @@ fun MetalEngravedText(
         Canvas(modifier = Modifier.matchParentSize()) {
             val result = layout ?: return@Canvas
             val edge = 1.dp.toPx()
-            // Card titles read deeper than the shared burr: the
-            // glyph interior is bare metal, so the two edges
-            // carry all of the contrast.
-            val dark = Color.Black.copy(alpha = if (isDark) 0.65f else 0.6f)
-            val light = Color.White.copy(alpha = if (isDark) 0.5f else 0.85f)
+            val dark = metalCarvedDark(isDark)
+            val light = metalCarvedLight(isDark)
             // Offscreen layer: Clear only erases the edge copies
             // inside it, never the metal beneath.
             drawContext.canvas.saveLayer(Rect(Offset.Zero, size), Paint())

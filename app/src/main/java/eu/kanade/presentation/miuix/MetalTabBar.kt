@@ -22,15 +22,19 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.BadgedBox
-import androidx.compose.material3.Text
+import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.draw.dropShadow
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.shadow.Shadow
@@ -91,11 +95,9 @@ private fun MetalTabButton(
     val pressScale = remember { Animatable(1f) }
     val pressScope = rememberCoroutineScope()
     val shape = remember { RoundedCornerShape(28.dp) }
-    val tint = if (selected) {
-        MiuixTheme.colorScheme.primary
-    } else {
-        MiuixTheme.colorScheme.onSurface
-    }
+    // 选中的才发光：辉光用主题色（和玻璃底栏的选中态同一个
+    // Miuix primary），图标和标签本身不再带任何颜色。
+    val accent = MiuixTheme.colorScheme.primary
     Box(
         modifier = modifier
             .height(56.dp)
@@ -115,6 +117,22 @@ private fun MetalTabButton(
             }
             .metalSurface(shape, isDark)
             .clip(shape)
+            .drawBehind {
+                // 选中的辉光：一池主题色的光落在按钮中央，
+                // 跟着弹起的程度淡入淡出；不选中时没有。
+                if (raise > 0.01f) {
+                    drawRect(
+                        brush = Brush.radialGradient(
+                            colors = listOf(
+                                accent.copy(alpha = 0.25f * raise),
+                                Color.Transparent,
+                            ),
+                            center = size.center,
+                            radius = size.minDimension * 0.9f,
+                        ),
+                    )
+                }
+            }
             .clickable(
                 interactionSource = remember { MutableInteractionSource() },
                 indication = null,
@@ -136,23 +154,34 @@ private fun MetalTabButton(
             BadgedBox(
                 badge = { badge?.invoke() },
             ) {
-                MetalEngravedIcon(
-                    painter = tab.options.icon!!,
-                    contentDescription = tab.options.title,
-                    tint = tint,
-                    isDark = isDark,
-                    modifier = Modifier.size(24.dp),
-                )
+                Box {
+                    // 辉光晕：模糊的主题色图标衬在刻字后面，
+                    // 像灯丝亮起来；不选中时 alpha 为 0。
+                    Icon(
+                        painter = tab.options.icon!!,
+                        contentDescription = null,
+                        tint = accent,
+                        modifier = Modifier
+                            .size(24.dp)
+                            .blur(6.dp)
+                            .alpha(0.8f * raise),
+                    )
+                    MetalCarvedIcon(
+                        painter = tab.options.icon!!,
+                        contentDescription = tab.options.title,
+                        isDark = isDark,
+                        modifier = Modifier.size(24.dp),
+                    )
+                }
             }
             if (showLabels) {
-                Text(
+                MetalEngravedText(
                     text = tab.options.title,
                     style = TextStyle(
                         fontSize = 11.sp,
                         lineHeight = 14.sp,
-                        shadow = metalEngravedShadow(isDark),
                     ),
-                    color = tint,
+                    isDark = isDark,
                     maxLines = 1,
                 )
             }

@@ -93,19 +93,30 @@ fun MiuixCapsuleTitle(
         ),
         contentAlignment = Alignment.Center,
     ) {
-        Text(
-            text = title,
-            style = if (isMetal) {
-                MaterialTheme.typography.titleMedium.copy(shadow = metalEngravedShadow(metalDark))
-            } else {
-                MaterialTheme.typography.titleMedium
-            },
-            color = MiuixTheme.colorScheme.onSurface,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-            modifier = Modifier
-                .widthIn(max = 180.dp)
-                .padding(horizontal = 16.dp, vertical = 8.dp),
-        )
+        if (isMetal) {
+            // 标题也是无色刻字，和卡片标题一样：金属从字形里透
+            // 出来，只留两道边。没有选中态，所以不发光。
+            MetalEngravedText(
+                text = title,
+                style = MaterialTheme.typography.titleMedium,
+                isDark = metalDark,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier
+                    .widthIn(max = 180.dp)
+                    .padding(horizontal = 16.dp, vertical = 8.dp),
+            )
+        } else {
+            Text(
+                text = title,
+                style = MaterialTheme.typography.titleMedium,
+                color = MiuixTheme.colorScheme.onSurface,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier
+                    .widthIn(max = 180.dp)
+                    .padding(horizontal = 16.dp, vertical = 8.dp),
+            )
+        }
     }
 }

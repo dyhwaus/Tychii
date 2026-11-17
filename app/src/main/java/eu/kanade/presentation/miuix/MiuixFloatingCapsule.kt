@@ -1,6 +1,7 @@
 package eu.kanade.presentation.miuix
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -11,6 +12,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.blur
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -125,12 +130,39 @@ fun MiuixFloatingCapsule(
                 },
             ) {
                 if (isMetal) {
-                    MetalEngravedIcon(
-                        imageVector = action.icon,
-                        contentDescription = action.contentDescription,
-                        tint = action.tint ?: MiuixTheme.colorScheme.onSurface,
-                        isDark = metalDark,
-                    )
+                    // 工具图标也是无色刻字；正在生效的项（原来
+                    // 传了 accent tint 的）才发光，和底栏一样。
+                    val glow = action.tint
+                    Box(
+                        modifier = Modifier.drawBehind {
+                            if (glow != null) {
+                                drawRect(
+                                    brush = Brush.radialGradient(
+                                        colors = listOf(
+                                            glow.copy(alpha = 0.25f),
+                                            Color.Transparent,
+                                        ),
+                                        center = size.center,
+                                        radius = size.minDimension * 0.9f,
+                                    ),
+                                )
+                            }
+                        },
+                    ) {
+                        if (glow != null) {
+                            Icon(
+                                imageVector = action.icon,
+                                contentDescription = null,
+                                tint = glow,
+                                modifier = Modifier.blur(6.dp).alpha(0.8f),
+                            )
+                        }
+                        MetalCarvedIcon(
+                            imageVector = action.icon,
+                            contentDescription = action.contentDescription,
+                            isDark = metalDark,
+                        )
+                    }
                 } else {
                     Icon(
                         imageVector = action.icon,
