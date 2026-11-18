@@ -2761,6 +2761,17 @@ removal) if the user ever wants it back.
 
 ## Build fixes
 
+- `MiuixLiquidBottomBar.kt:111` — `Unresolved reference
+  'width'` on `modifier.width(IntrinsicSize.Min)` (the Box
+  sizing the bar). Real error, line numbers matched the
+  pushed file. Cause: the pill-removal rewrite (3b7d226a)
+  dropped `import androidx.compose.foundation.layout.width`
+  while keeping the call. Fix (97251158): re-add the import.
+  Lesson: when rewriting a file wholesale, check every call
+  site against the import block — a full rewrite can
+  silently drop an import that a surgical edit would have
+  kept.
+
 - 2026-11-18: the previous fix (71d2a28b) was wrong — it
   swapped the imports to Compose's `RenderEffect` /
   `RuntimeShader`, but those do not exist: the build then
