@@ -2840,6 +2840,32 @@ capsule tool (e.g. filters on) still reads as active by
 its fill. If the fill is too faint to mark the active
 tool, `metalCarvedFill` (0.2) is the one knob.
 
+## Extension details: overlays had no host (2026-11-19)
+
+The user reported that tapping on the extension details
+page would not bring up the second-level menu. Traced in
+code: the page has two Miuix overlays — the AppBar
+overflow dropdown (⋮ → enable all / disable all / clear
+cookies, `OverlayDropdownPopup` in `AppBarActions`) and
+the content-warning dialog (tapping the Safe / Mixed / 18+
+row, `OverlayDialog`) — but the page root is the M3
+`Scaffold`, with no Miuix `Scaffold` ancestor anywhere
+above it, so both overlays were silently swallowed. The
+row taps themselves were fine (a source row toggles the
+source; the gear opens its preferences) — only the popups
+never appeared. Done in code db84a372: the
+tachiyomi/ui wrapper now wraps the screen in a
+`MiuixScaffold` (`containerColor` = page background,
+`contentWindowInsets` = zero), the same recipe as
+BrowseSourceScreen's wrapper — layout-neutral, it only
+gives the overlays a host. No page in the file was
+restructured.
+
+Untested — needs a rebuild: check the ⋮ menu opens and
+the content-type row opens its explanation dialog. The
+same gap exists on other pushed pages (migration screens,
+CategoryScreen, etc.) — only fix pages the user raises.
+
 ## Build fixes
 
 - `MiuixLiquidBottomBar.kt:111` — `Unresolved reference
