@@ -35,6 +35,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -50,9 +51,11 @@ import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.graphics.asComposeRenderEffect
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
@@ -91,6 +94,9 @@ private val CarouselPageSpacing = 12.dp
 // Neighbours shrink to this and fade to this at one page away.
 private const val NeighbourScale = 0.78f
 private const val NeighbourAlpha = 0.35f
+// How far neighbours tilt back in perspective (cover-flow):
+// the page facing the centre turns its outer edge away.
+private const val NeighbourTiltDegrees = 30f
 // How many of the newest chapters the detail panel shows.
 private const val LatestChapterCount = 5
 // The carousel backdrop: how blurred the focused cover is, how
@@ -130,9 +136,10 @@ half4 main(float2 coord) {
 /**
  * Carousel shelf, pinned above the focused manga's detail panel
  * in Shelf mode: the focused manga's cover sits in the middle,
- * its neighbours peeking in on both sides — smaller and dimmer
- * toward the screen edges, standing on the same plank. Swiping
- * moves between books; the detail panel below follows the focus.
+ * its neighbours peeking in on both sides — smaller, dimmer and
+ * tilted back in perspective toward the screen edges, standing
+ * on the same plank. Swiping moves between books; the detail
+ * panel below follows the focus.
  */
 @Composable
 internal fun LibraryShelfHeader(
@@ -171,10 +178,18 @@ internal fun LibraryShelfHeader(
         initialPage = focusedIndex,
         pageCount = { items.size },
     )
+    // One soft tick per page change, like Wenku8's per-step
+    // haptics — but not on first composition.
+    val haptic = LocalHapticFeedback.current
+    var previousPage by remember { mutableIntStateOf(focusedIndex) }
     // The pager is the source of truth while swiping; keep the
     // focused id in step with the settled page.
     LaunchedEffect(pagerState.currentPage) {
         val page = pagerState.currentPage
+        if (page != previousPage) {
+            haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+            previousPage = page
+        }
         if (page in items.indices) {
             focusedMangaId = items[page].libraryManga.manga.id
         }
@@ -231,11 +246,18 @@ internal fun LibraryShelfHeader(
                             .graphicsLayer {
                                 // Shrink toward the bottom edge, so
                                 // every cover keeps standing on the
-                                // plank.
+                                // plank, and tilt back in perspective
+                                // so it faces the centre — a
+                                // cover-flow lean, not a flat row.
+                                // pageOffset is signed: negative on
+                                // the right, so the right page's
+                                // left edge comes forward.
                                 val scale = 1f - (1f - NeighbourScale) * distance
                                 scaleX = scale
                                 scaleY = scale
                                 alpha = 1f - (1f - NeighbourAlpha) * distance
+                                rotationY = -pageOffset.coerceIn(-1f, 1f) * NeighbourTiltDegrees
+                                cameraDistance = 12f
                                 transformOrigin = TransformOrigin(0.5f, 1f)
                             }
                             .combinedClickable(

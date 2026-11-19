@@ -89,15 +89,15 @@ fun Modifier.metalSurface(shape: Shape, isDark: Boolean): Modifier = this.then(
         // 倒角：上沿亮线，下沿暗线，沿着圆角走。五金件的倒角硬，
         // 像被光切出来的边。
         val chamfer = Brush.verticalGradient(
-            0f to Color.White.copy(alpha = 0.6f),
-            0.45f to Color.Transparent,
-            1f to Color.Black.copy(alpha = 0.4f),
+            0f to Color.White.copy(alpha = 0.65f),
+            0.5f to Color.Transparent,
+            1f to Color.Black.copy(alpha = 0.45f),
         )
         // 左上斜柔光，静态，不跟手。
         val sheen = Brush.linearGradient(
-            colors = listOf(
-                Color.White.copy(alpha = 0.06f),
-                Color.Transparent,
+            colorStops = arrayOf(
+                0f to Color.White.copy(alpha = 0.09f),
+                0.6f to Color.Transparent,
             ),
             start = Offset.Zero,
             end = Offset(size.width * 0.7f, size.height),
@@ -114,17 +114,21 @@ fun Modifier.metalSurface(shape: Shape, isDark: Boolean): Modifier = this.then(
             clipPath(path) {
                 drawRect(brush = base)
                 // 缎面纹理：1px 横线，黑白交错，比拉丝钢细而淡——
-                // 铝是细腻的哑光面，不是粗拉丝。每条的 alpha 由行号
-                // 的哈希定——固定下来，跨帧不闪。
+                // 铝是细腻的哑光面，不是粗拉丝。每条线的强度、起
+                // 点、落点都由行号的哈希定——固定下来，跨帧不闪；
+                // 真实的拉丝不是直尺画出来的线，线有轻有重、有起
+                // 有落，不会每条都从左拉到右。
                 for (i in 0 until lineCount) {
                     val y = i * spacing
-                    val hash = ((i * 2654435761L) % 1000L) / 1000f
-                    val alpha = 0.01f + hash * 0.02f
+                    val hashA = ((i * 2654435761L) % 1000L) / 1000f
+                    val hashB = ((i * 40503L) % 1000L) / 1000f
+                    val hashC = ((i * 65599L) % 1000L) / 1000f
+                    val alpha = 0.005f + hashA * 0.045f
                     val color = if (i % 2 == 0) Color.White else Color.Black
                     drawLine(
                         color = color.copy(alpha = alpha),
-                        start = Offset(0f, y),
-                        end = Offset(size.width, y),
+                        start = Offset(hashB * size.width * 0.2f, y),
+                        end = Offset(size.width - hashC * size.width * 0.2f, y),
                         strokeWidth = 1f,
                     )
                 }
