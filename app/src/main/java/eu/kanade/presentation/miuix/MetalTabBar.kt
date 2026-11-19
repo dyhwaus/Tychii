@@ -23,24 +23,21 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.Icon
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
-import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.draw.dropShadow
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.shadow.Shadow
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import eu.kanade.presentation.util.Tab
@@ -95,8 +92,8 @@ private fun MetalTabButton(
     val pressScale = remember { Animatable(1f) }
     val pressScope = rememberCoroutineScope()
     val shape = remember { RoundedCornerShape(28.dp) }
-    // 选中的才发光：辉光是白色的，不跟主题色；图标和标签
-    // 本身不再带任何颜色。
+    // 图标和标签是无色刻字，字形里淡淡填一层色，和漫画卡片
+    // 的标题一样；选中不再发光，选中只靠弹起来表示。
     Box(
         modifier = modifier
             .height(56.dp)
@@ -116,22 +113,6 @@ private fun MetalTabButton(
             }
             .metalSurface(shape, isDark)
             .clip(shape)
-            .drawBehind {
-                // 选中的辉光：一池白色的光落在按钮中央，
-                // 跟着弹起的程度淡入淡出；不选中时没有。
-                if (raise > 0.01f) {
-                    drawRect(
-                        brush = Brush.radialGradient(
-                            colors = listOf(
-                                MetalGlowColor.copy(alpha = 0.25f * raise),
-                                Color.Transparent,
-                            ),
-                            center = Offset(size.width / 2f, size.height / 2f),
-                            radius = size.minDimension * 0.9f,
-                        ),
-                    )
-                }
-            }
             .clickable(
                 interactionSource = remember { MutableInteractionSource() },
                 indication = null,
@@ -153,17 +134,14 @@ private fun MetalTabButton(
             BadgedBox(
                 badge = { badge?.invoke() },
             ) {
+                // 和漫画卡片的标题一样：实心淡色图标衬在刻字
+                // 后面，字形抠掉的地方透出填色。
                 Box {
-                    // 辉光晕：模糊的白色图标衬在刻字后面，
-                    // 像灯丝亮起来；不选中时 alpha 为 0。
                     Icon(
                         painter = tab.options.icon!!,
                         contentDescription = null,
-                        tint = MetalGlowColor,
-                        modifier = Modifier
-                            .size(24.dp)
-                            .blur(6.dp)
-                            .alpha(0.8f * raise),
+                        tint = metalCarvedFill(isDark),
+                        modifier = Modifier.size(24.dp),
                     )
                     MetalCarvedIcon(
                         painter = tab.options.icon!!,
@@ -174,15 +152,26 @@ private fun MetalTabButton(
                 }
             }
             if (showLabels) {
-                MetalEngravedText(
-                    text = tab.options.title,
-                    style = TextStyle(
-                        fontSize = 11.sp,
-                        lineHeight = 14.sp,
-                    ),
-                    isDark = isDark,
-                    maxLines = 1,
+                // 标题也一样：淡色实心字衬在刻字后面。
+                val labelStyle = TextStyle(
+                    fontSize = 11.sp,
+                    lineHeight = 14.sp,
                 )
+                Box {
+                    Text(
+                        text = tab.options.title,
+                        style = labelStyle,
+                        color = metalCarvedFill(isDark),
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                    MetalEngravedText(
+                        text = tab.options.title,
+                        style = labelStyle,
+                        isDark = isDark,
+                        maxLines = 1,
+                    )
+                }
             }
         }
     }

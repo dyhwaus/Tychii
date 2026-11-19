@@ -12,11 +12,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
-import androidx.compose.ui.draw.blur
-import androidx.compose.ui.draw.drawBehind
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -132,31 +127,16 @@ fun MiuixFloatingCapsule(
             ) {
                 if (isMetal) {
                     // 工具图标也是无色刻字；正在生效的项（原来
-                    // 传了 accent tint 的）才发光，和底栏一样；
-                    // 光是白色的，不跟主题色。
-                    val glowing = action.tint != null
-                    Box(
-                        modifier = Modifier.drawBehind {
-                            if (glowing) {
-                                drawRect(
-                                    brush = Brush.radialGradient(
-                                        colors = listOf(
-                                            MetalGlowColor.copy(alpha = 0.25f),
-                                            Color.Transparent,
-                                        ),
-                                        center = Offset(size.width / 2f, size.height / 2f),
-                                        radius = size.minDimension * 0.9f,
-                                    ),
-                                )
-                            }
-                        },
-                    ) {
-                        if (glowing) {
+                    // 传了 accent tint 的）字形里淡淡填一层色，
+                    // 和漫画卡片的标题一样——填色就是生效的标
+                    // 记，辉光没有了。
+                    val filled = action.tint != null
+                    Box {
+                        if (filled) {
                             Icon(
                                 imageVector = action.icon,
                                 contentDescription = null,
-                                tint = MetalGlowColor,
-                                modifier = Modifier.blur(6.dp).alpha(0.8f),
+                                tint = metalCarvedFill(metalDark),
                             )
                         }
                         MetalCarvedIcon(
