@@ -2804,6 +2804,42 @@ centre without looking bent, and the tick fires once per
 page change. If the tilt reads backwards, the sign of the
 `rotationY` line is the one thing to flip.
 
+## Metal glow replaced by carved fill (2026-11-19)
+
+The user asked for the toolbar and nav bar glow to match
+the manga card. The card has no glow since 746a2860 — its
+titles are a colourless carving over a faint solid fill
+(`metalCarvedFill`, 191abe8e) — so the white glow is now
+gone from the last two places that had it. Done in code
+16d8a747.
+
+- `MetalTabBar.kt`: the selected tab's radial wash and the
+  blurred white icon copy behind the carved icon are
+  removed. Every tab icon and label now sits over a solid
+  copy in `metalCarvedFill` — the same Box-over-fill
+  pattern as `CoverTitleStrip` (fill icon under
+  `MetalCarvedIcon`, fill `Text` under `MetalEngravedText`,
+  same style and size so the carving punches through to
+  the fill). The fill is on all tabs, like the card titles;
+  selection is shown only by the raise (spring, -4.dp,
+  scale +4%, deeper shadow), which was always the primary
+  selected marker.
+- `MiuixFloatingCapsule.kt`: the active tool's radial wash
+  and blurred halo are removed. An active tool (one that
+  carries a tint) now gets the fill inside its carved icon
+  instead — the fill IS the active marker there, since the
+  capsule has no raise to show it. Inactive tools stay
+  plain carving.
+- `MetalMaterial.kt`: `MetalGlowColor` is deleted — nothing
+  references it any more. Glass-mode glows were never
+  touched (they keep the theme colour).
+
+Untested — needs a rebuild: check the selected tab still
+reads as selected by its raise alone, and that an active
+capsule tool (e.g. filters on) still reads as active by
+its fill. If the fill is too faint to mark the active
+tool, `metalCarvedFill` (0.2) is the one knob.
+
 ## Build fixes
 
 - `MiuixLiquidBottomBar.kt:111` — `Unresolved reference
