@@ -2759,6 +2759,51 @@ composition + backdrop re-recording on switch. The pill can
 be restored from the commit history (3b7d226a is the
 removal) if the user ever wants it back.
 
+## Metal realism + 3D shelf carousel (2026-11-19)
+
+The user decided against a Flutter rebuild and picked both
+optimisations instead: metal texture and the shelf carousel
+in 3D. Done in code 49f3877d.
+
+Metal (`MetalMaterial.kt`, `metalSurface` only — no API
+change, every metal piece gets it at once): the grain is no
+longer ruled lines. Each 1px line now has its own
+hash-based strength, start and end — alpha 0.005–0.05
+(was a flat 0.01–0.03), strokes fade in and out across at
+most 80% of the width instead of every line running edge
+to edge, like real brushing. The top-left sheen is a touch
+stronger (white 0.06 → 0.09) and fades out by 60% of the
+diagonal instead of running the whole way, so the light
+pools top-left. The bevel is a little crisper (top white
+0.6 → 0.65, bottom black 0.4 → 0.45, midpoint 0.45 →
+0.5). Base gradient, top light band and engraving are
+untouched.
+
+Carousel (`LibraryShelf.kt`, `LibraryShelfHeader` only):
+neighbours now tilt back in perspective as well as
+shrinking and fading — `rotationY = -pageOffset * 30f`
+(`NeighbourTiltDegrees`), `cameraDistance = 12f`, pivot
+kept at the bottom centre so the covers stay standing on
+the plank, outer edge away, facing the centre: a
+cover-flow lean, not a flat row. The sign: pageOffset is
+negative on the right, so the right page's left edge comes
+forward. And a soft haptic tick on every settled page
+change (`HapticFeedbackType.TextHandleMove`, fired from the
+existing `LaunchedEffect(pagerState.currentPage)` and
+guarded by a remembered `previousPage` so first
+composition stays silent) — Wenku8's per-step haptics.
+The pager already snaps on its own, so nothing was added
+for that; the prev/next wrap (instant jump) is unchanged,
+and the backdrop, plank and detail panel are untouched.
+The two knobs are `NeighbourTiltDegrees` (top of
+LibraryShelf.kt) and the `cameraDistance` next to it.
+
+Untested — needs a rebuild: check the metal reads as
+brushed rather than ruled, the neighbours lean toward the
+centre without looking bent, and the tick fires once per
+page change. If the tilt reads backwards, the sign of the
+`rotationY` line is the one thing to flip.
+
 ## Build fixes
 
 - `MiuixLiquidBottomBar.kt:111` — `Unresolved reference
