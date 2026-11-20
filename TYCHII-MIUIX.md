@@ -2975,6 +2975,41 @@ at the top of LibraryShelf.kt: `NeighbourTiltDegrees`
 `BackdropDrift` (12.dp). If the tilt reads backwards,
 flip the sign of the rotationY line, as before.
 
+## Metal nav bar back to the shared capsule (2026-11-20)
+
+The user asked for the metal mode nav bar to be the same
+as the other modes again: the separate floating buttons
+(`MetalTabBar.kt`, one per tab, introduced 2026-11-16)
+are gone from the bar, and all four bar styles now use
+the one capsule. Done in code 6012610c:
+
+- `MiuixLiquidBottomBar.kt` takes an `isMetal` flag: the
+  capsule container is brushed metal (`metalSurface`)
+  instead of the glass backdrop or the plain surface
+  colour. The drop shadow and the 64.dp capsule are
+  unchanged.
+- `TychiiLiquidBar.kt` no longer branches to
+  `MetalTabButtons`; the tab content branches instead.
+  In metal mode the icons and labels are colourless
+  carvings over a faint fill, like the card titles —
+  the Library icon stays live (it animates on selection),
+  the other icons and the labels use the pre-rendered
+  bitmaps from the smoothness change, and the selected
+  tab pops up on a spring (the raise the old buttons
+  used, damping 0.6 / stiffness 500), since the carving
+  alone marks nothing. The items are keyed by tab, not
+  by position, so hiding the Updates tab does not move
+  the raise state to another tab.
+- `MetalTabBar.kt` is kept in the repo, unused, so the
+  separate buttons can come back from history if the
+  user wants them again.
+
+Untested — needs a rebuild: check the metal capsule reads
+as brushed metal (not a flat grey bar), the carved icons
+and labels stay legible, the selected tab reads by its
+raise alone, and switching to glass/translucent/opaque
+is unchanged.
+
 ## Build fixes
 
 - `MetalTabBar.kt:157` — `Operator '==' cannot be
