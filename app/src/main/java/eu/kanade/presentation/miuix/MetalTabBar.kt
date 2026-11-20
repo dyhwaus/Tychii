@@ -12,7 +12,6 @@ package eu.kanade.presentation.miuix
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
-import androidx.compose.animation.graphics.vector.AnimatedVectorPainter
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -145,7 +144,9 @@ private fun MetalTabButton(
                 // 和漫画卡片的标题一样：实心淡色图标衬在刻字
                 // 后面，字形抠掉的地方透出填色。静态图标的刻
                 // 字预渲染成一张 bitmap，不再每帧占一个离屏层；
-                // 书架图标会随选中播动画，只能现场画。
+                // 书架图标会随选中播动画，只能现场画——它的
+                // painter 类型不是公开 API，拿 tab 的序号认：
+                // 书架固定是 0 号 tab。
                 Box(contentAlignment = Alignment.Center) {
                     Icon(
                         painter = tab.options.icon!!,
@@ -153,7 +154,7 @@ private fun MetalTabButton(
                         tint = metalCarvedFill(isDark),
                         modifier = Modifier.size(24.dp),
                     )
-                    if (tab.options.icon is AnimatedVectorPainter) {
+                    if (tab.options.index == 0u) {
                         MetalCarvedIcon(
                             painter = tab.options.icon!!,
                             contentDescription = tab.options.title,
