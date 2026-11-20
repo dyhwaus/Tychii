@@ -46,7 +46,6 @@ import androidx.compose.ui.graphics.drawOutline
 import androidx.compose.ui.graphics.drawscope.CanvasDrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.clipPath
-import androidx.compose.ui.graphics.drawscope.draw
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.graphics.painter.Painter
@@ -386,11 +385,14 @@ fun rememberCarvedIconBitmap(
                 canvas = canvas,
                 size = Size(width.toFloat(), iconPx.toFloat()),
             ) {
-                draw(
-                    painter = painter,
-                    size = Size(iconPx.toFloat(), iconPx.toFloat()),
-                    colorFilter = ColorFilter.tint(Color.Black),
-                )
+                // DrawScope has no draw(painter, ...) extension —
+                // a Painter draws itself: with(painter) { draw() }.
+                with(painter) {
+                    draw(
+                        size = Size(iconPx.toFloat(), iconPx.toFloat()),
+                        colorFilter = ColorFilter.tint(Color.Black),
+                    )
+                }
             }
         }
         ImageBitmap(width, height).apply {
