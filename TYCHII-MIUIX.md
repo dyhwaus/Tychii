@@ -2866,6 +2866,46 @@ the content-type row opens its explanation dialog. The
 same gap exists on other pushed pages (migration screens,
 CategoryScreen, etc.) — only fix pages the user raises.
 
+## Metal smoothness: cheaper backdrop, bar shadow, tab carving (2026-11-20)
+
+The user asked to make Metal mode smoother overall, and
+picked doing both of the two directions offered (shelf
+backdrop + tab bar). Done in code 5ffc273c:
+
+- Shelf backdrop (LibraryShelf.kt): `BackdropBlurRadius`
+  28.dp → 16.dp, dispersion unchanged at 18.dp. The blur
+  re-renders every frame of the 250ms crossfade on swipe,
+  so a smaller radius is the cheapest big win; the look
+  stays, only a little softer.
+- Tab bar shadow (MetalTabBar.kt): the dropShadow radius
+  and alpha no longer follow the raise spring — animating
+  them re-blurred the shadow every frame. The shadow is
+  now fixed (12.dp, 0.25 dark / 0.15 light); the lift
+  still reads from the translation and the scale. The
+  header comment was corrected to match.
+- Tab carving pre-rendered (MetalMaterial.kt, new
+  `rememberCarvedIconBitmap` / `rememberCarvedTextBitmap`;
+  MetalTabBar.kt): the five tab icons and labels are now
+  drawn once into bitmaps (same saveLayer + Clear trick as
+  MetalEngravedText) instead of holding a live offscreen
+  layer per icon and a Canvas saveLayer per label. The
+  bitmaps are 1.dp taller on each side so the offset edges
+  are not clipped, and the fill copies underneath stay live
+  so alignment and the fill still match. The Library tab
+  icon is the exception: it is an AnimatedVectorPainter
+  that plays on selection, and a bitmap would freeze it —
+  it keeps the live MetalCarvedIcon. The tool capsule
+  still uses the live carving too; the helpers can be
+  reused there later.
+
+Untested — needs a rebuild: check the tab icons and
+labels still read as carved (especially the Library icon
+animation), the selected tab still reads by its raise
+alone, and shelf swipes feel lighter. If the bitmap
+carving misaligns with the fill by 1.dp, the inner Boxes
+in MetalTabButton now centre their children, so check
+there first.
+
 ## Build fixes
 
 - `MiuixLiquidBottomBar.kt:111` — `Unresolved reference
