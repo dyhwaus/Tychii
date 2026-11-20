@@ -2866,6 +2866,30 @@ the content-type row opens its explanation dialog. The
 same gap exists on other pushed pages (migration screens,
 CategoryScreen, etc.) — only fix pages the user raises.
 
+### Follow-up (2026-11-20): the row was on the wrong page
+
+The user reported again that 漫畫內容類型 still opens
+nothing, with a screenshot: the row is not on the
+extension details page at all, it is on
+SourcePreferencesScreen (title = source name, e.g.
+NoyAcg (ZH-HANT)), reached from the extension details
+page. Its dialog is `ListPreferenceDialog` — a Miuix
+`OverlayDialog` — and that screen also has only the M3
+`Scaffold`, no Miuix host, so the dialog was swallowed
+the same way. The 11-19 wrapper was on the wrong screen.
+Done in code 2af41321: SourcePreferencesScreen's content
+(the M3 Scaffold and the `PreferenceDialog` sibling) is
+now wrapped in the same layout-neutral `MiuixScaffold`.
+This also covers `MultiSelectListPreferenceDialog`
+(also an `OverlayDialog`); the EditText dialog
+deliberately stays Material3 (platform window, extensions
+need `android.R.id.button1` in its hierarchy).
+
+Untested — needs a rebuild: tap 漫畫內容類型 on a
+source's preferences page and check the option list
+opens; the 密碼 row (Material3 dialog) should be
+unchanged.
+
 ## Metal smoothness: cheaper backdrop, bar shadow, tab carving (2026-11-20)
 
 The user asked to make Metal mode smoother overall, and
