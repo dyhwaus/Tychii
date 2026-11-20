@@ -2908,6 +2908,24 @@ there first.
 
 ## Build fixes
 
+- `MetalMaterial.kt:389-392` — `No value passed for
+  parameter 'density' / 'layoutDirection' / 'canvas' /
+  'block'` and `No parameter with name 'painter' /
+  'colorFilter'`. Real error, line numbers matched the
+  pushed file. Cause: `rememberCarvedIconBitmap`
+  (5ffc273c) called a `DrawScope.draw(painter, ...)`
+  extension that does not exist — the only `draw` of that
+  name in the drawscope package is the scope-setup one
+  (`draw(density, layoutDirection, canvas, size,
+  graphicsLayer, block)`), which the call resolved to. A
+  Painter draws itself: its member is `DrawScope.draw(size,
+  alpha, colorFilter)`. Fix (b95f1714): `with(painter) {
+  draw(size = ..., colorFilter = ...) }`, and the
+  now-unused `import ...drawscope.draw` removed. Lesson:
+  check an API against the official reference before
+  asserting it exists — this one was written from memory,
+  like the RenderEffect fix before it.
+
 - `MiuixLiquidBottomBar.kt:111` — `Unresolved reference
   'width'` on `modifier.width(IntrinsicSize.Min)` (the Box
   sizing the bar). Real error, line numbers matched the
