@@ -78,10 +78,14 @@ internal fun RowScope.FloatingBottomBarItem(
  * 强调色 tint，不再有滑动的 pill——pill（拖动、CombinedBackdrop
  * 采样、第二遍模糊）因点按切换延迟卡顿而拿掉了。
  *
+ * 金属模式用的是同一条胶囊：容器换成拉丝金属，tab 内容由调用方
+ * 换成刻字，选中态由调用方用弹起来表示。
+ *
  * @param backdrop 页面内容的模糊源
  * @param isBlurEnabled 是否启用玻璃（关闭时退化为纯色胶囊）
  * @param containerAlpha 玻璃关闭时容器色的不透明度：1f 为不透明，0.75f 为半透明
  * @param isDark 深色主题：决定薄纱是提亮还是压暗
+ * @param isMetal 金属模式：容器是拉丝金属，不模糊也不用纯色
  */
 @Composable
 internal fun MiuixLiquidBottomBar(
@@ -90,6 +94,7 @@ internal fun MiuixLiquidBottomBar(
     isDark: Boolean,
     isBlurEnabled: Boolean = true,
     containerAlpha: Float = 1f,
+    isMetal: Boolean = false,
     content: @Composable RowScope.() -> Unit,
 ) {
     // The capsule shape MUST be a RoundedCornerShape, not CircleShape: the
@@ -128,7 +133,9 @@ internal fun MiuixLiquidBottomBar(
                     onClick = {},
                 )
                 .then(
-                    if (isBlurEnabled) {
+                    if (isMetal) {
+                        Modifier.metalSurface(pillShape, isDark)
+                    } else if (isBlurEnabled) {
                         Modifier.drawBackdrop(
                             backdrop = backdrop,
                             shape = { pillShape },
