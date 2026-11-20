@@ -154,7 +154,7 @@ private fun MetalTabButton(
                         tint = metalCarvedFill(isDark),
                         modifier = Modifier.size(24.dp),
                     )
-                    if (tab.options.index == 0u) {
+                    if (tab.options.index.toInt() == 0) {
                         MetalCarvedIcon(
                             painter = tab.options.icon!!,
                             contentDescription = tab.options.title,
