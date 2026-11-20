@@ -2908,6 +2908,22 @@ there first.
 
 ## Build fixes
 
+- `MetalTabBar.kt:157` — `Operator '==' cannot be
+  applied to 'UShort' and 'UInt'` on
+  `tab.options.index == 0u`. Real error. Cause: Voyager's
+  tab index is a `UShort`, but a bare `0u` literal is a
+  `UInt` in Kotlin — the two do not compare. Fix
+  (0b46d0fe): `tab.options.index.toInt() == 0`. The three
+  errors in this round all came from the same metal
+  smoothness change (5ffc273c), and all three were API or
+  type details used from memory without checking: a
+  `draw(painter, ...)` that does not exist, a painter type
+  that is not public, and a `0u` literal of the wrong
+  unsigned width. After this fix the two touched files
+  were re-read end to end and every call in the change was
+  checked against the official reference or the stdlib
+  before pushing.
+
 - `MetalTabBar.kt:15,156` — `Unresolved reference
   'AnimatedVectorPainter'` on the import and the `is`
   check. Real error. Cause: the tab-bar bitmap change
