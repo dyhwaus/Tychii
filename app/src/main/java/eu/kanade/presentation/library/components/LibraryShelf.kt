@@ -4,6 +4,8 @@ import android.graphics.RenderEffect
 import android.graphics.RuntimeShader
 import android.os.Build
 import androidx.compose.animation.Crossfade
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -23,6 +25,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.CircularProgressIndicator
@@ -47,6 +50,7 @@ import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.graphics.asComposeRenderEffect
@@ -92,11 +96,15 @@ private val FocusedCoverWidth = 124.dp
 private val FocusedCoverHeight = 186.dp
 private val CarouselPageSpacing = 12.dp
 // Neighbours shrink to this and fade to this at one page away.
-private const val NeighbourScale = 0.78f
+private const val NeighbourScale = 0.7f
 private const val NeighbourAlpha = 0.35f
 // How far neighbours tilt back in perspective (cover-flow):
 // the page facing the centre turns its outer edge away.
-private const val NeighbourTiltDegrees = 30f
+private const val NeighbourTiltDegrees = 45f
+// How high the centred cover lifts off the plank as it
+// settles, and how far the backdrop drifts against a swipe.
+private val CentreLift = 4.dp
+private val BackdropDrift = 12.dp
 // How many of the newest chapters the detail panel shows.
 private const val LatestChapterCount = 5
 // The carousel backdrop: how blurred the focused cover is, how
@@ -198,7 +206,9 @@ internal fun LibraryShelfHeader(
     }
 
     // Loops around. A wrap jumps instantly instead of animating
-    // across every page in between.
+    // across every page in between. A step to a neighbour rides
+    // a spring with a touch of overshoot, so the page settles
+    // with a little bounce instead of stopping dead.
     fun focus(index: Int) {
         val size = items.size
         if (size == 0) return
@@ -208,7 +218,10 @@ internal fun LibraryShelfHeader(
             if (abs(next - pagerState.currentPage) > 1) {
                 pagerState.scrollToPage(next)
             } else {
-                pagerState.animateScrollToPage(next)
+                pagerState.animateScrollToPage(
+                    next,
+                    animationSpec = spring(dampingRatio = 0.7f, stiffness = 300f),
+                )
             }
         }
     }
@@ -238,6 +251,32 @@ internal fun LibraryShelfHeader(
                     modifier = Modifier.fillMaxSize(),
                     contentAlignment = Alignment.BottomCenter,
                 ) {
+                    // The cover's shadow on the plank: a soft
+                    // ellipse under the cover's base, outside the
+                    // cover's tilt so it stays flat on the shelf.
+                    // Strongest and widest under the centred cover,
+                    // fainter and narrower under the neighbours;
+                    // the cover lifts off it as it settles. The
+                    // blur is Android 12+ only — below that the
+                    // ellipse stays unblurred.
+                    Box(
+                        modifier = Modifier
+                            .align(Alignment.BottomCenter)
+                            .width(FocusedCoverWidth + 16.dp)
+                            .height(12.dp)
+                            .graphicsLayer {
+                                alpha = 1f - distance * 0.55f
+                                scaleX = 0.85f + 0.15f * (1f - distance)
+                            }
+                            .background(Color.Black.copy(alpha = 0.5f), CircleShape)
+                            .then(
+                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                                    Modifier.blur(8.dp)
+                                } else {
+                                    Modifier
+                                },
+                            ),
+                    )
                     // Tap and long-press both live on this wrapper:
                     // the cover itself only takes an onClick, so a
                     // long-press for selection has to come from
@@ -261,6 +300,12 @@ internal fun LibraryShelfHeader(
                                 rotationY = -pageOffset.coerceIn(-1f, 1f) * NeighbourTiltDegrees
                                 cameraDistance = 12f
                                 transformOrigin = TransformOrigin(0.5f, 1f)
+                                // The centred cover lifts off the
+                                // plank as it settles; the floor
+                                // shadow underneath stays put, so
+                                // the lift reads as the cover
+                                // floating above the shelf.
+                                translationY = -CentreLift.toPx() * (1f - distance)
                             }
                             .combinedClickable(
                                 onClick = {
@@ -302,6 +347,16 @@ internal fun LibraryShelfHeader(
                         Modifier.background(MaterialTheme.colorScheme.surfaceContainerHigh)
                     },
                 ),
+        )
+        // The shelf's front edge: a thin darker strip under the
+        // plank, so the shelf reads as a board with thickness,
+        // not a flat line.
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp)
+                .height(2.dp)
+                .background(Color.Black.copy(alpha = 0.18f)),
         )
 
         Row(
@@ -370,12 +425,33 @@ internal fun LibraryShelf(
     // The backdrop needs Android 12 (RenderEffect blur); below
     // that the carousel keeps its plain background.
     val backdropEnabled = Build.VERSION.SDK_INT >= Build.VERSION_CODES.S
+    val focusedIndex = focusedItem?.let { item ->
+        items.indexOfFirst { it.libraryManga.manga.id == item.libraryManga.manga.id }
+            .takeIf { it >= 0 }
+    } ?: 0
     BoxWithConstraints(modifier = modifier.fillMaxSize()) {
         val density = LocalDensity.current
         val backdropSizePx = remember(maxWidth, density) {
             with(density) {
                 Size(maxWidth.toPx(), (FocusedCoverHeight + PlankHeight).toPx())
             }
+        }
+        // The backdrop drifts against the swipe and settles back
+        // over the same 250ms as its crossfade. Wrap jumps (the
+        // loop) skip the drift. The value is read inside the
+        // backdrop's graphicsLayer, so the drift re-layouts only
+        // that box instead of recomposing the backdrop.
+        val driftPx = remember(density) { with(density) { BackdropDrift.toPx() } }
+        val backdropDrift = remember { Animatable(0f) }
+        var previousFocusedIndex by remember { mutableIntStateOf(-1) }
+        LaunchedEffect(focusedIndex) {
+            val prev = previousFocusedIndex
+            previousFocusedIndex = focusedIndex
+            if (prev == -1 || prev == focusedIndex) return@LaunchedEffect
+            val delta = focusedIndex - prev
+            if (abs(delta) != 1) return@LaunchedEffect
+            backdropDrift.snapTo(-delta * driftPx)
+            backdropDrift.animateTo(0f, tween(250))
         }
         Box(modifier = Modifier.fillMaxSize()) {
             // The backdrop sits behind the header, exactly over
@@ -389,7 +465,8 @@ internal fun LibraryShelf(
                     sizePx = backdropSizePx,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(FocusedCoverHeight + PlankHeight),
+                        .height(FocusedCoverHeight + PlankHeight)
+                        .graphicsLayer { translationX = backdropDrift.value },
                 )
             }
             Column(modifier = Modifier.fillMaxSize()) {
