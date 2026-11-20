@@ -2908,6 +2908,20 @@ there first.
 
 ## Build fixes
 
+- `MetalTabBar.kt:15,156` — `Unresolved reference
+  'AnimatedVectorPainter'` on the import and the `is`
+  check. Real error. Cause: the tab-bar bitmap change
+  (5ffc273c) branched on the animated painter's type, but
+  there is no public class by that name —
+  `rememberAnimatedVectorPainter` only promises to return
+  a `Painter`, and its implementation class is not public
+  API. Fix (f4468865): drop the type check and the import;
+  the Library tab is identified by its Voyager index
+  (`tab.options.index == 0u`, fixed at 0 in LibraryTab),
+  with a comment saying why. Lesson: check a type against
+  the official reference before using it in a branch — same
+  class of mistake as the `draw(painter, ...)` call above.
+
 - `MetalMaterial.kt:389-392` — `No value passed for
   parameter 'density' / 'layoutDirection' / 'canvas' /
   'block'` and `No parameter with name 'painter' /
