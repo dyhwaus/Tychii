@@ -9,9 +9,11 @@ import android.widget.EditText
 import android.widget.LinearLayout
 import androidx.appcompat.widget.AppCompatButton
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -69,6 +71,7 @@ import tachiyomi.presentation.core.components.ScrollbarLazyColumn
 import tachiyomi.presentation.core.components.material.Scaffold
 import tachiyomi.presentation.core.i18n.stringResource
 import tachiyomi.presentation.core.screens.LoadingScreen
+import top.yukonga.miuix.kmp.basic.Scaffold as MiuixScaffold
 
 class SourcePreferencesScreen(val sourceId: Long) : Screen() {
 
@@ -100,26 +103,38 @@ class SourcePreferencesScreen(val sourceId: Long) : Screen() {
         }
         SideEffect { savedDialogKey = preferenceScreen.dialogPreference?.key }
 
-        Scaffold(
-            topBar = {
-                AppBar(
-                    title = preferenceScreen.title,
-                    navigateUp = navigator::pop,
-                    scrollBehavior = it,
-                )
-            },
-        ) { contentPadding ->
-            val items = remember(preferenceScreen.version) { preferenceScreen.items() }
-            ScrollbarLazyColumn(contentPadding = contentPadding) {
-                items(items) { PreferenceRow(it) }
+        // The List/MultiSelect preference dialogs on this
+        // page are Miuix OverlayDialogs — they only render
+        // inside a Miuix Scaffold ancestor. Without it they
+        // silently never appear (the 漫畫內容類型 row). The
+        // wrapper is layout-neutral: zero insets, the page
+        // background. (The EditText dialog deliberately
+        // stays Material3 — it must be a platform window.)
+        MiuixScaffold(
+            containerColor = MaterialTheme.colorScheme.background,
+            contentWindowInsets = WindowInsets(0, 0, 0, 0),
+        ) {
+            Scaffold(
+                topBar = {
+                    AppBar(
+                        title = preferenceScreen.title,
+                        navigateUp = navigator::pop,
+                        scrollBehavior = it,
+                    )
+                },
+            ) { contentPadding ->
+                val items = remember(preferenceScreen.version) { preferenceScreen.items() }
+                ScrollbarLazyColumn(contentPadding = contentPadding) {
+                    items(items) { PreferenceRow(it) }
+                }
             }
-        }
 
-        preferenceScreen.dialogPreference?.let {
-            PreferenceDialog(
-                preference = it,
-                onDismissRequest = { preferenceScreen.dialogPreference = null },
-            )
+            preferenceScreen.dialogPreference?.let {
+                PreferenceDialog(
+                    preference = it,
+                    onDismissRequest = { preferenceScreen.dialogPreference = null },
+                )
+            }
         }
     }
 }
