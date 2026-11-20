@@ -2930,6 +2930,51 @@ carving misaligns with the fill by 1.dp, the inner Boxes
 in MetalTabButton now centre their children, so check
 there first.
 
+## Shelf carousel: deeper perspective, contact shadows, spring settle (2026-11-20)
+
+The user asked to optimise the 3D carousel again and make
+the UI feel more premium, and picked both directions
+offered (depth & light + motion). All in LibraryShelf.kt,
+code e6547cf8:
+
+- Depth & light: neighbours tilt 30° → 45° and shrink
+  0.78 → 0.7, so they recede further into the shelf. The
+  centred cover lifts 4.dp off the plank as it settles
+  (`CentreLift`, translationY driven by the page offset).
+  Each cover gets a contact shadow on the plank: a soft
+  ellipse (140.dp × 12.dp, blurred 8.dp) under the
+  cover's base, outside the cover's tilt so it stays flat
+  on the shelf — strongest and widest under the centred
+  cover, fainter and narrower under the neighbours; the
+  cover lifts off it. The blur is Android 12+ only, below
+  that the ellipse stays unblurred. The plank gains a
+  2.dp darker front edge, so the shelf reads as a board
+  with thickness.
+- Motion: a step to a neighbour (prev/next buttons,
+  neighbour tap) now rides a spring with a touch of
+  overshoot (`spring(dampingRatio = 0.7f, stiffness =
+  300f)`) instead of the pager's default; wrap jumps
+  still jump instantly. The backdrop drifts 12.dp against
+  the swipe and settles back over the same 250ms as its
+  crossfade (an `Animatable` in `LibraryShelf`, snapped
+  then eased on each focus change; wrap jumps skip the
+  drift). The value is read inside the backdrop's
+  `graphicsLayer`, so the drift re-layouts only that box
+  instead of recomposing the backdrop. The tilt and the
+  growth toward the centre already followed the finger
+  through the page offset — with the deeper tilt and
+  smaller scale they read more strongly now.
+
+Untested — needs a rebuild: check the 45° tilt reads as
+deeper, not as the neighbours turning away too far; the
+centred cover's lift and its floor shadow; the spring
+overshoot on prev/next and neighbour taps; the backdrop
+drifting against the swipe. The knobs are all constants
+at the top of LibraryShelf.kt: `NeighbourTiltDegrees`
+(45f), `NeighbourScale` (0.7f), `CentreLift` (4.dp),
+`BackdropDrift` (12.dp). If the tilt reads backwards,
+flip the sign of the rotationY line, as before.
+
 ## Build fixes
 
 - `MetalTabBar.kt:157` — `Operator '==' cannot be
