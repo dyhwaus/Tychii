@@ -1,16 +1,19 @@
 // 金属模式的底栏：不再是一条胶囊，而是一个 tab 一个独立悬浮按钮。
-// 选中的那个像开关一样弹起来——往上抬 4.dp、阴影变大变深、微微放大，
-// 用弹簧弹到位，带一点过冲；点按时先微微下沉再弹起。未选中的平着。
+// 选中的那个像开关一样弹起来——往上抬 4.dp、微微放大，用弹簧弹
+// 到位，带一点过冲；点按时先微微下沉再弹起。未选中的平着。阴影
+// 固定不动，抬起只靠位移和缩放表示——阴影跟着弹簧变会每帧重算。
 // 没有 pill，也就没有拖动切换，点按切换。标签和角标都保留。
 //
-// 阴影在最外层（和底栏胶囊一样）：按钮抬起来时，阴影留在原地变大
-// 变淡，像东西真的离开了地面；平移和缩放只动按钮本身。
+// 阴影在最外层（和底栏胶囊一样）：按钮抬起来时，阴影留在原地；
+// 平移和缩放只动按钮本身。
 
 package eu.kanade.presentation.miuix
 
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
+import androidx.compose.animation.graphics.vector.AnimatedVectorPainter
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
@@ -35,6 +38,7 @@ import androidx.compose.ui.draw.dropShadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.shadow.Shadow
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextOverflow
@@ -97,12 +101,16 @@ private fun MetalTabButton(
     Box(
         modifier = modifier
             .height(56.dp)
+            // The shadow stays fixed while the button raises:
+            // animating its radius re-blurs the shadow every
+            // frame of the spring, and the lift already reads
+            // from the translation and the scale.
             .dropShadow(
                 shape = shape,
                 shadow = Shadow(
-                    radius = 10.dp + 4.dp * raise,
+                    radius = 12.dp,
                     color = Color.Black,
-                    alpha = (if (isDark) 0.2f else 0.1f) + 0.1f * raise,
+                    alpha = if (isDark) 0.25f else 0.15f,
                 ),
             )
             .graphicsLayer {
@@ -135,29 +143,44 @@ private fun MetalTabButton(
                 badge = { badge?.invoke() },
             ) {
                 // 和漫画卡片的标题一样：实心淡色图标衬在刻字
-                // 后面，字形抠掉的地方透出填色。
-                Box {
+                // 后面，字形抠掉的地方透出填色。静态图标的刻
+                // 字预渲染成一张 bitmap，不再每帧占一个离屏层；
+                // 书架图标会随选中播动画，只能现场画。
+                Box(contentAlignment = Alignment.Center) {
                     Icon(
                         painter = tab.options.icon!!,
                         contentDescription = null,
                         tint = metalCarvedFill(isDark),
                         modifier = Modifier.size(24.dp),
                     )
-                    MetalCarvedIcon(
-                        painter = tab.options.icon!!,
-                        contentDescription = tab.options.title,
-                        isDark = isDark,
-                        modifier = Modifier.size(24.dp),
-                    )
+                    if (tab.options.icon is AnimatedVectorPainter) {
+                        MetalCarvedIcon(
+                            painter = tab.options.icon!!,
+                            contentDescription = tab.options.title,
+                            isDark = isDark,
+                            modifier = Modifier.size(24.dp),
+                        )
+                    } else {
+                        // 24.dp 宽，上下各 1.dp 留给错开的刻边。
+                        Image(
+                            bitmap = rememberCarvedIconBitmap(
+                                painter = tab.options.icon!!,
+                                isDark = isDark,
+                            ),
+                            contentDescription = tab.options.title,
+                            modifier = Modifier.size(24.dp, 26.dp),
+                        )
+                    }
                 }
             }
             if (showLabels) {
-                // 标题也一样：淡色实心字衬在刻字后面。
+                // 标题也一样：淡色实心字衬在刻字后面；刻字预
+                // 渲染成一张 bitmap，不再每帧走 saveLayer。
                 val labelStyle = TextStyle(
                     fontSize = 11.sp,
                     lineHeight = 14.sp,
                 )
-                Box {
+                Box(contentAlignment = Alignment.Center) {
                     Text(
                         text = tab.options.title,
                         style = labelStyle,
@@ -165,11 +188,19 @@ private fun MetalTabButton(
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
                     )
-                    MetalEngravedText(
+                    val labelBitmap = rememberCarvedTextBitmap(
                         text = tab.options.title,
                         style = labelStyle,
                         isDark = isDark,
-                        maxLines = 1,
+                    )
+                    val density = LocalDensity.current
+                    Image(
+                        bitmap = labelBitmap,
+                        contentDescription = null,
+                        modifier = Modifier.size(
+                            with(density) { labelBitmap.width.toDp() },
+                            with(density) { labelBitmap.height.toDp() },
+                        ),
                     )
                 }
             }

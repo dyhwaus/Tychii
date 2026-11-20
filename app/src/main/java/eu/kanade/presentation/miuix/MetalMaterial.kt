@@ -29,26 +29,39 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Canvas
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.CompositingStrategy
+import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.Outline
 import androidx.compose.ui.graphics.Paint
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.Shadow
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.drawOutline
+import androidx.compose.ui.graphics.drawscope.CanvasDrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.clipPath
+import androidx.compose.ui.graphics.drawscope.draw
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.drawText
+import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 
@@ -336,6 +349,127 @@ fun MetalEngravedText(
             drawText(result, topLeft = Offset(0f, edge), color = light)
             drawText(result, topLeft = Offset.Zero, blendMode = BlendMode.Clear)
             drawContext.canvas.restore()
+        }
+    }
+}
+
+/**
+ * Carved icon pre-rendered once into a bitmap: the two edges and
+ * the punch-out are drawn into an offscreen bitmap instead of a
+ * live offscreen RenderNode layer, so the tab bar no longer pays
+ * a layer per icon on every frame. The glyph is drawn once into
+ * a scratch bitmap and reused for the two edge copies and the
+ * punch-out, mirroring MetalEngravedText's saveLayer + Clear.
+ * The bitmap is 1.dp taller on each side than the icon so the
+ * offset edges are not clipped, and the glyph stays centred.
+ * Do not use for animated painters — a bitmap freezes them at
+ * one frame (the Library tab icon animates on selection).
+ */
+@Composable
+fun rememberCarvedIconBitmap(
+    painter: Painter,
+    isDark: Boolean,
+    iconSize: Dp = 24.dp,
+): ImageBitmap {
+    val density = LocalDensity.current
+    val layoutDirection = LocalLayoutDirection.current
+    return remember(painter, isDark, density.density, density.fontScale) {
+        val edgePx = with(density) { 1.dp.toPx() }
+        val iconPx = with(density) { iconSize.toPx() }.toInt()
+        val width = iconPx
+        val height = iconPx + (edgePx * 2).toInt()
+        val glyph = ImageBitmap(width, iconPx).apply {
+            val canvas = Canvas(this)
+            CanvasDrawScope().draw(
+                density = density,
+                layoutDirection = layoutDirection,
+                canvas = canvas,
+                size = Size(width.toFloat(), iconPx.toFloat()),
+            ) {
+                draw(
+                    painter = painter,
+                    size = Size(iconPx.toFloat(), iconPx.toFloat()),
+                    colorFilter = ColorFilter.tint(Color.Black),
+                )
+            }
+        }
+        ImageBitmap(width, height).apply {
+            val canvas = Canvas(this)
+            CanvasDrawScope().draw(
+                density = density,
+                layoutDirection = layoutDirection,
+                canvas = canvas,
+                size = Size(width.toFloat(), height.toFloat()),
+            ) {
+                // Offscreen layer: Clear only erases the edge
+                // copies inside it, never the metal beneath.
+                drawContext.canvas.saveLayer(Rect(Offset.Zero, size), Paint())
+                drawImage(
+                    image = glyph,
+                    dstOffset = IntOffset(0, 0),
+                    dstSize = IntSize(width, iconPx),
+                    colorFilter = ColorFilter.tint(metalCarvedDark(isDark)),
+                )
+                drawImage(
+                    image = glyph,
+                    dstOffset = IntOffset(0, (edgePx * 2).toInt()),
+                    dstSize = IntSize(width, iconPx),
+                    colorFilter = ColorFilter.tint(metalCarvedLight(isDark)),
+                )
+                drawImage(
+                    image = glyph,
+                    dstOffset = IntOffset(0, edgePx.toInt()),
+                    dstSize = IntSize(width, iconPx),
+                    blendMode = BlendMode.Clear,
+                )
+                drawContext.canvas.restore()
+            }
+        }
+    }
+}
+
+/**
+ * Carved label pre-rendered once into a bitmap, same idea as
+ * rememberCarvedIconBitmap: the tab bar no longer pays a Canvas
+ * saveLayer per label. Measured with the same style and maxLines
+ * as the fill text underneath, so the carving lines up with it;
+ * the bitmap is 1.dp taller on each side so the offset edges
+ * are not clipped.
+ */
+@Composable
+fun rememberCarvedTextBitmap(
+    text: String,
+    style: TextStyle,
+    isDark: Boolean,
+    maxLines: Int = 1,
+): ImageBitmap {
+    val density = LocalDensity.current
+    val layoutDirection = LocalLayoutDirection.current
+    val textMeasurer = rememberTextMeasurer()
+    return remember(text, style, isDark, maxLines, density.density, density.fontScale) {
+        val layout = textMeasurer.measure(
+            text = AnnotatedString(text),
+            style = style,
+            overflow = TextOverflow.Ellipsis,
+            maxLines = maxLines,
+        )
+        val edgePx = with(density) { 1.dp.toPx() }
+        val width = layout.size.width
+        val height = layout.size.height + (edgePx * 2).toInt()
+        ImageBitmap(width, height).apply {
+            val canvas = Canvas(this)
+            CanvasDrawScope().draw(
+                density = density,
+                layoutDirection = layoutDirection,
+                canvas = canvas,
+                size = Size(width.toFloat(), height.toFloat()),
+            ) {
+                drawContext.canvas.saveLayer(Rect(Offset.Zero, size), Paint())
+                drawText(layout, topLeft = Offset(0f, 0f), color = metalCarvedDark(isDark))
+                drawText(layout, topLeft = Offset(0f, edgePx * 2), color = metalCarvedLight(isDark))
+                drawText(layout, topLeft = Offset(0f, edgePx), blendMode = BlendMode.Clear)
+                drawContext.canvas.restore()
+            }
         }
     }
 }

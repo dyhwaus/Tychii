@@ -101,8 +101,10 @@ private const val NeighbourTiltDegrees = 30f
 private const val LatestChapterCount = 5
 // The carousel backdrop: how blurred the focused cover is, how
 // far its colours bleed outward at the edges, and the plank the
-// covers stand on.
-private val BackdropBlurRadius = 28.dp
+// covers stand on. The blur was 28.dp — it re-renders every
+// frame of the 250ms crossfade on swipe, so 16.dp keeps the look
+// at a much lower cost.
+private val BackdropBlurRadius = 16.dp
 private val BackdropDispersion = 18.dp
 private val PlankHeight = 6.dp
 
