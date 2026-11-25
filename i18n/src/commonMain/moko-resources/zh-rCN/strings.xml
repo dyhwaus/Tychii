@@ -73,6 +73,11 @@
     <string name="action_download">下载</string>
     <string name="action_bookmark">为章节添加书签</string>
     <string name="action_remove_bookmark">为章节删除书签</string>
+    <string name="action_add_page_bookmark">为这一页添加书签</string>
+    <string name="action_remove_page_bookmark">为这一页删除书签</string>
+    <string name="label_page_bookmarks">页书签</string>
+    <string name="label_no_page_bookmarks">还没有页书签</string>
+    <string name="label_page_number">第 %d 页</string>
     <string name="action_delete">删除</string>
     <string name="action_update_library">更新书架</string>
     <string name="action_edit">编辑</string>

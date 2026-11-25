@@ -27,6 +27,7 @@ fun ReaderTopBar(
     navigateUp: () -> Unit,
     bookmarked: Boolean,
     onToggleBookmarked: () -> Unit,
+    onShowPageBookmarks: () -> Unit,
     onOpenInWebView: (() -> Unit)?,
     onOpenInBrowser: (() -> Unit)?,
     onShare: (() -> Unit)?,
@@ -71,6 +72,12 @@ fun ReaderTopBar(
                                 MaterialSymbols.Rounded.Bookmark
                             },
                             onClick = onToggleBookmarked,
+                        ),
+                    )
+                    add(
+                        AppBar.OverflowAction(
+                            title = stringResource(MR.strings.label_page_bookmarks),
+                            onClick = onShowPageBookmarks,
                         ),
                     )
                     onOpenInWebView?.let {

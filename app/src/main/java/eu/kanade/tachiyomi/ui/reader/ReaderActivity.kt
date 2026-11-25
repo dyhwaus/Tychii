@@ -66,6 +66,7 @@ import eu.kanade.domain.ui.model.BarStyle
 import eu.kanade.domain.ui.model.GlassTier
 import eu.kanade.presentation.reader.DisplayRefreshHost
 import eu.kanade.presentation.reader.OrientationSelectDialog
+import eu.kanade.presentation.reader.PageBookmarksDialog
 import eu.kanade.presentation.reader.ReaderContentOverlay
 import eu.kanade.presentation.reader.ReaderNavigationOverlay
 import eu.kanade.presentation.reader.ReaderNavigationOverlayState
@@ -120,6 +121,7 @@ import tachiyomi.core.common.Constants
 import tachiyomi.core.common.i18n.stringResource
 import tachiyomi.core.common.util.system.logcat
 import tachiyomi.i18n.MR
+import tachiyomi.domain.pagebookmark.model.PageBookmark
 import tachiyomi.presentation.core.screens.LoadingScreen
 import top.yukonga.miuix.kmp.basic.CircularProgressIndicator
 import top.yukonga.miuix.kmp.basic.Text as MiuixText
@@ -347,6 +349,16 @@ class ReaderActivity : BaseActivity() {
                         onSetAsCover = viewModel::setAsCover,
                         onShare = viewModel::shareImage,
                         onSave = viewModel::saveImage,
+                        pageBookmarked = state.pageBookmarked,
+                        onTogglePageBookmark = viewModel::togglePageBookmark,
+                    )
+                }
+                is ReaderViewModel.Dialog.PageBookmarks -> {
+                    PageBookmarksDialog(
+                        bookmarks = state.pageBookmarks,
+                        onJump = ::jumpToPageBookmark,
+                        onDelete = viewModel::removePageBookmark,
+                        onDismissRequest = onDismissRequest,
                     )
                 }
                 null -> {}
@@ -600,6 +612,7 @@ class ReaderActivity : BaseActivity() {
             onClickTopAppBar = ::openMangaScreen,
             bookmarked = state.bookmarked,
             onToggleBookmarked = viewModel::toggleChapterBookmark,
+            onShowPageBookmarks = viewModel::showPageBookmarks,
             onOpenInWebView = ::openChapterInWebView.takeIf { isHttpSource },
             onOpenInBrowser = ::openChapterInBrowser.takeIf { isHttpSource },
             onShare = ::shareChapter.takeIf { isHttpSource },
@@ -762,6 +775,21 @@ class ReaderActivity : BaseActivity() {
         val currentChapter = viewModel.state.value.currentChapter ?: return
         val page = currentChapter.pages?.getOrNull(index) ?: return
         viewer.moveToPage(page)
+    }
+
+    /**
+     * Jumps to a page bookmark: loads its chapter first when it is not
+     * the current one, then moves the viewer to the bookmarked page —
+     * the same two steps as loading the next chapter.
+     */
+    private fun jumpToPageBookmark(bookmark: PageBookmark) {
+        lifecycleScope.launch {
+            val currentId = viewModel.state.value.currentChapter?.chapter?.id
+            if (currentId != bookmark.chapterId) {
+                if (!viewModel.loadChapterById(bookmark.chapterId)) return@launch
+            }
+            moveToPageIndex(bookmark.page)
+        }
     }
 
     /**

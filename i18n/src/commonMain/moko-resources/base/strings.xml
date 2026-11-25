@@ -125,6 +125,11 @@
     <string name="action_download">Download</string>
     <string name="action_bookmark">Bookmark chapter</string>
     <string name="action_remove_bookmark">Unbookmark chapter</string>
+    <string name="action_add_page_bookmark">Bookmark page</string>
+    <string name="action_remove_page_bookmark">Remove page bookmark</string>
+    <string name="label_page_bookmarks">Page bookmarks</string>
+    <string name="label_no_page_bookmarks">No page bookmarks yet</string>
+    <string name="label_page_number">Page %d</string>
     <string name="action_delete">Delete</string>
     <string name="action_update_library">Update library</string>
     <string name="action_enable_all">Enable all</string>

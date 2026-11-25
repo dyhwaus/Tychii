@@ -14,10 +14,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import eu.kanade.presentation.components.AdaptiveSheet
 import mihon.icons.materialsymbols.MaterialSymbols
+import mihon.icons.materialsymbols.rounded.Bookmark
 import mihon.icons.materialsymbols.rounded.ContentCopy
 import mihon.icons.materialsymbols.rounded.Photo
 import mihon.icons.materialsymbols.rounded.Save
 import mihon.icons.materialsymbols.rounded.Share
+import mihon.icons.materialsymbols.roundedfilled.Bookmark
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.components.ActionButton
 import tachiyomi.presentation.core.components.material.padding
@@ -31,6 +33,8 @@ fun ReaderPageActionsDialog(
     onSetAsCover: () -> Unit,
     onShare: (Boolean) -> Unit,
     onSave: () -> Unit,
+    pageBookmarked: Boolean,
+    onTogglePageBookmark: () -> Unit,
 ) {
     var showSetCoverDialog by remember { mutableStateOf(false) }
 
@@ -44,6 +48,25 @@ fun ReaderPageActionsDialog(
                 title = stringResource(MR.strings.set_as_cover),
                 icon = MaterialSymbols.Rounded.Photo,
                 onClick = { showSetCoverDialog = true },
+            )
+            ActionButton(
+                modifier = Modifier.weight(1f),
+                title = stringResource(
+                    if (pageBookmarked) {
+                        MR.strings.action_remove_page_bookmark
+                    } else {
+                        MR.strings.action_add_page_bookmark
+                    },
+                ),
+                icon = if (pageBookmarked) {
+                    MaterialSymbols.RoundedFilled.Bookmark
+                } else {
+                    MaterialSymbols.Rounded.Bookmark
+                },
+                onClick = {
+                    onTogglePageBookmark()
+                    onDismissRequest()
+                },
             )
             ActionButton(
                 modifier = Modifier.weight(1f),

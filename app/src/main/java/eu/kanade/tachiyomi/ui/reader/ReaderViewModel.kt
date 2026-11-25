@@ -90,6 +90,10 @@ import tachiyomi.domain.history.model.HistoryUpdate
 import tachiyomi.domain.library.service.LibraryPreferences
 import tachiyomi.domain.manga.interactor.GetManga
 import tachiyomi.domain.manga.model.Manga
+import tachiyomi.domain.pagebookmark.interactor.AddPageBookmark
+import tachiyomi.domain.pagebookmark.interactor.DeletePageBookmark
+import tachiyomi.domain.pagebookmark.interactor.GetPageBookmarks
+import tachiyomi.domain.pagebookmark.model.PageBookmark
 import tachiyomi.domain.source.service.SourceManager
 import tachiyomi.source.local.image.LocalCoverManager
 import tachiyomi.source.local.isLocal
@@ -119,6 +123,9 @@ class ReaderViewModel(
     private val getNextChapters: GetNextChapters,
     private val upsertHistory: UpsertHistory,
     private val updateChapter: UpdateChapter,
+    private val getPageBookmarks: GetPageBookmarks,
+    private val addPageBookmark: AddPageBookmark,
+    private val deletePageBookmark: DeletePageBookmark,
     private val setMangaViewerFlags: SetMangaViewerFlags,
     private val getIncognitoState: GetIncognitoState,
     private val libraryPreferences: LibraryPreferences,
@@ -314,6 +321,13 @@ class ReaderViewModel(
             .launchIn(viewModelScope)
 
         if (hasValidArgs) {
+            // The bookmark list lives as long as the reader: every add
+            // or delete flows back through it.
+            viewModelScope.launch {
+                getPageBookmarks.subscribe(mangaId).collect { bookmarks ->
+                    mutableState.update { it.copy(pageBookmarks = bookmarks) }
+                }
+            }
             viewModelScope.launch { init() }
         }
     }
@@ -811,6 +825,51 @@ class ReaderViewModel(
         }
     }
 
+    fun showPageBookmarks() {
+        mutableState.update { it.copy(dialog = Dialog.PageBookmarks) }
+    }
+
+    /**
+     * Adds a bookmark on the page the page-actions dialog was opened for,
+     * or removes it when it is already bookmarked.
+     */
+    fun togglePageBookmark() {
+        val page = (state.value.dialog as? Dialog.PageActions)?.page ?: return
+        val chapterId = getCurrentChapter()?.chapter?.id ?: return
+        val bookmarked = state.value.pageBookmarked
+        viewModelScope.launch {
+            if (bookmarked) {
+                val id = state.value.pageBookmarks
+                    .firstOrNull { it.chapterId == chapterId && it.page == page.index }?.id
+                    ?: return@launch
+                deletePageBookmark.await(id)
+            } else {
+                addPageBookmark.await(chapterId, page.index)
+            }
+        }
+        mutableState.update { it.copy(pageBookmarked = !bookmarked) }
+    }
+
+    fun removePageBookmark(bookmarkId: Long) {
+        viewModelScope.launch {
+            deletePageBookmark.await(bookmarkId)
+        }
+    }
+
+    /**
+     * Called from the activity to load and set the chapter holding a page
+     * bookmark as active. Returns false when the chapter is not in this
+     * manga's chapter list; the activity then moves the viewer to the
+     * bookmarked page.
+     */
+    suspend fun loadChapterById(chapterId: Long): Boolean {
+        if (!::chapterList.isInitialized) return false
+        if (chapterId == state.value.currentChapter?.chapter?.id) return true
+        val chapter = chapterList.firstOrNull { it.chapter.id == chapterId } ?: return false
+        loadAdjacent(chapter)
+        return true
+    }
+
     /**
      * Returns the viewer position used by this manga or the default one.
      */
@@ -921,7 +980,12 @@ class ReaderViewModel(
     }
 
     fun openPageDialog(page: ReaderPage) {
-        mutableState.update { it.copy(dialog = Dialog.PageActions(page)) }
+        // Whether this page is already bookmarked, read off the live
+        // list — no extra query for a sheet that opens and closes.
+        val chapterId = getCurrentChapter()?.chapter?.id
+        val bookmarked = chapterId != null &&
+            state.value.pageBookmarks.any { it.chapterId == chapterId && it.page == page.index }
+        mutableState.update { it.copy(dialog = Dialog.PageActions(page), pageBookmarked = bookmarked) }
     }
 
     fun openSettingsDialog() {
@@ -1092,6 +1156,8 @@ class ReaderViewModel(
         val initError: Throwable? = null,
         val viewerChapters: ViewerChapters? = null,
         val bookmarked: Boolean = false,
+        val pageBookmarks: List<PageBookmark> = emptyList(),
+        val pageBookmarked: Boolean = false,
         val isLoadingAdjacentChapter: Boolean = false,
         val currentPage: Int = -1,
         val dialog: Dialog? = null,
@@ -1109,6 +1175,7 @@ class ReaderViewModel(
         data object ReadingModeSelect : Dialog
         data object OrientationModeSelect : Dialog
         data class PageActions(val page: ReaderPage) : Dialog
+        data object PageBookmarks : Dialog
     }
 
     sealed interface Event {
