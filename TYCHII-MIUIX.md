@@ -3016,9 +3016,10 @@ The user supplied a review report ("Tychii 深度代码审查报告与改造建�
 written without full source access, so every claim in it was re-verified
 against the current code before acting. Work follows the report's own
 priority order; 2.3, 3.x, the 2.2 design and implementation, the 4.1
-first slice and the 4.3 data center are done, and 4.2 turned out to be
-mostly already implemented (see below). Remaining: the rest of the
-2.5 dialog-host audit, the 4.1 rule engine, and 4.4 page bookmarks.
+smart groups and rule engine, and the 4.3 data center are done, and
+4.2 turned out to be mostly already implemented (see below).
+Remaining: the rest of the 2.5 dialog-host audit, and 4.4 page
+bookmarks.
 
 - 2.1 CI: already satisfied — `.github/workflows/build.yml` (inherited from
   Mihon) runs on push to main and on PRs: spotlessCheck, unit tests,
@@ -3292,11 +3293,81 @@ hides while searching or selecting, like the floating capsule.
   expectations, all validated against a Python simulation of the same
   logic — including the exact 30-day boundary (reading is `>`, paused
   is `<=`, so the boundary instant belongs to paused only).
-- Not done: the user rule engine (the other half of 4.1 — versioned
-  rules, filtering pushed to the data layer) and page-level bookmarks
-  (4.4). Per-manga reader config (4.2) turned out to already exist
-  via `Manga.viewerFlags` — no new table was needed; the reading data
-  center (4.3) is done, in the section below.
+- Not done: page-level bookmarks (4.4). Per-manga reader config
+  (4.2) turned out to already exist via `Manga.viewerFlags` — no new
+  table was needed; the reading data center (4.3) is done, in the
+  section below.
+
+## Smart library rules (2026-11-25): 4.1, second layer
+
+User-defined rules, the third layer of the smart library (the
+built-in groups are the first). A rule is a name, an enable switch,
+a list of ANDed conditions, and an optional sort override.
+
+- Storage: one versioned JSON document in the `pref_library_rules`
+  string preference (`LibraryPreferences.rules`), parsed and written
+  by `parseLibraryRules`/`serializeLibraryRules` in
+  `tachiyomi/ui/library/LibraryRule.kt`. Rules are small user config,
+  not library data, so they need no database table. The document
+  carries a version (`CURRENT_LIBRARY_RULE_VERSION = 1`); a future
+  version or unparsable JSON loads as an empty list and is never
+  overwritten until the user saves, so a bad document cannot wipe
+  the rules. The domain layer holds the preference as an opaque
+  string; the model and matching live in the app module next to the
+  smart groups (they match on `LibraryItem`, which the domain
+  module does not have).
+- Conditions (`RuleCondition`): seven fields — reading state
+  (reuses the smart-group READING/PAUSED predicates, plus never
+  started and fully read), last update / last read in days, favorite,
+  status, downloaded, unread count — with per-field operators
+  (equals; within/more-than N days; at least N). Missing dates count
+  as infinitely long ago (within never matches, more-than always
+  does); a malformed condition (unknown value, unparseable number,
+  an operator that does not belong to its field) never matches, so a
+  broken rule shows an empty library instead of silently showing
+  everything. A rule with no conditions matches everything.
+  Favorite is vacuous inside the library (everything there is a
+  favorite) but exists so the report's example rule can be written
+  as stated.
+- Wiring: `LibraryViewModel` observes the preference
+  (`rulesFlow`), keeps the active rule as an id resolved against the
+  live list on every emission (editing or deleting the active rule
+  takes effect without re-selecting it), filters after the smart
+  group, and passes the rule's sort into `applySort` as an override
+  (`LibraryData.sortOverride`). A rule and a smart group never
+  filter at the same time — selecting one clears the other. While a
+  rule with a sort is active, the sort dialog still edits the
+  category sort, which applies once the rule is cleared.
+- UI: the chip row gains one chip per enabled rule plus a trailing
+  智能规则 chip that opens the rule manager (`RuleListScreen`,
+  pushed from the Library tab). The manager lists rules with their
+  condition summaries and an enable switch, and a FAB to create one.
+  The editor (`RuleEditorScreen`) edits name, enable, conditions
+  (field/operator/value as `OverlaySpinnerPreference` rows, numbers
+  in a Material3 text field — same reason as the category dialogs),
+  sort (type + direction, tracker score and random left out) and
+  offers save / copy / delete. Both screens share
+  `LibraryRulesViewModel`, whose draft survives rotation and loads
+  exactly once per editor instance. The list and editor observe the
+  same preference, so the library screen picks up every change.
+- Strings: 33 keys (`label_library_rules`, `action_new_rule`,
+  `label_rule_*`, `rule_field_*`, `rule_op_*`,
+  `rule_reading_not_started/finished`, `rule_summary_*`,
+  `label_sort_ascending/descending`, `action_copy`, `label_yes/no`),
+  base + zh-rCN.
+- Unit test `LibraryRuleTest` (JUnit 5 + Kotest): 11 tests —
+  matching per field (incl. the null-date behavior and the 30-day
+  reading/paused boundary via the smart groups), ANDing, malformed
+  conditions, sort round-trip, and the JSON store round-trip plus
+  bad/future-version input. Expectations were simulated in Python
+  first; all 15 simulated cases held.
+
+Untested — needs a rebuild: the rule chips appear after the seven
+groups; tapping one filters and the chip stays selected; the manager
+opens from the 智能规则 chip; creating, editing, copying,
+disabling and deleting a rule all reflect in the chip row without
+re-entering the library; a rule with a sort re-sorts while active
+and the category sort returns when it is cleared.
 
 Untested — needs a rebuild: the chip row appears above the grid/list
 in every display mode, tapping a chip filters and the active chip
@@ -3459,12 +3530,10 @@ exists:
   the reader its page indicator — the report's phrasing does not
   pin down what else is wanted, so nothing was changed).
 
-Still to do in 4.x: the 4.1 rule engine (versioned rules, conditions
-on the domain model, edit/copy/disable/delete — needs its editor UI;
-storage belongs in preferences as versioned JSON, not a new table,
-since rules are small user config) and 4.4 page bookmarks (new
-`page_bookmark` table + a `20.sqm` migration + reader UI to add a
-bookmark at the current page, list them and jump to one).
+Still to do in 4.x: 4.4 page bookmarks (new `page_bookmark` table +
+a `20.sqm` migration + reader UI to add a bookmark at the current
+page, list them and jump to one). The 4.1 rule engine is done, in the
+section above.
 
 ## Build fixes
 
