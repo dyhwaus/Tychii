@@ -208,7 +208,7 @@ fun parseLibraryRules(json: String): List<LibraryRule> {
         val element = libraryRulesJson.parseToJsonElement(json)
         val version = element.jsonObject["version"]?.jsonPrimitive?.intOrNull ?: return emptyList()
         if (version != CURRENT_LIBRARY_RULE_VERSION) return emptyList()
-        libraryRulesJson.decodeFromJsonElement<LibraryRuleFile>(element).rules
+        libraryRulesJson.decodeFromJsonElement(LibraryRuleFile.serializer(), element).rules
     } catch (_: Exception) {
         emptyList()
     }

@@ -112,9 +112,7 @@ class LibraryViewModel(
 
     // The active rule is kept as an id and resolved against the live
     // rule list on every emission, so editing or deleting the rule in
-    // the rule screens takes effect here without re-selecting it. It is
-    // resolved in its own flow so the library combine below stays at
-    // seven inputs.
+    // the rule screens takes effect here without re-selecting it.
     private val selectedRuleId = MutableStateFlow<String?>(null)
     private val rulesFlow: Flow<List<LibraryRule>> = libraryPreferences.rules.changes()
         .map { parseLibraryRules(it) }
@@ -157,16 +155,16 @@ class LibraryViewModel(
         .flatMapLatest { needsTracks -> if (needsTracks) getTracksPerManga.subscribe() else flowOf(emptyMap()) }
 
     // Shared separately so search, selection and dialog changes still reach [state] before the
-    // first query result
+    // first query result. combine() only has typed overloads for up to
+    // five flows in kotlinx-coroutines 1.11, so the seven inputs arrive
+    // as five pairs; the pairs are destructured in the transform.
     private val library = combine(
-        searchQuery.debounce(0.25.seconds),
-        getCategories.subscribe(),
+        combine(searchQuery.debounce(0.25.seconds), getCategories.subscribe(), ::Pair),
         getFavoritesFlow(),
         combine(tracks, getTrackingFiltersFlow(), ::Pair),
         getLibraryItemPreferencesFlow(),
-        selectedSmartCategory,
-        selectedRule,
-    ) { searchQuery, categories, favorites, tracksPair, itemPreferences, smartCategory, rule ->
+        combine(selectedSmartCategory, selectedRule, ::Pair),
+    ) { (searchQuery, categories), favorites, tracksPair, itemPreferences, (smartCategory, rule) ->
         val (tracksMap, trackingFilters) = tracksPair
         val showSystemCategory = favorites.any { it.libraryManga.categories.contains(0) }
         val filteredFavorites = favorites
