@@ -1,0 +1,30 @@
+import kotlin.time.Instant;
+
+CREATE TABLE page_bookmark(
+    id INTEGER NOT NULL PRIMARY KEY,
+    chapter_id INTEGER NOT NULL,
+    page INTEGER AS Int NOT NULL,
+    created_at INTEGER AS Instant NOT NULL,
+    UNIQUE(chapter_id, page),
+    FOREIGN KEY(chapter_id) REFERENCES chapter (id)
+    ON DELETE CASCADE
+);
+
+CREATE INDEX page_bookmark_chapter_id_index ON page_bookmark(chapter_id);
+
+insert:
+INSERT INTO page_bookmark(chapter_id, page, created_at)
+VALUES (:chapterId, :page, :createdAt)
+ON CONFLICT(chapter_id, page) DO NOTHING;
+
+deleteById:
+DELETE FROM page_bookmark
+WHERE id = :id;
+
+getByMangaId:
+SELECT
+    page_bookmark.id, page_bookmark.chapter_id, chapter.remote_name, page_bookmark.page, page_bookmark.created_at
+FROM page_bookmark
+JOIN chapter ON chapter.id = page_bookmark.chapter_id
+WHERE chapter.manga_id = :mangaId
+ORDER BY page_bookmark.created_at DESC;

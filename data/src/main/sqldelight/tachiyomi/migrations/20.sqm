@@ -1,0 +1,15 @@
+-- Page bookmarks (4.4): one row per bookmarked page inside a chapter.
+-- The UNIQUE(chapter_id, page) pair is the bookmark; re-adding the
+-- same page is a no-op. Deleting a chapter removes its bookmarks.
+
+CREATE TABLE page_bookmark(
+    id INTEGER NOT NULL PRIMARY KEY,
+    chapter_id INTEGER NOT NULL,
+    page INTEGER NOT NULL,
+    created_at INTEGER NOT NULL,
+    UNIQUE(chapter_id, page),
+    FOREIGN KEY(chapter_id) REFERENCES chapter (id)
+    ON DELETE CASCADE
+);
+
+CREATE INDEX page_bookmark_chapter_id_index ON page_bookmark(chapter_id);
