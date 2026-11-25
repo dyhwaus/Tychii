@@ -3340,7 +3340,11 @@ a list of ANDed conditions, and an optional sort override.
   category sort, which applies once the rule is cleared.
 - UI: the chip row gains one chip per enabled rule plus a trailing
   智能规则 chip that opens the rule manager (`RuleListScreen`,
-  pushed from the Library tab). The manager lists rules with their
+  pushed from the Library tab). The row is hidden in Shelf mode
+  (2026-11-25, user request) — the shelf page has no room for a
+  chip row above the carousel; a group or rule selected before
+  switching to Shelf still filters, and is cleared from the grid
+  or list view. The manager lists rules with their
   condition summaries and an enable switch, and a FAB to create one.
   The editor (`RuleEditorScreen`) edits name, enable, conditions
   (field/operator/value as `OverlaySpinnerPreference` rows, numbers
