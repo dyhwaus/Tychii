@@ -3645,6 +3645,52 @@ was matched to the .sq definition by hand.
 
 ## Build fixes
 
+- Review batches, first local `:app:compileDebugKotlin`:
+  ~30 errors across six files, six root causes. (1)
+  `LibraryIndexRail.kt:20` — `awaitPointerEventScope`
+  imported from `androidx.compose.ui.input.pointer`, where
+  no such top-level function exists. It is a member of
+  `PointerInputScope`, so inside a `pointerInput` block it
+  needs no import at all (the reader's `Viewer.kt` uses it
+  the same way). Fix: delete the import. (2)
+  `StatsData.kt:97` — `LocalDate.minus` unresolved.
+  `minus(DatePeriod)` on a `LocalDate` is an operator
+  extension in kotlinx.datetime, not a member — it must be
+  imported (`ReleasePattern.kt` does exactly that). Fix:
+  add `import kotlinx.datetime.minus`. (3)
+  `LibraryRule.kt:44` / `SmartLibraryCategory.kt:39` —
+  `Clock.System` unresolved: both files imported
+  `kotlinx.datetime.Clock`, whose `System` is gone in
+  kotlinx-datetime 0.8.0. Fix: `kotlin.time.Clock`, the
+  same import `ReaderViewModel` already uses. (4) Smart
+  casts on `lastUpdate`/`lastRead`/`favoriteAt` in both
+  files: a public property from the domain module can't be
+  smart-cast after a null check. Fix: read each date into
+  a local `val` first. (5) `LibraryRule.kt:207` —
+  `decodeFromJsonElement<LibraryRuleFile>` failed because
+  `LibraryRuleFile` was a `private` @Serializable class
+  and the reified inline decoder can't use a private
+  serializer. Fix: make the envelope class public.
+  (6) `LibraryViewModel.kt:165` — the 8-input `library`
+  combine fell back to the vararg overload and none of
+  its lambda parameters could be inferred (every error
+  after it in that file is a cascade). The 5-input state
+  combine in the same file, with the same destructured
+  shape, resolves fine, so the trigger is the 8-input
+  combine itself, not any one flow. Fix: resolve the
+  active rule in its own two-input combine
+  (`selectedRule`) and take 7 inputs in the library
+  combine, destructuring the tracks Pair inside the body
+  instead of in the parameter list. (7)
+  `ReaderActivity.kt:606` — `glassTier` unresolved
+  inside the inner `AppBars` function: the tier is a
+  local of the outer setContent scope, and `AppBars`
+  never received it as a parameter. Fix: add a
+  `glassTier: GlassTier` parameter and pass it at the
+  call site. All six were in the review-batch code
+  (2.2/2.3/4.1/4.3); none were caught earlier because no
+  local build had run since 2026-11-14.
+
 - Page bookmarks (4.4), first local build: 7 errors in
   `:data:compileDebugKotlin`, all three from the new table.
   (1) `Unresolved reference 'Int'` in the generated
