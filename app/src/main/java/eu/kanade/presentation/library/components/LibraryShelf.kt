@@ -68,6 +68,7 @@ import eu.kanade.presentation.components.relativeDateText
 import eu.kanade.presentation.manga.components.DotSeparatorText
 import eu.kanade.presentation.manga.components.MangaCover
 import eu.kanade.presentation.miuix.MetalEngravedText
+import eu.kanade.presentation.miuix.TychiiCorners
 import eu.kanade.presentation.miuix.metalIsDark
 import eu.kanade.presentation.miuix.metalSurface
 import eu.kanade.tachiyomi.source.model.SManga
@@ -283,7 +284,7 @@ internal fun LibraryShelfHeader(
                     // here.
                     Box(
                         modifier = Modifier
-                            .shadow(4.dp, RoundedCornerShape(8.dp))
+                            .shadow(4.dp, RoundedCornerShape(TychiiCorners.Cover))
                             .graphicsLayer {
                                 // Shrink toward the bottom edge, so
                                 // every cover keeps standing on the
@@ -327,7 +328,7 @@ internal fun LibraryShelfHeader(
                                 url = manga.thumbnailUrl,
                                 lastModified = manga.coverLastModified,
                             ),
-                            shape = RoundedCornerShape(8.dp),
+                            shape = RoundedCornerShape(TychiiCorners.Cover),
                         )
                     }
                 }

@@ -102,7 +102,7 @@ internal fun MiuixLiquidBottomBar(
     // (it reads the four corner radii), and CircleShape is not one — with
     // CircleShape the refraction is silently skipped. A 32.dp radius on a
     // 64.dp tall bar is a perfect capsule, identical in appearance.
-    val pillShape = remember { RoundedCornerShape(32.dp) }
+    val pillShape = remember { RoundedCornerShape(TychiiCorners.Pill) }
     val tabContentColor = MiuixTheme.colorScheme.onSurface
     val surfaceContainer = MiuixTheme.colorScheme.surfaceContainer
     val containerColor = if (isBlurEnabled) {

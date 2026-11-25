@@ -41,6 +41,7 @@ import eu.kanade.presentation.miuix.CapsuleAction
 import eu.kanade.presentation.miuix.FloatMotion
 import eu.kanade.presentation.miuix.LiquidNavBarClearance
 import eu.kanade.presentation.miuix.TopCapsuleClearance
+import eu.kanade.presentation.miuix.TychiiCorners
 import eu.kanade.tachiyomi.data.download.model.Download
 import eu.kanade.tachiyomi.ui.home.HomeScreen
 import eu.kanade.tachiyomi.ui.updates.UpdatesItem
@@ -273,7 +274,7 @@ private fun UpdatesAppBar(
             .fillMaxWidth()
             .statusBarsPadding()
             .padding(top = 8.dp, start = 12.dp, end = 12.dp)
-            .clip(RoundedCornerShape(32.dp))
+            .clip(RoundedCornerShape(TychiiCorners.Pill))
             .background(backgroundColor)
             .height(64.dp)
             .padding(horizontal = 8.dp),

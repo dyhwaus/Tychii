@@ -29,6 +29,7 @@ import eu.kanade.presentation.components.AppBar
 import eu.kanade.presentation.components.AppBarActions
 import eu.kanade.presentation.components.SearchToolbar
 import eu.kanade.presentation.miuix.FloatMotion
+import eu.kanade.presentation.miuix.TychiiCorners
 import eu.kanade.presentation.util.isTabletUi
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.rounded.Close
@@ -179,7 +180,7 @@ private fun LibrarySelectionToolbar(
             .fillMaxWidth()
             .statusBarsPadding()
             .padding(top = 8.dp, start = 12.dp, end = 12.dp)
-            .clip(RoundedCornerShape(32.dp))
+            .clip(RoundedCornerShape(TychiiCorners.Pill))
             .background(backgroundColor)
             .height(64.dp)
             .padding(horizontal = 8.dp),

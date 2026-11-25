@@ -46,6 +46,7 @@ import eu.kanade.presentation.miuix.MetalRecessLight
 import eu.kanade.presentation.miuix.MiuixGlassBlurRadius
 import eu.kanade.presentation.miuix.MiuixGlassChromaticAberration
 import eu.kanade.presentation.miuix.MiuixGlassSurfaceAlpha
+import eu.kanade.presentation.miuix.TychiiCorners
 import eu.kanade.presentation.miuix.lens
 import eu.kanade.presentation.miuix.metalIsDark
 import eu.kanade.presentation.miuix.metalSurface
@@ -134,7 +135,7 @@ fun ChapterNavigator(
         barStyle == BarStyle.METAL -> if (metalIsDark()) MetalRecessDark else MetalRecessLight
         else -> surfaceContainer.copy(alpha = 0.75f)
     }
-    val sliderShape = remember { RoundedCornerShape(24.dp) }
+    val sliderShape = remember { RoundedCornerShape(TychiiCorners.Bar) }
     val highlight = if (isGlass) rememberTiltBrightHighlight() else null
     val sliderBackground = if (isGlass) {
         Modifier.drawBackdrop(
@@ -251,7 +252,7 @@ fun HorizontalChapterNavigator(
                     Row(
                         modifier = Modifier
                             .weight(1f)
-                            .clip(RoundedCornerShape(24.dp))
+                            .clip(RoundedCornerShape(TychiiCorners.Bar))
                             .then(sliderBackground)
                             .padding(horizontal = 16.dp),
                         verticalAlignment = Alignment.CenterVertically,
@@ -334,7 +335,7 @@ fun VerticalChapterNavigator(
             Column(
                 modifier = Modifier
                     .weight(1f)
-                    .clip(RoundedCornerShape(24.dp))
+                    .clip(RoundedCornerShape(TychiiCorners.Bar))
                     .then(sliderBackground)
                     .padding(vertical = 16.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,

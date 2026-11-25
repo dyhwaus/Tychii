@@ -38,6 +38,7 @@ import eu.kanade.presentation.miuix.FloatMotion
 import eu.kanade.presentation.miuix.MiuixGlassBlurRadius
 import eu.kanade.presentation.miuix.MiuixGlassChromaticAberration
 import eu.kanade.presentation.miuix.MiuixGlassSurfaceAlpha
+import eu.kanade.presentation.miuix.TychiiCorners
 import eu.kanade.presentation.miuix.lens
 import eu.kanade.presentation.miuix.metalIsDark
 import eu.kanade.presentation.miuix.metalSurface
@@ -106,7 +107,7 @@ fun ReaderAppBars(
         barStyle == BarStyle.OPAQUE -> surfaceContainer
         else -> surfaceContainer.copy(alpha = 0.75f)
     }
-    val pillShape = remember { RoundedCornerShape(24.dp) }
+    val pillShape = remember { RoundedCornerShape(TychiiCorners.Bar) }
     val highlight = if (isGlass) rememberTiltBrightHighlight() else null
     val pillBackground = if (isGlass) {
         Modifier.drawBackdrop(

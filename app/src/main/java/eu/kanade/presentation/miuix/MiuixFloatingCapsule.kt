@@ -72,7 +72,7 @@ fun MiuixFloatingCapsule(
     // A vertical pill: the icon buttons are ~40.dp wide, so 24.dp is
     // (close to) half the width — a capsule radius. RoundedCornerShape,
     // not CircleShape, so the backdrop shape stays a CornerBasedShape.
-    val shape = remember { RoundedCornerShape(24.dp) }
+    val shape = remember { RoundedCornerShape(TychiiCorners.Bar) }
     val animationScope = rememberCoroutineScope()
     val pressScale = remember { Animatable(1f) }
     // Only follow the tilt sensor in glass mode; opaque/translucent don't

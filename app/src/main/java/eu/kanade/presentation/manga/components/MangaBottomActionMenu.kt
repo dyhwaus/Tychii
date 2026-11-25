@@ -44,6 +44,7 @@ import androidx.compose.ui.unit.dp
 import eu.kanade.presentation.components.DownloadDropdownMenu
 import eu.kanade.presentation.manga.DownloadAction
 import eu.kanade.presentation.miuix.FloatMotion
+import eu.kanade.presentation.miuix.TychiiCorners
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
@@ -105,7 +106,7 @@ fun MangaBottomActionMenu(
         ) {
             Surface(
                 modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(32.dp),
+                shape = RoundedCornerShape(TychiiCorners.Pill),
                 color = MiuixTheme.colorScheme.surfaceContainerHigh,
             ) {
             val haptic = LocalHapticFeedback.current
@@ -303,7 +304,7 @@ fun LibraryBottomActionMenu(
         ) {
             Surface(
                 modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(32.dp),
+                shape = RoundedCornerShape(TychiiCorners.Pill),
                 color = MiuixTheme.colorScheme.surfaceContainerHigh,
             ) {
             val haptic = LocalHapticFeedback.current
