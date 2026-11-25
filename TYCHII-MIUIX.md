@@ -3586,6 +3586,59 @@ aluminium in both themes (flat, fine grain, soft edge, no strong
 highlight) and that the selected tab's faint theme tint and the
 active capsule tool's tinted fill read as anodized, not as glow.
 
+## Page bookmarks (2026-11-25): 4.4
+
+The review doc's 4.4 is one line — "书签系统：页级书签、批注、
+快速跳转，P2" — so the scope here is the first slice: bookmark a
+page, list the manga's bookmarks, jump to one, delete one.
+Annotations （批注） are not in this slice: a memo column with no
+editor UI would be a speculative column, and the editor is a second
+feature. Backup/restore of page bookmarks is not in this slice
+either: history rides in the backup through MangaBackupCreator, and
+bookmarks would need the same treatment (a BackupPageBookmark model
++ creator + decoder) — follow-up, noted as a gap.
+
+Done in code 66aeedb2 (data) and 630f4ac7 (reader UI):
+
+- Data: new `page_bookmark` table (`data/.../data/page_bookmark.sq` +
+  migration `20.sqm`, the latest): id, chapter_id, page (0-based,
+  the same index the reader uses for lastPageRead/requestedPage),
+  created_at; UNIQUE(chapter_id, page) so re-adding a page is a
+  no-op; FK to chapter ON DELETE CASCADE. Queries: insert, delete
+  by id, get-by-manga (JOIN chapter for the name, newest first).
+  Domain model `PageBookmark`, repository + impl (the History
+  pattern), three small interactors (Get/Add/DeletePageBookmarks).
+  No exists query: the reader derives "is this page bookmarked"
+  from the already-collected list.
+- Reader: the page-actions sheet (long-press a page) gains a fifth
+  button — bookmark / remove bookmark, filled icon when bookmarked
+  (ReaderPageActionsDialog). The top bar's ⋮ menu gains a "页书签"
+  entry (ReaderTopBar, threaded through ReaderAppBars). The list is
+  a new `PageBookmarksDialog` — an AdaptiveSheet, NOT an
+  OverlayDialog, because the reader has no Miuix Scaffold host and
+  an OverlayDialog would never render here (the 2.5 audit finding).
+  Rows show chapter name + "第 N 页 · 日期" (relativeDateText),
+  tap jumps, trailing delete button.
+- Jump: same two steps as loading the next chapter — the activity
+  loads the bookmark's chapter first when it is not current
+  (`ReaderViewModel.loadChapterById`, returns false when the chapter
+  is not in the list), then `moveToPageIndex(bookmark.page)`. The
+  list itself is a Flow from the repository, collected in the
+  ViewModel's init, so adds and deletes show up without a refresh.
+- Strings: 5 new keys base + zh-rCN (action_add/remove_page_
+  bookmark, label_page_bookmarks, label_no_page_bookmarks,
+  label_page_number).
+
+Untested — needs a rebuild: add a bookmark from the page-actions
+sheet (the button flips to the filled icon on reopen), open the list
+from the top bar's ⋮ menu, jump within the same chapter and to
+another chapter (the loading dialog should show for the latter),
+delete from the list, and confirm a bookmark survives an app
+restart (migration 20 runs). Also still unverified: the SQLDelight
+migration check (`verifySqlDelightMigration`) — the cloud Gradle
+daemon is down, so the 20.sqm CREATE TABLE was matched to the .sq
+definition by hand.
+
 ## Build fixes
 
 - `MetalTabBar.kt:157` — `Operator '==' cannot be
