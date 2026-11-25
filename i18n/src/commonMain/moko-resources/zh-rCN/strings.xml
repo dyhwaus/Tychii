@@ -664,6 +664,16 @@
     <string name="label_started">阅读过</string>
     <string name="action_not_now">以后再说</string>
     <string name="label_used">平台数</string>
+    <string name="label_reading_activity_section">阅读活动</string>
+    <string name="label_read_this_month">本月读过</string>
+    <string name="label_completion_rate">完结率</string>
+    <string name="label_last_7_days_read_duration">近 7 天阅读时长</string>
+    <string name="label_time_of_day">阅读时段</string>
+    <string name="label_time_night">夜间</string>
+    <string name="label_time_morning">上午</string>
+    <string name="label_time_afternoon">下午</string>
+    <string name="label_time_evening">晚上</string>
+    <string name="label_source_distribution">来源分布</string>
     <string name="not_applicable">无</string>
     <string name="minute_short">%d 分</string>
     <string name="seconds_short">%d 秒</string>

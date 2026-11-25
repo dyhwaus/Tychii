@@ -970,6 +970,16 @@
     <string name="label_tracked_titles">Tracked entries</string>
     <string name="label_mean_score">Mean score</string>
     <string name="label_used">Used</string>
+    <string name="label_reading_activity_section">Reading activity</string>
+    <string name="label_read_this_month">Read this month</string>
+    <string name="label_completion_rate">Completion rate</string>
+    <string name="label_last_7_days_read_duration">Reading time, last 7 days</string>
+    <string name="label_time_of_day">Time of day</string>
+    <string name="label_time_night">Night</string>
+    <string name="label_time_morning">Morning</string>
+    <string name="label_time_afternoon">Afternoon</string>
+    <string name="label_time_evening">Evening</string>
+    <string name="label_source_distribution">By source</string>
     <string name="not_applicable">N/A</string>
     <string name="day_short">%dd</string>
     <string name="hour_short">%dh</string>
