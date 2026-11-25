@@ -139,17 +139,16 @@ fun MiuixFloatingCapsule(
                 },
             ) {
                 if (isMetal) {
-                    // 工具图标也是无色刻字；正在生效的项（原来
-                    // 传了 accent tint 的）字形里淡淡填一层主题色，
-                    // 阳极氧化的微主题色反射，金属结构保留；填色就
-                    // 是生效的标记，辉光没有了。
+                    // 工具图标也是无色刻字；正在生效的项字形里
+                    // 淡淡填一层，和卡片标题一样；填色就是生效
+                    // 的标记，辉光没有了。
                     val filled = action.tint != null
                     Box {
                         if (filled) {
                             Icon(
                                 imageVector = action.icon,
                                 contentDescription = null,
-                                tint = action.tint!!.copy(alpha = 0.2f),
+                                tint = metalCarvedFill(metalDark),
                             )
                         }
                         MetalCarvedIcon(

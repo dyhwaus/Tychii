@@ -3,12 +3,10 @@ package eu.kanade.presentation.miuix
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
@@ -118,18 +116,6 @@ fun TychiiLiquidBar(
                             .then(
                                 if (isMetal) {
                                     Modifier
-                                        .then(
-                                            // 阳极氧化选中态：微主题色反射，
-                                            // 保留金属结构；弹起还在。
-                                            if (selected) {
-                                                Modifier.background(
-                                                    MiuixTheme.colorScheme.primary.copy(alpha = 0.10f),
-                                                    RoundedCornerShape(16.dp),
-                                                )
-                                            } else {
-                                                Modifier
-                                            },
-                                        )
                                         .graphicsLayer {
                                             translationY = -4.dp.toPx() * raise
                                             val scale = 1f + 0.04f * raise
