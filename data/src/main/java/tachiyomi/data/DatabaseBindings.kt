@@ -84,6 +84,10 @@ object DatabaseBindings {
                 user_last_page_readAdapter = IntColumnAdapter,
                 state_date_fetchAdapter = InstantColumnAdapter,
             ),
+            page_bookmarkAdapter = Page_bookmark.Adapter(
+                pageAdapter = IntColumnAdapter,
+                created_atAdapter = InstantColumnAdapter,
+            ),
             manga_trackAdapter = Manga_track.Adapter(
                 start_dateAdapter = InstantColumnAdapter,
                 finish_dateAdapter = InstantColumnAdapter,

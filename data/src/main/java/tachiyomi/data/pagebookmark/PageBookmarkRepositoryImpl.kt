@@ -19,16 +19,16 @@ class PageBookmarkRepositoryImpl(
 ) : PageBookmarkRepository {
 
     override fun subscribeByMangaId(mangaId: Long): Flow<List<PageBookmark>> {
-        return database.pageBookmarkQueries
+        return database.page_bookmarkQueries
             .getByMangaId(mangaId, PageBookmarkMapper::mapPageBookmark)
             .subscribeToList()
     }
 
     override suspend fun add(chapterId: Long, page: Int, createdAt: Instant) {
-        database.pageBookmarkQueries.insert(chapterId, page, createdAt)
+        database.page_bookmarkQueries.insert(chapterId, page, createdAt)
     }
 
     override suspend fun delete(bookmarkId: Long) {
-        database.pageBookmarkQueries.deleteById(bookmarkId)
+        database.page_bookmarkQueries.deleteById(bookmarkId)
     }
 }
