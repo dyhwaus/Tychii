@@ -3010,6 +3010,60 @@ and labels stay legible, the selected tab reads by its
 raise alone, and switching to glass/translucent/opaque
 is unchanged.
 
+## Review report batch (2026-11-25): 2.1, 2.6, 2.4, 2.5
+
+The user supplied a review report ("Tychii 深度代码审查报告与改造建议")
+written without full source access, so every claim in it was re-verified
+against the current code before acting. Work follows the report's own
+priority order; the remaining items are 2.3 (library fast navigation),
+3.x (design system), 2.2 (tiered glass rendering), 4.x (smart library /
+per-manga reader config / data center).
+
+- 2.1 CI: already satisfied — `.github/workflows/build.yml` (inherited from
+  Mihon) runs on push to main and on PRs: spotlessCheck, unit tests,
+  SQLDelight migration verification, release build, APK + mapping artifacts.
+  No duplicate workflow was added. Still missing: automated UI regression
+  tests for key flows.
+- 2.6 Dead setting removed: `categoryTabs` ("Show category tabs") had no
+  reader anywhere — the only references were its own definition
+  (`LibraryPreferences.kt`, key `display_category_tabs`) and its row in
+  `LibrarySettingsDialog.kt`. Both are gone, plus the base
+  `action_display_show_tabs` string. The neighbouring
+  `categoryNumberOfItems` setting is live (`LibraryViewModel` collects it)
+  and stays. Locale translations of the removed string were left in place
+  (translator-managed). Old installs keep an orphaned
+  `display_category_tabs` key, which is inert.
+- 2.4 Unfavorite undo: tapping the favorite button on the manga detail page
+  again still removes the manga at once, but now shows a Snackbar
+  ("Removed %s from library" / 「已将《%s》移出书架」) with an Undo action.
+  Undo re-favorites the same manga; removal only flips `favoriteAt`, so
+  categories and downloads are untouched and the manga comes back exactly
+  as it was. Only if the user does not undo does the existing
+  delete-downloads prompt appear afterwards. This also restores the base
+  `action_undo` string ("Undo") — the base file carried a
+  `<!-- missing undo feature after Compose rewrite #7454 -->` comment where
+  it belonged, and 67 locale files (including zh-rCN 「撤销」) still had the
+  translation. The second such comment (Category activity section) marks a
+  different missing string and was left alone. The Explore long-press
+  unfavorite path (`changeMangaFavorite`) does not have undo yet.
+- 2.5 Dialog-host governance: new shared wrapper
+  `presentation/miuix/TychiiPage.kt` — a layout-neutral Miuix Scaffold
+  (zero insets, page background color) that any pushed screen showing a
+  Miuix overlay can wrap itself in; the signature was verified against the
+  Miuix 0.9.4 Scaffold source. Audit result: `PreferenceScaffold` already
+  IS a Miuix Scaffold, so all settings screens have a host. Applied the
+  wrapper to `CategoryScreen` (ui), whose create/rename/delete dialogs are
+  `OverlayDialog`s sitting as siblings of its M3 Scaffold with no Miuix
+  ancestor — they could never appear. The five already-wrapped pages
+  (BrowseSourceScreen, MangaScreen, BrowseSectionScreen,
+  ExtensionDetailsScreen, SourcePreferencesScreen) were left on their inline
+  wrappers. Still unchecked: migration screens, DownloadQueueScreen, reader
+  dialogs.
+
+Untested — needs a rebuild: unfavorite shows the undo Snackbar and Undo
+restores the manga with categories intact; the category create/rename/delete
+dialogs open; nothing else changed on those screens.
+
 ## Build fixes
 
 - `MetalTabBar.kt:157` — `Operator '==' cannot be
