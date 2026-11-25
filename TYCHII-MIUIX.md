@@ -3634,12 +3634,44 @@ sheet (the button flips to the filled icon on reopen), open the list
 from the top bar's ⋮ menu, jump within the same chapter and to
 another chapter (the loading dialog should show for the latter),
 delete from the list, and confirm a bookmark survives an app
-restart (migration 20 runs). Also still unverified: the SQLDelight
-migration check (`verifySqlDelightMigration`) — the cloud Gradle
-daemon is down, so the 20.sqm CREATE TABLE was matched to the .sq
-definition by hand.
+restart (migration 20 runs). The first local build found 7 errors
+in `:data:compileDebugKotlin` (missing `kotlin.Int` import in the
+.sq, missing `page_bookmarkAdapter` in DatabaseBindings, and the
+`pageBookmarkQueries` name — the property keeps the underscore);
+all three are fixed in the build-fixes section above. The
+SQLDelight migration check (`verifySqlDelightMigration`) is still
+unrun — the cloud Gradle daemon is down, so the 20.sqm CREATE TABLE
+was matched to the .sq definition by hand.
 
 ## Build fixes
+
+- Page bookmarks (4.4), first local build: 7 errors in
+  `:data:compileDebugKotlin`, all three from the new table.
+  (1) `Unresolved reference 'Int'` in the generated
+  `GetByMangaId.kt`, `Page_bookmark.kt` and
+  `Page_bookmarkQueries.kt`. Real error. Cause: the
+  `page INTEGER AS Int` column needs its type imported in
+  the .sq file — `chapter.sq` does `import kotlin.Int;`
+  for the same reason, and `page_bookmark.sq` did not.
+  Fix: add the import. (2) `No value passed for parameter
+  'page_bookmarkAdapter'` in `DatabaseBindings.kt:67`.
+  Real error. Cause: every table with custom column types
+  needs its Adapter registered when the Database is built
+  — the `page` (Int) and `created_at` (Instant) columns
+  were missed. Fix: `page_bookmarkAdapter =
+  Page_bookmark.Adapter(pageAdapter = IntColumnAdapter,
+  created_atAdapter = InstantColumnAdapter)`. (3)
+  `Unresolved reference 'pageBookmarkQueries'` in
+  `PageBookmarkRepositoryImpl`. Real error. Cause: the
+  queries property keeps the file name's underscore —
+  `excluded_scanlator.sq` is `excluded_scanlatorQueries`,
+  `manga_category.sq` is `manga_categoryQueries` — so the
+  property is `page_bookmarkQueries`, not
+  `pageBookmarkQueries`. Fix: rename the three call sites.
+  All three were in the 4.4 data push (66aeedb2); the
+  `pageBookmarkQueries` name and the missing Adapter were
+  written from the History pattern without checking the
+  multi-word-file convention or the DatabaseBindings list.
 
 - `MetalTabBar.kt:157` — `Operator '==' cannot be
   applied to 'UShort' and 'UInt'` on
