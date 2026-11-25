@@ -3015,10 +3015,10 @@ is unchanged.
 The user supplied a review report ("Tychii 深度代码审查报告与改造建议")
 written without full source access, so every claim in it was re-verified
 against the current code before acting. Work follows the report's own
-priority order; 2.3, 3.x, the 2.2 design and implementation, and the
-first 4.x slice (smart groups) are done. Remaining: the rest of the
-2.5 dialog-host audit, and the rest of 4.x (rule engine, per-manga
-reader config, data center, bookmarks).
+priority order; 2.3, 3.x, the 2.2 design and implementation, the 4.1
+first slice and the 4.3 data center are done, and 4.2 turned out to be
+mostly already implemented (see below). Remaining: the rest of the
+2.5 dialog-host audit, the 4.1 rule engine, and 4.4 page bookmarks.
 
 - 2.1 CI: already satisfied — `.github/workflows/build.yml` (inherited from
   Mihon) runs on push to main and on PRs: spotlessCheck, unit tests,
@@ -3293,10 +3293,10 @@ hides while searching or selecting, like the floating capsule.
   logic — including the exact 30-day boundary (reading is `>`, paused
   is `<=`, so the boundary instant belongs to paused only).
 - Not done: the user rule engine (the other half of 4.1 — versioned
-  rules, filtering pushed to the data layer), per-manga reader config
-  (4.2, needs a new DB table + SQLDelight migration), the reading data
-  center (4.3 — a Stats screen already exists, not yet read in depth),
-  page-level bookmarks (4.4).
+  rules, filtering pushed to the data layer) and page-level bookmarks
+  (4.4). Per-manga reader config (4.2) turned out to already exist
+  via `Manga.viewerFlags` — no new table was needed; the reading data
+  center (4.3) is done, in the section below.
 
 Untested — needs a rebuild: the chip row appears above the grid/list
 in every display mode, tapping a chip filters and the active chip
@@ -3381,6 +3381,90 @@ everywhere with no blur; the refraction switch only affects FULL;
 the shelf backdrop loses dispersion in BALANCED and disappears in
 LITE (glass mode only — other styles keep today's backdrop);
 non-glass styles are pixel-identical.
+
+## Reading data center (2026-11-25): 4.3
+
+The Stats screen (More → 统计） gains a 阅读活动 section at the
+bottom, computed from the history table only — no image-file scans,
+no new tables, no migration.
+
+- What the database actually stores (verified first, as the report
+  asks): `history` has one row per chapter read, with `read_at`
+  (Instant) and `read_duration` (ms, accumulated per chapter via
+  upsert). There are NO per-page events, so pages read cannot be
+  computed and is deliberately not shown — the gap must not be
+  filled by guessing.
+- The section shows: 本月读过 (distinct manga with a read in the
+  current month) and 完结率 (fully-read completed titles / library
+  size) as two numbers; a 7-day reading-time bar chart (day labels
+  M-d, value above each bar, 7-day total on the right); 阅读时段
+  (chapters read per bucket: 夜间 0–5, 上午 6–11, 下午 12–17,
+  晚上 18–23); 来源分布 (top 5 sources by library size).
+- Aggregation is a pure function, `computeReadingActivity` in
+  `presentation/more/stats/data/StatsData.kt` next to the new
+  `ReadingActivity`/`DailyReading`/`SourceCount` data classes: it
+  takes the history map, the library's source ids, the completed
+  count, a pre-resolved source-name map and `now`. History rows
+  whose read time was reset (readAt == null) carry no day and are
+  left out of the daily, monthly and bucket figures; their duration
+  still counts in the overview's total. The ViewModel calls it once
+  in `init` (same IO launch as the other stats) after fetching
+  history via a new `GetHistory.await(mangaIds)` (empty list
+  short-circuits to an empty map — `IN ()` is not valid SQL).
+  Source names are resolved in the ViewModel because
+  `SourceManager.getOrStub` is suspend. The report suggested a
+  stats repository in the data module; the screen already aggregates
+  in its ViewModel, so the aggregation stays there as a tested pure
+  function instead of a repository refactor.
+- Strings: 10 keys (`label_reading_activity_section`,
+  `label_read_this_month`, `label_completion_rate`,
+  `label_last_7_days_read_duration`, `label_time_of_day`,
+  `label_time_night/morning/afternoon/evening`,
+  `label_source_distribution`), base + zh-rCN.
+- Unit test `ReadingActivityTest` (JUnit 5 + Kotest): 3 tests —
+  daily/monthly/bucket/source aggregation against fixed Instants in
+  UTC, the empty case, and the top-5 cap. The expectations were
+  simulated in Python first; the simulation caught one wrong
+  expectation (the October 10:00 row belongs to the morning bucket —
+  the buckets cover all history, not just this month).
+- Not done from 4.3's list: pages read (no data), and a per-day
+  breakdown beyond 7 days (the chart is 7 days by design).
+
+## 4.2 verification (2026-11-25): mostly already implemented
+
+Checked against the code before building anything — the report was
+written without full source access, and its headline item already
+exists:
+
+- Per-manga reading mode: implemented via `Manga.viewerFlags`
+  (`domain/manga/model/Manga.kt`: `readingMode` and
+  `readerOrientation` computed from the flags;
+  `ReaderViewModel.getMangaReadingMode()` resolves per-manga, then
+  falls back to the global default;
+  `setMangaReadingMode()` persists via
+  `SetMangaViewerFlags.awaitSetReadingMode`; the reader settings
+  screen already edits it per manga). No new table was needed, and
+  none was built.
+- Immersive mode: implemented in `ReaderActivity`
+  (`readerPreferences.fullscreen` + `WindowInsetsControllerCompat`,
+  transient bars by swipe, re-applied on resume).
+- Bookmarks: chapter-level bookmarks already exist
+  (`Chapter.bookmark`, toggled in the reader, filterable in the
+  chapter list). Page-level bookmarks do NOT exist — that is 4.4,
+  and it needs a new table (see below).
+- Not built: smart reading direction (P2 — suggesting a mode from
+  image aspect ratio touches the viewer, the high-risk area the
+  report says to approach carefully); the "reading progress"
+  unified display (the detail page already shows unread/total and
+  the reader its page indicator — the report's phrasing does not
+  pin down what else is wanted, so nothing was changed).
+
+Still to do in 4.x: the 4.1 rule engine (versioned rules, conditions
+on the domain model, edit/copy/disable/delete — needs its editor UI;
+storage belongs in preferences as versioned JSON, not a new table,
+since rules are small user config) and 4.4 page bookmarks (new
+`page_bookmark` table + a `20.sqm` migration + reader UI to add a
+bookmark at the current page, list them and jump to one).
 
 ## Build fixes
 
