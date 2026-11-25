@@ -3108,6 +3108,44 @@ tapping a letter lands on the right manga, the action capsule still works
 (the rail never covers it), and small/non-alphabetical/searching/selecting
 states show no rail.
 
+## Design system (2026-11-25): 3.1, 3.2
+
+Verified against the code first, like the rest of the batch:
+
+- 3.1 Material unification: the report's proposed `TychiiMaterial` enum
+  already exists as `BarStyle` (OPAQUE / TRANSLUCENT / LIQUID_GLASS /
+  METAL), and the floating pieces already share it. What was duplicated
+  was the API-32 fallback: four screens computed `effectiveBarStyle` with
+  the identical `if (barStyle == LIQUID_GLASS && !isMiuixGlassSupported)`
+  gate, and the shared manga card inlined the same check as `isGlass`.
+  New `BarStyle.effective()` in `presentation/theme/MiuixGlass.kt`
+  (next to the gate itself); all five sites now read it. No behavior
+  change: LIQUID_GLASS below API 32 still renders as TRANSLUCENT, METAL
+  still passes through ungated.
+- 3.2 Design tokens: new `presentation/miuix/TychiiTokens.kt` —
+  `TychiiCorners` with the three radii the floating pieces and covers
+  actually share: Pill 32.dp (bottom bar, selection bars, bottom action
+  menus), Bar 24.dp (reader bars, chapter navigator, action capsule),
+  Cover 8.dp (grid and shelf covers). All 15 sites now read the tokens.
+  Motion already lived in `FloatMotion` (300/250 ms) and the list
+  clearances in `TychiiLiquidBar`, so they were left where they are;
+  the tokens file points at them. Deliberately NOT tokenized: the
+  settings two-pane row highlight (24.dp, a different concept), the
+  index rail pill (8.dp, its own width), the track dialog (8.dp,
+  one-off), Miuix's own Card default (16.dp, library-owned).
+- 3.3 Adapter layer: NOT built. Measured first: Miuix owns buttons and
+  dialogs almost everywhere (56 Miuix Button uses); the M3 remnants are
+  deliberate single cases — the EditText preference dialog must stay a
+  platform Dialog (extensions need `android.R.id.button1`), and Miuix
+  has no DatePicker (TrackInfoDialogSelector). Thin wrappers nobody
+  calls yet would be speculative abstraction, so the rule is recorded
+  here instead: new floating UI uses Miuix; M3 stays only where Miuix
+  has no equivalent.
+
+Untested — needs a rebuild: same look everywhere (this batch only renames
+values, it changes none), glass still falls back to translucent below
+API 32, and no screen changed behavior.
+
 ## Build fixes
 
 - `MetalTabBar.kt:157` — `Operator '==' cannot be
