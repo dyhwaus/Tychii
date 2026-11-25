@@ -3015,9 +3015,10 @@ is unchanged.
 The user supplied a review report ("Tychii 深度代码审查报告与改造建议")
 written without full source access, so every claim in it was re-verified
 against the current code before acting. Work follows the report's own
-priority order; the remaining items are 2.3 (library fast navigation),
-3.x (design system), 2.2 (tiered glass rendering), 4.x (smart library /
-per-manga reader config / data center).
+priority order; 2.3, 3.x, the 2.2 design and the first 4.x slice (smart
+groups) are done. Remaining: the 2.2 implementation, the rest of the 2.5
+dialog-host audit, and the rest of 4.x (rule engine, per-manga reader
+config, data center, bookmarks).
 
 - 2.1 CI: already satisfied — `.github/workflows/build.yml` (inherited from
   Mihon) runs on push to main and on PRs: spotlessCheck, unit tests,
@@ -3239,6 +3240,70 @@ the tier setting.
 3. Skip backdrop creation in LITE.
 4. Settings rows + strings.
 5. Benchmark on the user's device; tune the RAM line; record results.
+
+## Smart library groups (2026-11-25): 4.1, first slice
+
+The first 4.x slice: seven built-in smart groups as a horizontally
+scrollable chip row above the Library grid/list, between the dropdowns
+and the pull-to-refresh. Tapping a chip filters the whole library to
+that group; tapping the active chip clears it. The filter applies
+before grouping, so every category page is filtered the same way, and
+it composes with the tri-state filters and the search query. The row
+hides while searching or selecting, like the floating capsule.
+
+- `SmartLibraryCategory` (`tachiyomi/ui/library/SmartLibraryCategory.kt`):
+  an enum with a `titleRes` per entry (same shape as `BarStyle`) and a
+  `matches(item, now)` predicate. The seven groups, in row order:
+  Reading now （正在阅读）, Recently updated （最近更新）, Long unread
+  （长期未读）, Completed （已完结）, Downloaded （已下载）, Recently added
+  （最近加入）, Paused （暂停阅读）.
+- Reading / Long unread / Paused split the unread shelf three ways and
+  never overlap: never started, started and read within 30 days,
+  started and untouched for 30 days. A started manga with no recorded
+  last-read time counts as reading (its staleness cannot be proven).
+  Long unread also requires the manga to have been added over a week
+  ago, so a fresh addition does not go stale at once. Recent means
+  within 7 days (update or added time).
+- The 7-day and 30-day lines are starting guesses the user never
+  specified — tune them if they feel wrong on a real library. They
+  live as `RECENT_THRESHOLD` / `STALE_THRESHOLD` at the top of the
+  file, `kotlin.time.Duration.Companion.days`.
+- Wiring: `LibraryViewModel` holds `selectedSmartCategory`
+  (`MutableStateFlow<SmartLibraryCategory?>`) with a toggling
+  `selectSmartCategory()`; the `library` combine applies the predicate
+  after `applyFilters` and before the search-text filter, and `State`
+  carries `smartCategory`. `LibraryTab` passes it through;
+  `LibraryContent` renders the row.
+- The chip is the shared `FilterChip`
+  (`presentation/miuix/FilterChip.kt`), extracted from the Explore
+  page's private `FilterButton` (same body, same glass/metal/flat
+  branches). The two Explore call sites now call `FilterChip`; the
+  private function and its 15 now-unused imports are gone. The chip
+  takes an optional icon and an optional backdrop: the Library row
+  passes `backdrop = null` because it sits inside the
+  backdrop-recorded layer — a glass chip there would recurse — so in
+  glass mode it renders translucent (the same 0.75 veil the glass
+  branch draws). `GlobalSearchToolbar`'s own private `FilterButton`
+  (a plain Miuix Button) is a different component and stays.
+- Strings: `smart_category_*` (base + zh-rCN), seven entries next to
+  the `action_filter_*` strings.
+- Unit test `SmartLibraryCategoryTest` (JUnit 5 + Kotest, same
+  conventions as `LibraryIndexTest`): 10 tests, 24 predicate
+  expectations, all validated against a Python simulation of the same
+  logic — including the exact 30-day boundary (reading is `>`, paused
+  is `<=`, so the boundary instant belongs to paused only).
+- Not done: the user rule engine (the other half of 4.1 — versioned
+  rules, filtering pushed to the data layer), per-manga reader config
+  (4.2, needs a new DB table + SQLDelight migration), the reading data
+  center (4.3 — a Stats screen already exists, not yet read in depth),
+  page-level bookmarks (4.4).
+
+Untested — needs a rebuild: the chip row appears above the grid/list
+in every display mode, tapping a chip filters and the active chip
+shows the accent tint, tapping it again clears, the row hides while
+searching or selecting, the Explore 热门/最新 chips look and behave
+exactly as before, and the index rail still recomputes from the
+filtered items.
 
 ## Build fixes
 
