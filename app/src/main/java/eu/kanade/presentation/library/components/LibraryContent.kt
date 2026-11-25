@@ -208,12 +208,13 @@ fun LibraryContent(
 
         // The smart groups and the user's rules: one-tap views over
         // the library. Hidden while searching or selecting, like the
-        // floating capsule. The row sits inside the
-        // backdrop-recorded layer, so the chips get no backdrop: a
-        // glass chip there would recurse. The trailing add chip opens
-        // the rule manager; a rule chip filters, tapping it again
-        // clears it.
-        if (!searching && !selecting) {
+        // floating capsule, and hidden in Shelf mode — the shelf
+        // page has no room for a chip row above the carousel. The
+        // row sits inside the backdrop-recorded layer, so the chips
+        // get no backdrop: a glass chip there would recurse. The
+        // trailing add chip opens the rule manager; a rule chip
+        // filters, tapping it again clears it.
+        if (!searching && !selecting && displayMode != LibraryDisplayMode.Shelf) {
             Row(
                 modifier = Modifier
                     .horizontalScroll(chipScrollState)
