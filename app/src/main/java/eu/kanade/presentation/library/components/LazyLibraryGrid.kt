@@ -3,9 +3,11 @@ package eu.kanade.presentation.library.components
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.lazy.staggeredgrid.LazyStaggeredGridScope
+import androidx.compose.foundation.lazy.staggeredgrid.LazyStaggeredGridState
 import androidx.compose.foundation.lazy.staggeredgrid.LazyVerticalStaggeredGrid
 import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridCells
 import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridItemSpan
+import androidx.compose.foundation.lazy.staggeredgrid.rememberLazyStaggeredGridState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -22,6 +24,7 @@ internal fun LazyLibraryGrid(
     modifier: Modifier = Modifier,
     columns: Int,
     contentPadding: PaddingValues,
+    state: LazyStaggeredGridState = rememberLazyStaggeredGridState(),
     content: LazyStaggeredGridScope.() -> Unit,
 ) {
     // Plain grid, no fast-scroll thumb: the thumb sat on the right edge
@@ -29,6 +32,7 @@ internal fun LazyLibraryGrid(
     LazyVerticalStaggeredGrid(
         columns = if (columns == 0) StaggeredGridCells.Adaptive(128.dp) else StaggeredGridCells.Fixed(columns),
         modifier = modifier,
+        state = state,
         contentPadding = contentPadding + PaddingValues(8.dp),
         verticalItemSpacing = CommonMangaItemDefaults.GridVerticalSpacer,
         horizontalArrangement = Arrangement.spacedBy(CommonMangaItemDefaults.GridHorizontalSpacer),

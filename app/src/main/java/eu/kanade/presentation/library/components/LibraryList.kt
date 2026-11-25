@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -17,6 +18,7 @@ import tachiyomi.presentation.core.util.plus
 internal fun LibraryList(
     items: List<LibraryItem>,
     contentPadding: PaddingValues,
+    listState: LazyListState,
     selection: Set<Long>,
     onClick: (LibraryManga) -> Unit,
     onLongClick: (LibraryManga) -> Unit,
@@ -28,6 +30,7 @@ internal fun LibraryList(
     // Plain list, no fast-scroll thumb (see LazyLibraryGrid).
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
+        state = listState,
         contentPadding = contentPadding + PaddingValues(vertical = 8.dp),
     ) {
         item {
