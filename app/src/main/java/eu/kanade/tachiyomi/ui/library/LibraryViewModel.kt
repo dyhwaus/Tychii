@@ -108,6 +108,8 @@ class LibraryViewModel(
 
     private val dialog = MutableStateFlow<Dialog?>(null)
 
+    private val selectedSmartCategory = MutableStateFlow<SmartLibraryCategory?>(null)
+
     private val activeCategoryIndex = MutableStateFlow(libraryPreferences.lastUsedCategory.get())
 
     private val displayPreferences = combine(
@@ -150,10 +152,18 @@ class LibraryViewModel(
         getFavoritesFlow(),
         combine(tracks, getTrackingFiltersFlow(), ::Pair),
         getLibraryItemPreferencesFlow(),
-    ) { searchQuery, categories, favorites, (tracksMap, trackingFilters), itemPreferences ->
+        selectedSmartCategory,
+    ) { searchQuery, categories, favorites, (tracksMap, trackingFilters), itemPreferences, smartCategory ->
         val showSystemCategory = favorites.any { it.libraryManga.categories.contains(0) }
         val filteredFavorites = favorites
             .applyFilters(tracksMap, trackingFilters, itemPreferences)
+            .let { libraryItems ->
+                if (smartCategory == null) {
+                    libraryItems
+                } else {
+                    libraryItems.filter { smartCategory.matches(it) }
+                }
+            }
             .let { libraryItems ->
                 if (searchQuery.isNullOrEmpty()) {
                     libraryItems
@@ -188,12 +198,14 @@ class LibraryViewModel(
         library,
         combine(searchQuery, selection, dialog, ::Triple),
         combine(activeCategoryIndex, displayPreferences, hasActiveFilters, ::Triple),
-    ) { library, (searchQuery, selection, dialog), (activeCategoryIndex, display, hasActiveFilters) ->
+        selectedSmartCategory,
+    ) { library, (searchQuery, selection, dialog), (activeCategoryIndex, display, hasActiveFilters), smartCategory ->
         State(
             isLoading = library == null,
             searchQuery = searchQuery,
             selection = selection,
             hasActiveFilters = hasActiveFilters,
+            smartCategory = smartCategory,
             showMangaCount = display.showMangaCount,
             showMangaContinueButton = display.showMangaContinueButton,
             dialog = dialog,
@@ -711,6 +723,11 @@ class LibraryViewModel(
         searchQuery.update { query }
     }
 
+    fun selectSmartCategory(category: SmartLibraryCategory?) {
+        // Tapping the active chip clears it.
+        selectedSmartCategory.update { if (it == category) null else category }
+    }
+
     fun updateActiveCategoryIndex(index: Int) {
         activeCategoryIndex.update { index }
         // Coerce here rather than reading it back off [state], which is derived asynchronously
@@ -797,6 +814,7 @@ class LibraryViewModel(
         val searchQuery: String? = null,
         val selection: Set</* Manga */ Long> = setOf(),
         val hasActiveFilters: Boolean = false,
+        val smartCategory: SmartLibraryCategory? = null,
         val showMangaCount: Boolean = false,
         val showMangaContinueButton: Boolean = false,
         val dialog: Dialog? = null,

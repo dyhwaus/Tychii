@@ -57,6 +57,13 @@
     <string name="action_filter_tracked">Tracked</string>
     <string name="action_filter_unread">Unread</string>
     <string name="action_filter_interval_custom">Customized update frequency</string>
+    <string name="smart_category_reading">Reading now</string>
+    <string name="smart_category_recently_updated">Recently updated</string>
+    <string name="smart_category_long_unread">Long unread</string>
+    <string name="smart_category_completed">Completed</string>
+    <string name="smart_category_downloaded">Downloaded</string>
+    <string name="smart_category_recently_added">Recently added</string>
+    <string name="smart_category_paused">Paused</string>
     <!-- reserved for #4048 -->
     <string name="action_sort_alpha">Alphabetically</string>
     <string name="action_sort_count">Total entries</string>

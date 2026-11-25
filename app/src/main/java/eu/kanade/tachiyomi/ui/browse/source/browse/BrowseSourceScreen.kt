@@ -6,7 +6,6 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -16,14 +15,11 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
-import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -39,9 +35,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
 import androidx.compose.ui.input.nestedscroll.NestedScrollSource
@@ -62,7 +56,6 @@ import top.yukonga.miuix.kmp.basic.Scaffold as MiuixScaffold
 import top.yukonga.miuix.kmp.basic.TextButton
 import top.yukonga.miuix.kmp.blur.Backdrop
 import top.yukonga.miuix.kmp.blur.blur
-import top.yukonga.miuix.kmp.blur.drawBackdrop
 import top.yukonga.miuix.kmp.blur.layerBackdrop
 import top.yukonga.miuix.kmp.blur.rememberLayerBackdrop
 import top.yukonga.miuix.kmp.overlay.OverlayListPopup
@@ -77,18 +70,11 @@ import eu.kanade.presentation.category.components.ChangeCategoryDialog
 import eu.kanade.presentation.components.SearchToolbar
 import eu.kanade.presentation.manga.DuplicateMangaDialog
 import eu.kanade.presentation.miuix.CapsuleAction
+import eu.kanade.presentation.miuix.FilterChip
 import eu.kanade.presentation.miuix.FloatMotion
 import eu.kanade.presentation.miuix.MetalEngravedIcon
 import eu.kanade.presentation.miuix.MiuixFloatingCapsule
-import eu.kanade.presentation.miuix.MiuixGlassBlurRadius
-import eu.kanade.presentation.miuix.MiuixGlassChromaticAberration
 import eu.kanade.presentation.miuix.TopFadeBlur
-import eu.kanade.presentation.miuix.lens
-import eu.kanade.presentation.miuix.metalEngravedShadow
-import eu.kanade.presentation.miuix.metalIsDark
-import eu.kanade.presentation.miuix.metalSurface
-import eu.kanade.presentation.miuix.rememberTiltBrightHighlight
-import eu.kanade.presentation.miuix.vibrancy
 import eu.kanade.presentation.theme.effective
 import eu.kanade.presentation.util.AssistContentScreen
 import eu.kanade.presentation.util.Screen
@@ -311,7 +297,7 @@ data class BrowseSourceScreen(
                                     ),
                                 horizontalArrangement = Arrangement.spacedBy(MaterialTheme.padding.small),
                             ) {
-                                FilterButton(
+                                FilterChip(
                                     selected = state.listing == Listing.Popular,
                                     onClick = {
                                         viewModel.resetFilters()
@@ -323,7 +309,7 @@ data class BrowseSourceScreen(
                                     backdrop = backdrop,
                                 )
                                 if (source.supportsLatest) {
-                                    FilterButton(
+                                    FilterChip(
                                         selected = state.listing == Listing.Latest,
                                         onClick = {
                                             viewModel.resetFilters()
@@ -526,96 +512,3 @@ data class BrowseSourceScreen(
     }
 }
 
-// The listing chips (Popular, Latest) in the Explore top bar. They are
-// the same pill language as the floating bars, so they follow the global
-// bar style: solid, translucent, frosted glass or brushed metal — the
-// selected one is the accent tint, like the bottom bar's selected tab.
-// In glass mode the chip gets the side capsule's blur, lens and
-// highlight, but the veil stays at the translucent alpha: the chips sit
-// on the header's opaque surface, so there is no page content behind
-// them to blur, and the glass alpha would make the pill vanish. In
-// metal mode the icon and label are engraved.
-@Composable
-private fun FilterButton(
-    selected: Boolean,
-    onClick: () -> Unit,
-    icon: ImageVector,
-    label: String,
-    barStyle: BarStyle,
-    backdrop: Backdrop,
-) {
-    val colorScheme = MiuixTheme.colorScheme
-    val isGlass = barStyle == BarStyle.LIQUID_GLASS
-    val isMetal = barStyle == BarStyle.METAL
-    val metalDark = metalIsDark()
-    val containerColor = when (barStyle) {
-        BarStyle.OPAQUE -> colorScheme.surfaceContainer
-        BarStyle.TRANSLUCENT, BarStyle.LIQUID_GLASS -> colorScheme.surfaceContainer.copy(alpha = 0.75f)
-        // Metal draws its own surface; this value is never used.
-        BarStyle.METAL -> colorScheme.surfaceContainer
-    }
-    val contentColor = if (selected) colorScheme.primary else colorScheme.onSurface
-    val shape = RoundedCornerShape(12.dp)
-    val highlight = if (isGlass) rememberTiltBrightHighlight() else null
-    val textStyle = LocalTextStyle.current
-    Box(
-        modifier = Modifier
-            .clip(shape)
-            .then(
-                if (isGlass) {
-                    Modifier.drawBackdrop(
-                        backdrop = backdrop,
-                        shape = { shape },
-                        effects = {
-                            vibrancy()
-                            blur(MiuixGlassBlurRadius.toPx(), MiuixGlassBlurRadius.toPx())
-                            lens(
-                                refractionHeight = 16.dp.toPx(),
-                                refractionAmount = 10.dp.toPx(),
-                                depthEffect = true,
-                                chromaticAberration = MiuixGlassChromaticAberration,
-                            )
-                        },
-                        highlight = { highlight?.copy(alpha = 0.66f) },
-                        onDrawSurface = { drawRect(containerColor) },
-                    )
-                } else if (isMetal) {
-                    Modifier.metalSurface(shape, metalDark)
-                } else {
-                    Modifier.background(containerColor)
-                },
-            )
-            .clickable(onClick = onClick)
-            .padding(horizontal = 12.dp, vertical = 8.dp),
-        contentAlignment = Alignment.Center,
-    ) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            if (isMetal) {
-                MetalEngravedIcon(
-                    imageVector = icon,
-                    contentDescription = null,
-                    tint = contentColor,
-                    isDark = metalDark,
-                    modifier = Modifier.size(18.dp),
-                )
-            } else {
-                Icon(
-                    imageVector = icon,
-                    contentDescription = null,
-                    modifier = Modifier.size(18.dp),
-                    tint = contentColor,
-                )
-            }
-            Text(
-                text = label,
-                modifier = Modifier.padding(start = 4.dp),
-                color = contentColor,
-                style = if (isMetal) {
-                    textStyle.copy(shadow = metalEngravedShadow(metalDark))
-                } else {
-                    textStyle
-                },
-            )
-        }
-    }
-}

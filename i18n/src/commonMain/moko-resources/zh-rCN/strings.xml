@@ -18,6 +18,13 @@
     <string name="action_filter_bookmarked">已添加书签</string>
     <string name="action_filter_unread">未读</string>
     <string name="action_filter_empty">取消筛选</string>
+    <string name="smart_category_reading">正在阅读</string>
+    <string name="smart_category_recently_updated">最近更新</string>
+    <string name="smart_category_long_unread">长期未读</string>
+    <string name="smart_category_completed">已完结</string>
+    <string name="smart_category_downloaded">已下载</string>
+    <string name="smart_category_recently_added">最近加入</string>
+    <string name="smart_category_paused">暂停阅读</string>
     <string name="action_sort_alpha">名称</string>
     <string name="action_sort_total">章节数</string>
     <string name="action_sort_last_read">最近阅读</string>

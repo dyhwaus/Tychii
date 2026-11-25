@@ -382,6 +382,8 @@ data object LibraryTab : Tab {
                         onDisplayModeSelected = settingsViewModel::setDisplayMode,
                         filterOptions = filterOptions,
                         onClickSearch = { viewModel.search("") },
+                        smartCategory = state.smartCategory,
+                        onSmartCategorySelected = viewModel::selectSmartCategory,
                     )
                 }
             }
