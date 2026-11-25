@@ -72,7 +72,7 @@ import eu.kanade.presentation.miuix.MiuixFloatingCapsule
 import eu.kanade.presentation.miuix.TopCapsuleClearance
 import eu.kanade.presentation.miuix.TopFadeBlur
 import eu.kanade.presentation.miuix.TychiiLiquidBar
-import eu.kanade.presentation.theme.isMiuixGlassSupported
+import eu.kanade.presentation.theme.effective
 import eu.kanade.presentation.util.Screen
 import eu.kanade.presentation.util.isTabletUi
 import eu.kanade.tachiyomi.ui.browse.BrowseSection
@@ -136,14 +136,7 @@ object HomeScreen : Screen() {
         val hideUpdatesTab by remember {
             context.appGraph.uiPreferences.hideUpdatesTab
         }.collectAsState()
-        // One style for both floating bars (bottom navigation + title
-        // capsule). Liquid glass only runs on API 32+; below that it
-        // behaves like translucent (see MiuixGlass.kt).
-        val effectiveBarStyle = if (barStyle == BarStyle.LIQUID_GLASS && !isMiuixGlassSupported) {
-            BarStyle.TRANSLUCENT
-        } else {
-            barStyle
-        }
+        val effectiveBarStyle = barStyle.effective()
         val glassEnabled = effectiveBarStyle == BarStyle.LIQUID_GLASS
         // The Updates tab can be hidden from Settings; the bar and the
         // rail both render this list, so a hidden tab is never selectable.

@@ -74,7 +74,7 @@ import eu.kanade.presentation.reader.ReadingModeSelectDialog
 import eu.kanade.presentation.reader.appbars.ReaderAppBars
 import eu.kanade.presentation.reader.components.ChapterNavigatorType
 import eu.kanade.presentation.reader.settings.ReaderSettingsDialog
-import eu.kanade.presentation.theme.isMiuixGlassSupported
+import eu.kanade.presentation.theme.effective
 import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.data.notification.NotificationReceiver
 import eu.kanade.tachiyomi.data.notification.Notifications
@@ -206,11 +206,7 @@ class ReaderActivity : BaseActivity() {
             val navigation = settingsViewModel.navigation.collectAsState().value
 
             val barStyle by remember { appGraph.uiPreferences.barStyle }.collectAsState()
-            val effectiveBarStyle = if (barStyle == BarStyle.LIQUID_GLASS && !isMiuixGlassSupported) {
-                BarStyle.TRANSLUCENT
-            } else {
-                barStyle
-            }
+            val effectiveBarStyle = barStyle.effective()
             val backdrop = rememberLayerBackdrop()
 
             val backgroundColor = remember(general.theme) { Color(baseContext.readerBackgroundColor(general.theme)) }

@@ -89,7 +89,7 @@ import eu.kanade.presentation.miuix.metalIsDark
 import eu.kanade.presentation.miuix.metalSurface
 import eu.kanade.presentation.miuix.rememberTiltBrightHighlight
 import eu.kanade.presentation.miuix.vibrancy
-import eu.kanade.presentation.theme.isMiuixGlassSupported
+import eu.kanade.presentation.theme.effective
 import eu.kanade.presentation.util.AssistContentScreen
 import eu.kanade.presentation.util.Screen
 import eu.kanade.tachiyomi.source.online.HttpSource
@@ -191,13 +191,7 @@ data class BrowseSourceScreen(
         val barStyle by remember {
             context.appGraph.uiPreferences.barStyle
         }.collectAsState()
-        // One style for the capsule: liquid glass only runs on
-        // API 32+; below that it behaves like translucent.
-        val effectiveBarStyle = if (barStyle == BarStyle.LIQUID_GLASS && !isMiuixGlassSupported) {
-            BarStyle.TRANSLUCENT
-        } else {
-            barStyle
-        }
+        val effectiveBarStyle = barStyle.effective()
         val glassEnabled = effectiveBarStyle == BarStyle.LIQUID_GLASS
         // The blur source. Created unconditionally (it is only a
         // handle); it is only *applied* to the content layer when

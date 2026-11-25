@@ -45,11 +45,12 @@ import eu.kanade.domain.ui.model.BarStyle
 import eu.kanade.presentation.manga.components.MangaCover
 import eu.kanade.presentation.miuix.MetalEngravedIcon
 import eu.kanade.presentation.miuix.MetalEngravedText
+import eu.kanade.presentation.miuix.TychiiCorners
 import eu.kanade.presentation.miuix.metalCarvedFill
 import eu.kanade.presentation.miuix.metalIsDark
 import eu.kanade.presentation.miuix.metalSurface
 import eu.kanade.presentation.theme.Typefaces
-import eu.kanade.presentation.theme.isMiuixGlassSupported
+import eu.kanade.presentation.theme.effective
 import mihon.app.di.appGraph
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.roundedfilled.PlayArrow
@@ -118,7 +119,7 @@ fun MangaCompactGridItem(
         // setting through each screen.
         val context = LocalContext.current
         val barStyle by remember { context.appGraph.uiPreferences.barStyle }.collectAsState()
-        val isGlass = barStyle == BarStyle.LIQUID_GLASS && isMiuixGlassSupported
+        val isGlass = barStyle.effective() == BarStyle.LIQUID_GLASS
         val isMetal = barStyle == BarStyle.METAL
         // The title lives on the cover now, so the card is the cover
         // itself — no surface behind it. The strip stays crisp when
@@ -126,8 +127,8 @@ fun MangaCompactGridItem(
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .shadow(2.dp, RoundedCornerShape(8.dp))
-                .clip(RoundedCornerShape(8.dp)),
+                .shadow(2.dp, RoundedCornerShape(TychiiCorners.Cover))
+                .clip(RoundedCornerShape(TychiiCorners.Cover)),
         ) {
             MangaGridCover(
                 cover = {
@@ -137,7 +138,7 @@ fun MangaCompactGridItem(
                             .alpha(if (isSelected && !isGlass) GRID_SELECTED_COVER_ALPHA else coverAlpha)
                             .reportCoverCenterY(onCoverPositioned),
                         data = coverData,
-                        shape = RoundedCornerShape(8.dp),
+                        shape = RoundedCornerShape(TychiiCorners.Cover),
                         onClick = onClickCover,
                     )
                     if (isSelected && isGlass) {

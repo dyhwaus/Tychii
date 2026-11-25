@@ -1,6 +1,7 @@
 package eu.kanade.presentation.theme
 
 import android.os.Build
+import eu.kanade.domain.ui.model.BarStyle
 
 /**
  * Whether the liquid-glass (miuix-blur) effect can run on this device.
@@ -13,3 +14,16 @@ import android.os.Build
  */
 val isMiuixGlassSupported: Boolean
     get() = Build.VERSION.SDK_INT >= Build.VERSION_CODES.S_V2
+
+/**
+ * The bar style that actually renders: liquid glass needs API 32+; below
+ * that it behaves like translucent. Every floating piece reads this one
+ * function instead of repeating the gate.
+ */
+fun BarStyle.effective(): BarStyle {
+    return if (this == BarStyle.LIQUID_GLASS && !isMiuixGlassSupported) {
+        BarStyle.TRANSLUCENT
+    } else {
+        this
+    }
+}

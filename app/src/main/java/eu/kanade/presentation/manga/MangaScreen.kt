@@ -83,7 +83,7 @@ import eu.kanade.presentation.miuix.metalIsDark
 import eu.kanade.presentation.miuix.metalSurface
 import eu.kanade.presentation.miuix.rememberTiltBrightHighlight
 import eu.kanade.presentation.miuix.vibrancy
-import eu.kanade.presentation.theme.isMiuixGlassSupported
+import eu.kanade.presentation.theme.effective
 import eu.kanade.presentation.util.formatChapterNumber
 import androidx.core.graphics.ColorUtils
 import eu.kanade.tachiyomi.data.download.model.Download
@@ -172,11 +172,7 @@ fun MangaScreen(
     val context = LocalContext.current
     val themeColor = rememberThemeColor(vibrantColor)
     val barStyle by remember { context.appGraph.uiPreferences.barStyle }.collectAsState()
-    val effectiveBarStyle = if (barStyle == BarStyle.LIQUID_GLASS && !isMiuixGlassSupported) {
-        BarStyle.TRANSLUCENT
-    } else {
-        barStyle
-    }
+    val effectiveBarStyle = barStyle.effective()
     val backdrop = rememberLayerBackdrop()
     val onCopyTagToClipboard: (tag: String) -> Unit = {
         if (it.isNotEmpty()) {
