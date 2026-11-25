@@ -3668,20 +3668,32 @@ was matched to the .sq definition by hand.
   smart-cast after a null check. Fix: read each date into
   a local `val` first. (5) `LibraryRule.kt:207` —
   `decodeFromJsonElement<LibraryRuleFile>` failed because
-  `LibraryRuleFile` was a `private` @Serializable class
-  and the reified inline decoder can't use a private
-  serializer. Fix: make the envelope class public.
+  the reified overload does not exist at all: javap on
+  the kotlinx-serialization-json 1.12.0 jar shows only
+  `decodeFromJsonElement(DeserializationStrategy,
+  JsonElement)` — only `decodeFromString` has a reified
+  form. Making the envelope class public did not help;
+  the same call failed again at :211. Fix: pass the
+  serializer explicitly,
+  `decodeFromJsonElement(LibraryRuleFile.serializer(),
+  element)`.
   (6) `LibraryViewModel.kt:165` — the 8-input `library`
   combine fell back to the vararg overload and none of
   its lambda parameters could be inferred (every error
-  after it in that file is a cascade). The 5-input state
-  combine in the same file, with the same destructured
-  shape, resolves fine, so the trigger is the 8-input
-  combine itself, not any one flow. Fix: resolve the
-  active rule in its own two-input combine
-  (`selectedRule`) and take 7 inputs in the library
-  combine, destructuring the tracks Pair inside the body
-  instead of in the parameter list. (7)
+  after it in that file is a cascade). The first fix
+  (7 inputs, no destructured parameter) failed the same
+  way at :169, so neither the count 8 nor the
+  destructuring was the trigger. Verified against the
+  real jar: javap on kotlinx-coroutines-core-jvm 1.11.0
+  shows typed `combine` overloads for 2, 3, 4 and 5
+  flows only — the 6–20 overloads do not exist in 1.11.
+  The 5-input state combine in the same file resolves
+  fine, which is consistent. Fix: the active rule is
+  resolved in its own two-input combine (`selectedRule`),
+  and the library combine takes five inputs, pairing
+  the seven values with `::Pair` (query+categories,
+  tracks+filters, smart category+rule) and destructuring
+  the pairs in the transform. (7)
   `ReaderActivity.kt:606` — `glassTier` unresolved
   inside the inner `AppBars` function: the tier is a
   local of the outer setContent scope, and `AppBars`
