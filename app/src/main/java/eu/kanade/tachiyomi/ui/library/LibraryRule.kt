@@ -2,7 +2,7 @@ package eu.kanade.tachiyomi.ui.library
 
 import dev.icerock.moko.resources.StringResource
 import eu.kanade.tachiyomi.source.model.SManga
-import kotlinx.datetime.Clock
+import kotlin.time.Clock
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.intOrNull
@@ -87,21 +87,25 @@ data class RuleCondition(
             }
             RuleField.LAST_UPDATE_DAYS -> {
                 val days = value.toIntOrNull() ?: return false
+                // A cross-module property can't be smart-cast after a
+                // null check, so it is read into a local first.
+                val lastUpdate = manga.manga.lastUpdate
                 when (operator) {
-                    RuleOperator.WITHIN_DAYS -> manga.manga.lastUpdate != null &&
-                        manga.manga.lastUpdate >= now - days.days
-                    RuleOperator.MORE_THAN_DAYS -> manga.manga.lastUpdate == null ||
-                        manga.manga.lastUpdate < now - days.days
+                    RuleOperator.WITHIN_DAYS -> lastUpdate != null &&
+                        lastUpdate >= now - days.days
+                    RuleOperator.MORE_THAN_DAYS -> lastUpdate == null ||
+                        lastUpdate < now - days.days
                     else -> false
                 }
             }
             RuleField.LAST_READ_DAYS -> {
                 val days = value.toIntOrNull() ?: return false
+                val lastRead = manga.lastRead
                 when (operator) {
-                    RuleOperator.WITHIN_DAYS -> manga.lastRead != null &&
-                        manga.lastRead >= now - days.days
-                    RuleOperator.MORE_THAN_DAYS -> manga.lastRead == null ||
-                        manga.lastRead < now - days.days
+                    RuleOperator.WITHIN_DAYS -> lastRead != null &&
+                        lastRead >= now - days.days
+                    RuleOperator.MORE_THAN_DAYS -> lastRead == null ||
+                        lastRead < now - days.days
                     else -> false
                 }
             }
@@ -183,7 +187,7 @@ enum class RuleOperator(val titleRes: StringResource) {
 }
 
 @Serializable
-private data class LibraryRuleFile(
+data class LibraryRuleFile(
     val version: Int,
     val rules: List<LibraryRule>,
 )

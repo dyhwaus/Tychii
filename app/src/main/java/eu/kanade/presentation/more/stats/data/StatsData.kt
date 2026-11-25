@@ -3,6 +3,7 @@ package eu.kanade.presentation.more.stats.data
 import kotlinx.datetime.DatePeriod
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
+import kotlinx.datetime.minus
 import kotlinx.datetime.toLocalDateTime
 import tachiyomi.domain.history.model.History
 import kotlin.time.Instant

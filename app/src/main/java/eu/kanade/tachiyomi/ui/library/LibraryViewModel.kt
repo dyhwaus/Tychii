@@ -112,10 +112,15 @@ class LibraryViewModel(
 
     // The active rule is kept as an id and resolved against the live
     // rule list on every emission, so editing or deleting the rule in
-    // the rule screens takes effect here without re-selecting it.
+    // the rule screens takes effect here without re-selecting it. It is
+    // resolved in its own flow so the library combine below stays at
+    // seven inputs.
     private val selectedRuleId = MutableStateFlow<String?>(null)
     private val rulesFlow: Flow<List<LibraryRule>> = libraryPreferences.rules.changes()
         .map { parseLibraryRules(it) }
+    private val selectedRule: Flow<LibraryRule?> = combine(rulesFlow, selectedRuleId) { rules, id ->
+        rules.firstOrNull { it.id == id }?.takeIf { it.enabled }
+    }
 
     private val activeCategoryIndex = MutableStateFlow(libraryPreferences.lastUsedCategory.get())
 
@@ -160,11 +165,10 @@ class LibraryViewModel(
         combine(tracks, getTrackingFiltersFlow(), ::Pair),
         getLibraryItemPreferencesFlow(),
         selectedSmartCategory,
-        rulesFlow,
-        selectedRuleId,
-    ) { searchQuery, categories, favorites, (tracksMap, trackingFilters), itemPreferences, smartCategory, rules, selectedRuleId ->
+        selectedRule,
+    ) { searchQuery, categories, favorites, tracksPair, itemPreferences, smartCategory, rule ->
+        val (tracksMap, trackingFilters) = tracksPair
         val showSystemCategory = favorites.any { it.libraryManga.categories.contains(0) }
-        val rule = rules.firstOrNull { it.id == selectedRuleId }?.takeIf { it.enabled }
         val filteredFavorites = favorites
             .applyFilters(tracksMap, trackingFilters, itemPreferences)
             .let { libraryItems ->

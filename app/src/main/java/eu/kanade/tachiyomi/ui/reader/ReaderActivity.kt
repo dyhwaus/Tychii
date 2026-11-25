@@ -293,7 +293,7 @@ class ReaderActivity : BaseActivity() {
 
                 ReaderNavigationOverlay(state = navigationOverlayState)
 
-                AppBars(state = state, barStyle = effectiveBarStyle, backdrop = backdrop)
+                AppBars(state = state, barStyle = effectiveBarStyle, glassTier = glassTier, backdrop = backdrop)
             }
 
             if (state.isLoadingAdjacentChapter) {
@@ -585,6 +585,7 @@ class ReaderActivity : BaseActivity() {
     fun AppBars(
         state: ReaderViewModel.State,
         barStyle: BarStyle,
+        glassTier: GlassTier,
         backdrop: Backdrop,
     ) {
         val isHttpSource = state.source is HttpSource

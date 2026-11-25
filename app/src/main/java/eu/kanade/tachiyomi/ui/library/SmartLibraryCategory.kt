@@ -2,7 +2,7 @@ package eu.kanade.tachiyomi.ui.library
 
 import dev.icerock.moko.resources.StringResource
 import eu.kanade.tachiyomi.source.model.SManga
-import kotlinx.datetime.Clock
+import kotlin.time.Clock
 import tachiyomi.i18n.MR
 import kotlin.time.Duration.Companion.days
 import kotlin.time.Instant
@@ -38,23 +38,28 @@ enum class SmartLibraryCategory(val titleRes: StringResource) {
 
     fun matches(item: LibraryItem, now: Instant = Clock.System.now()): Boolean {
         val manga = item.libraryManga
+        // Cross-module properties can't be smart-cast after a null
+        // check, so the dates are read into locals first.
+        val lastRead = manga.lastRead
+        val lastUpdate = manga.manga.lastUpdate
+        val favoriteAt = manga.manga.favoriteAt
         return when (this) {
             READING -> manga.hasStarted &&
                 manga.unreadCount > 0 &&
-                (manga.lastRead == null || manga.lastRead > now - STALE_THRESHOLD)
-            RECENTLY_UPDATED -> manga.manga.lastUpdate != null &&
-                manga.manga.lastUpdate >= now - RECENT_THRESHOLD
+                (lastRead == null || lastRead > now - STALE_THRESHOLD)
+            RECENTLY_UPDATED -> lastUpdate != null &&
+                lastUpdate >= now - RECENT_THRESHOLD
             LONG_UNREAD -> manga.unreadCount > 0 &&
                 !manga.hasStarted &&
-                (manga.manga.favoriteAt == null || manga.manga.favoriteAt <= now - RECENT_THRESHOLD)
+                (favoriteAt == null || favoriteAt <= now - RECENT_THRESHOLD)
             COMPLETED -> manga.manga.status.toInt() == SManga.COMPLETED
             DOWNLOADED -> item.isLocal || item.downloadCount > 0
-            RECENTLY_ADDED -> manga.manga.favoriteAt != null &&
-                manga.manga.favoriteAt >= now - RECENT_THRESHOLD
+            RECENTLY_ADDED -> favoriteAt != null &&
+                favoriteAt >= now - RECENT_THRESHOLD
             PAUSED -> manga.hasStarted &&
                 manga.unreadCount > 0 &&
-                manga.lastRead != null &&
-                manga.lastRead <= now - STALE_THRESHOLD
+                lastRead != null &&
+                lastRead <= now - STALE_THRESHOLD
         }
     }
 }
