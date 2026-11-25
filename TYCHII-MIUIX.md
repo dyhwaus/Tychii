@@ -763,6 +763,16 @@ no two popups that can be open at once, so they needed no change.
 The Library capsule's filter is now a third dropdown (see below),
 and the same mutual-exclusion covers it.
 
+Tapping the same capsule tool again did not close its dropdown
+(2026-11-25, user report): every action only ever set its state
+to true. Each action now toggles its own dropdown, and the
+Updates filter does the same. The toggle is what closes the menu
+because the capsule sits above the dropdown layer — a later
+sibling of the Scaffold in HomeScreen's outer Box — so the re-tap
+reaches the button, not the popup's outside-tap area. The Explore
+page needs nothing: its capsule hides while the filter panel is
+open, so the tool cannot be re-tapped then.
+
 ## Filter: capsule dropdown instead of the bottom sheet (2026-11-14)
 
 The Library and Updates capsule Filter buttons opened Mihon's
