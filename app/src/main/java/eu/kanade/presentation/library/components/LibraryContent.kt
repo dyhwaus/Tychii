@@ -1,15 +1,11 @@
 package eu.kanade.presentation.library.components
 
-import androidx.compose.foundation.horizontalScroll
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.calculateEndPadding
 import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.pager.rememberPagerState
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -19,22 +15,18 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.unit.dp
 import eu.kanade.core.preference.PreferenceMutableState
 import eu.kanade.presentation.miuix.CapsuleAction
-import eu.kanade.presentation.miuix.FilterChip
 import eu.kanade.presentation.miuix.LiquidNavBarClearance
 import eu.kanade.presentation.miuix.TopCapsuleClearance
-import eu.kanade.presentation.theme.effective
 import eu.kanade.tachiyomi.ui.home.HomeScreen
 import eu.kanade.tachiyomi.ui.library.LibraryItem
 import eu.kanade.tachiyomi.ui.library.LibraryRule
 import eu.kanade.tachiyomi.ui.library.SmartLibraryCategory
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import mihon.app.di.appGraph
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.automirroredrounded.Sort
 import mihon.icons.materialsymbols.automirroredroundedfilled.ViewList
@@ -52,7 +44,6 @@ import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.components.material.PullRefresh
 import tachiyomi.presentation.core.i18n.stringResource
 import tachiyomi.presentation.core.theme.active
-import tachiyomi.presentation.core.util.collectAsState
 import kotlin.time.Duration.Companion.seconds
 
 @Composable
@@ -110,12 +101,6 @@ fun LibraryContent(
         // Latest known cover positions, by manga id. A plain map, not
         // state: positions are only read when a cover is pressed.
         val coverPositions = remember { mutableMapOf<Long, Float>() }
-        val context = LocalContext.current
-        val barStyle by remember {
-            context.appGraph.uiPreferences.barStyle
-        }.collectAsState()
-        val effectiveBarStyle = barStyle.effective()
-        val chipScrollState = rememberScrollState()
         LibraryViewOptionsDropdowns(
             sort = sort,
             hasTrackers = hasTrackers,
@@ -207,50 +192,6 @@ fun LibraryContent(
                             tint = if (hasActiveFilters) activeColor else null,
                         ),
                     ),
-                )
-            }
-        }
-
-        // The smart groups and the user's rules: one-tap views over
-        // the library. Hidden while searching or selecting, like the
-        // floating capsule, and hidden in Shelf mode — the shelf
-        // page has no room for a chip row above the carousel. The
-        // row sits inside the backdrop-recorded layer, so the chips
-        // get no backdrop: a glass chip there would recurse. The
-        // trailing add chip opens the rule manager; a rule chip
-        // filters, tapping it again clears it.
-        if (!searching && !selecting && displayMode != LibraryDisplayMode.Shelf) {
-            Row(
-                modifier = Modifier
-                    .horizontalScroll(chipScrollState)
-                    // Breathing room above and below the chips.
-                    .padding(horizontal = 12.dp, vertical = 8.dp),
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-            ) {
-                SmartLibraryCategory.entries.forEach { category ->
-                    FilterChip(
-                        selected = category == smartCategory,
-                        onClick = { onSmartCategorySelected(category) },
-                        label = stringResource(category.titleRes),
-                        barStyle = effectiveBarStyle,
-                        backdrop = null,
-                    )
-                }
-                rules.filter { it.enabled }.forEach { rule ->
-                    FilterChip(
-                        selected = rule == smartRule,
-                        onClick = { onRuleSelected(rule) },
-                        label = rule.name,
-                        barStyle = effectiveBarStyle,
-                        backdrop = null,
-                    )
-                }
-                FilterChip(
-                    selected = false,
-                    onClick = onManageRules,
-                    label = stringResource(MR.strings.label_library_rules),
-                    barStyle = effectiveBarStyle,
-                    backdrop = null,
                 )
             }
         }
