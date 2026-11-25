@@ -384,6 +384,10 @@ data object LibraryTab : Tab {
                         onClickSearch = { viewModel.search("") },
                         smartCategory = state.smartCategory,
                         onSmartCategorySelected = viewModel::selectSmartCategory,
+                        rules = state.rules,
+                        smartRule = state.smartRule,
+                        onRuleSelected = viewModel::selectRule,
+                        onManageRules = { navigator.push(RuleListScreen()) },
                     )
                 }
             }

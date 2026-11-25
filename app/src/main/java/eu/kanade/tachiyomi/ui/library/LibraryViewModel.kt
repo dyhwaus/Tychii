@@ -110,6 +110,13 @@ class LibraryViewModel(
 
     private val selectedSmartCategory = MutableStateFlow<SmartLibraryCategory?>(null)
 
+    // The active rule is kept as an id and resolved against the live
+    // rule list on every emission, so editing or deleting the rule in
+    // the rule screens takes effect here without re-selecting it.
+    private val selectedRuleId = MutableStateFlow<String?>(null)
+    private val rulesFlow: Flow<List<LibraryRule>> = libraryPreferences.rules.changes()
+        .map { parseLibraryRules(it) }
+
     private val activeCategoryIndex = MutableStateFlow(libraryPreferences.lastUsedCategory.get())
 
     private val displayPreferences = combine(
@@ -153,8 +160,11 @@ class LibraryViewModel(
         combine(tracks, getTrackingFiltersFlow(), ::Pair),
         getLibraryItemPreferencesFlow(),
         selectedSmartCategory,
-    ) { searchQuery, categories, favorites, (tracksMap, trackingFilters), itemPreferences, smartCategory ->
+        rulesFlow,
+        selectedRuleId,
+    ) { searchQuery, categories, favorites, (tracksMap, trackingFilters), itemPreferences, smartCategory, rules, selectedRuleId ->
         val showSystemCategory = favorites.any { it.libraryManga.categories.contains(0) }
+        val rule = rules.firstOrNull { it.id == selectedRuleId }?.takeIf { it.enabled }
         val filteredFavorites = favorites
             .applyFilters(tracksMap, trackingFilters, itemPreferences)
             .let { libraryItems ->
@@ -162,6 +172,13 @@ class LibraryViewModel(
                     libraryItems
                 } else {
                     libraryItems.filter { smartCategory.matches(it) }
+                }
+            }
+            .let { libraryItems ->
+                if (rule == null) {
+                    libraryItems
+                } else {
+                    libraryItems.filter { rule.matches(it) }
                 }
             }
             .let { libraryItems ->
@@ -180,6 +197,8 @@ class LibraryViewModel(
             favorites = filteredFavorites,
             tracksMap = tracksMap,
             loggedInTrackerIds = trackingFilters.keys,
+            sortOverride = rule?.sortOrNull(),
+            activeRule = rule,
         )
     }
         .distinctUntilChanged()
@@ -188,7 +207,7 @@ class LibraryViewModel(
                 data = data,
                 groupedFavorites = data.favorites
                     .applyGrouping(data.categories, data.showSystemCategory)
-                    .applySort(data.favoritesById, data.tracksMap, data.loggedInTrackerIds),
+                    .applySort(data.favoritesById, data.tracksMap, data.loggedInTrackerIds, data.sortOverride),
             )
         }
         .flowOn(Dispatchers.Default)
@@ -199,13 +218,16 @@ class LibraryViewModel(
         combine(searchQuery, selection, dialog, ::Triple),
         combine(activeCategoryIndex, displayPreferences, hasActiveFilters, ::Triple),
         selectedSmartCategory,
-    ) { library, (searchQuery, selection, dialog), (activeCategoryIndex, display, hasActiveFilters), smartCategory ->
+        rulesFlow,
+    ) { library, (searchQuery, selection, dialog), (activeCategoryIndex, display, hasActiveFilters), smartCategory, rules ->
         State(
             isLoading = library == null,
             searchQuery = searchQuery,
             selection = selection,
             hasActiveFilters = hasActiveFilters,
             smartCategory = smartCategory,
+            smartRule = library?.data?.activeRule,
+            rules = rules,
             showMangaCount = display.showMangaCount,
             showMangaContinueButton = display.showMangaContinueButton,
             dialog = dialog,
@@ -314,6 +336,7 @@ class LibraryViewModel(
         favoritesById: Map<Long, LibraryItem>,
         trackMap: Map<Long, List<Track>>,
         loggedInTrackerIds: Set<Long>,
+        sortOverride: LibrarySort? = null,
     ): Map<Category, List</* LibraryItem */ Long>> {
         // The collator already ignores case, and lowercasing on every comparison is slow on large libraries
         val sortAlphabetically: (LibraryItem, LibraryItem) -> Int = { manga1, manga2 ->
@@ -376,14 +399,18 @@ class LibraryViewModel(
         }
 
         return mapValues { (key, value) ->
-            if (key.sort.type == LibrarySort.Type.Random) {
+            // A rule's sort replaces the category's sort while the
+            // rule is active; the sort dialog still edits the
+            // category sort, which applies once the rule is cleared.
+            val sort = sortOverride ?: key.sort
+            if (sort.type == LibrarySort.Type.Random) {
                 return@mapValues value.shuffled(Random(libraryPreferences.randomSortSeed.get()))
             }
 
             val manga = value.mapNotNull { favoritesById[it] }
 
-            val comparator = key.sort.comparator()
-                .let { if (key.sort.isAscending) it else it.reversed() }
+            val comparator = sort.comparator()
+                .let { if (sort.isAscending) it else it.reversed() }
                 .thenComparator(sortAlphabetically)
 
             manga.sortedWith(comparator).map { it.id }
@@ -726,6 +753,14 @@ class LibraryViewModel(
     fun selectSmartCategory(category: SmartLibraryCategory?) {
         // Tapping the active chip clears it.
         selectedSmartCategory.update { if (it == category) null else category }
+        if (selectedSmartCategory.value != null) selectedRuleId.value = null
+    }
+
+    fun selectRule(rule: LibraryRule?) {
+        // Tapping the active chip clears it. A rule and a smart group
+        // never filter at the same time.
+        selectedRuleId.update { if (it == rule?.id) null else rule?.id }
+        if (selectedRuleId.value != null) selectedSmartCategory.update { null }
     }
 
     fun updateActiveCategoryIndex(index: Int) {
@@ -803,6 +838,8 @@ class LibraryViewModel(
         val favorites: List<LibraryItem> = emptyList(),
         val tracksMap: Map</* Manga */ Long, List<Track>> = emptyMap(),
         val loggedInTrackerIds: Set<Long> = emptySet(),
+        val sortOverride: LibrarySort? = null,
+        val activeRule: LibraryRule? = null,
     ) {
         val favoritesById by lazy { favorites.associateBy { it.id } }
     }
@@ -815,6 +852,8 @@ class LibraryViewModel(
         val selection: Set</* Manga */ Long> = setOf(),
         val hasActiveFilters: Boolean = false,
         val smartCategory: SmartLibraryCategory? = null,
+        val smartRule: LibraryRule? = null,
+        val rules: List<LibraryRule> = emptyList(),
         val showMangaCount: Boolean = false,
         val showMangaContinueButton: Boolean = false,
         val dialog: Dialog? = null,

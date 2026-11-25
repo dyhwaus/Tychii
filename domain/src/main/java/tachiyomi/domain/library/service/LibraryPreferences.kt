@@ -33,6 +33,10 @@ class LibraryPreferences(
 
     val randomSortSeed: Preference<Int> = preferenceStore.getInt("library_random_sort_seed", 0)
 
+    // User-defined library rules as one versioned JSON document (see
+    // LibraryRule). The domain layer treats it as an opaque string.
+    val rules: Preference<String> = preferenceStore.getString("pref_library_rules", "")
+
     val portraitColumns: Preference<Int> = preferenceStore.getInt("pref_library_columns_portrait_key", 0)
 
     val landscapeColumns: Preference<Int> = preferenceStore.getInt("pref_library_columns_landscape_key", 0)

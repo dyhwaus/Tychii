@@ -30,6 +30,7 @@ import eu.kanade.presentation.miuix.TopCapsuleClearance
 import eu.kanade.presentation.theme.effective
 import eu.kanade.tachiyomi.ui.home.HomeScreen
 import eu.kanade.tachiyomi.ui.library.LibraryItem
+import eu.kanade.tachiyomi.ui.library.LibraryRule
 import eu.kanade.tachiyomi.ui.library.SmartLibraryCategory
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -83,6 +84,10 @@ fun LibraryContent(
     onClickSearch: () -> Unit,
     smartCategory: SmartLibraryCategory?,
     onSmartCategorySelected: (SmartLibraryCategory?) -> Unit,
+    rules: List<LibraryRule>,
+    smartRule: LibraryRule?,
+    onRuleSelected: (LibraryRule?) -> Unit,
+    onManageRules: () -> Unit,
 ) {
     Column(
         modifier = Modifier.padding(
@@ -201,10 +206,13 @@ fun LibraryContent(
             }
         }
 
-        // The smart groups: one-tap views over the library. Hidden
-        // while searching or selecting, like the floating capsule.
-        // The row sits inside the backdrop-recorded layer, so the chips
-        // get no backdrop: a glass chip there would recurse.
+        // The smart groups and the user's rules: one-tap views over
+        // the library. Hidden while searching or selecting, like the
+        // floating capsule. The row sits inside the
+        // backdrop-recorded layer, so the chips get no backdrop: a
+        // glass chip there would recurse. The trailing add chip opens
+        // the rule manager; a rule chip filters, tapping it again
+        // clears it.
         if (!searching && !selecting) {
             Row(
                 modifier = Modifier
@@ -222,6 +230,22 @@ fun LibraryContent(
                         backdrop = null,
                     )
                 }
+                rules.filter { it.enabled }.forEach { rule ->
+                    FilterChip(
+                        selected = rule == smartRule,
+                        onClick = { onRuleSelected(rule) },
+                        label = rule.name,
+                        barStyle = effectiveBarStyle,
+                        backdrop = null,
+                    )
+                }
+                FilterChip(
+                    selected = false,
+                    onClick = onManageRules,
+                    label = stringResource(MR.strings.label_library_rules),
+                    barStyle = effectiveBarStyle,
+                    backdrop = null,
+                )
             }
         }
 
