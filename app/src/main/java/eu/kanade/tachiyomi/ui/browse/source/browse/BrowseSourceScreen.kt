@@ -19,6 +19,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SnackbarHost
@@ -56,6 +57,7 @@ import top.yukonga.miuix.kmp.basic.Scaffold as MiuixScaffold
 import top.yukonga.miuix.kmp.basic.TextButton
 import top.yukonga.miuix.kmp.blur.Backdrop
 import top.yukonga.miuix.kmp.blur.blur
+import top.yukonga.miuix.kmp.blur.drawBackdrop
 import top.yukonga.miuix.kmp.blur.layerBackdrop
 import top.yukonga.miuix.kmp.blur.rememberLayerBackdrop
 import top.yukonga.miuix.kmp.overlay.OverlayListPopup
@@ -74,8 +76,18 @@ import eu.kanade.presentation.miuix.CapsuleAction
 import eu.kanade.presentation.miuix.FilterChip
 import eu.kanade.presentation.miuix.FloatMotion
 import eu.kanade.presentation.miuix.MetalEngravedIcon
+import eu.kanade.presentation.miuix.MetalEngravedText
 import eu.kanade.presentation.miuix.MiuixFloatingCapsule
+import eu.kanade.presentation.miuix.MiuixGlassBlurRadius
+import eu.kanade.presentation.miuix.MiuixGlassChromaticAberration
+import eu.kanade.presentation.miuix.MiuixGlassSpecular
+import eu.kanade.presentation.miuix.MiuixGlassSurfaceAlpha
 import eu.kanade.presentation.miuix.TopFadeBlur
+import eu.kanade.presentation.miuix.lens
+import eu.kanade.presentation.miuix.metalIsDark
+import eu.kanade.presentation.miuix.metalSurface
+import eu.kanade.presentation.miuix.rememberTiltBrightHighlight
+import eu.kanade.presentation.miuix.vibrancy
 import eu.kanade.presentation.theme.effective
 import eu.kanade.presentation.theme.rememberGlassTier
 import eu.kanade.presentation.util.AssistContentScreen
@@ -274,24 +286,99 @@ data class BrowseSourceScreen(
                             onSearch = { viewModel.search(it) },
                         )
                     } else {
+                        // The title bar follows the same BarStyle as
+                        // the bottom bar and the title capsule: opaque
+                        // is solid surfaceContainer, translucent is
+                        // surfaceContainer at 0.75, liquid glass
+                        // blurs the page behind it, brushed metal is
+                        // an opaque textured surface. In metal mode
+                        // the source name is engraved, like the
+                        // capsule title. The bar is a full-width
+                        // rectangle, so the shape is a zero-radius
+                        // RoundedCornerShape — the lens needs a
+                        // CornerBasedShape, and RectangleShape would
+                        // skip it. The bar sits in the Scaffold's
+                        // topBar slot, outside the content layer the
+                        // backdrop records, so the glass samples the
+                        // list without recursing.
+                        val isGlass = effectiveBarStyle == BarStyle.LIQUID_GLASS
+                        val useGlass = isGlass && glassTier != GlassTier.LITE
+                        val isMetal = effectiveBarStyle == BarStyle.METAL
+                        val metalDark = metalIsDark()
+                        val surfaceContainer = MiuixTheme.colorScheme.surfaceContainer
+                        val containerColor = when (effectiveBarStyle) {
+                            BarStyle.OPAQUE -> surfaceContainer
+                            BarStyle.TRANSLUCENT -> surfaceContainer.copy(alpha = 0.75f)
+                            BarStyle.LIQUID_GLASS -> surfaceContainer.copy(
+                                alpha = if (glassTier == GlassTier.LITE) 0.75f else MiuixGlassSurfaceAlpha,
+                            )
+                            BarStyle.METAL -> surfaceContainer
+                        }
+                        val barShape = remember { RoundedCornerShape(0.dp) }
+                        val highlight = when {
+                            !useGlass -> null
+                            glassTier == GlassTier.FULL -> rememberTiltBrightHighlight()
+                            else -> MiuixGlassSpecular
+                        }
                         Column(
                             modifier = Modifier
-                                .background(MiuixTheme.colorScheme.surface)
+                                .then(
+                                    if (useGlass) {
+                                        Modifier.drawBackdrop(
+                                            backdrop = backdrop,
+                                            shape = { barShape },
+                                            effects = {
+                                                vibrancy()
+                                                blur(MiuixGlassBlurRadius.toPx(), MiuixGlassBlurRadius.toPx())
+                                                if (glassTier == GlassTier.FULL) {
+                                                    lens(
+                                                        refractionHeight = 8.dp.toPx(),
+                                                        refractionAmount = 4.dp.toPx(),
+                                                        depthEffect = true,
+                                                        chromaticAberration = MiuixGlassChromaticAberration * 0.25f,
+                                                    )
+                                                }
+                                            },
+                                            highlight = { highlight?.copy(alpha = 0.64f) },
+                                            onDrawSurface = { drawRect(containerColor) },
+                                        )
+                                    } else if (isMetal) {
+                                        Modifier.metalSurface(barShape, metalDark)
+                                    } else {
+                                        Modifier.background(containerColor, barShape)
+                                    },
+                                )
                                 .pointerInput(Unit) {},
                         ) {
                             // Source name at the top left, with clearance from
                             // the status bar. The filter chips sit below it.
-                            Text(
-                                text = source.name,
-                                style = MaterialTheme.typography.titleLarge,
-                                fontWeight = FontWeight.Bold,
-                                modifier = Modifier.padding(
-                                    start = 16.dp,
-                                    top = 75.dp,
-                                    end = 16.dp,
-                                    bottom = 4.dp,
-                                ),
-                            )
+                            if (isMetal) {
+                                MetalEngravedText(
+                                    text = source.name,
+                                    style = MaterialTheme.typography.titleLarge.copy(
+                                        fontWeight = FontWeight.Bold,
+                                    ),
+                                    isDark = metalDark,
+                                    modifier = Modifier.padding(
+                                        start = 16.dp,
+                                        top = 75.dp,
+                                        end = 16.dp,
+                                        bottom = 4.dp,
+                                    ),
+                                )
+                            } else {
+                                Text(
+                                    text = source.name,
+                                    style = MaterialTheme.typography.titleLarge,
+                                    fontWeight = FontWeight.Bold,
+                                    modifier = Modifier.padding(
+                                        start = 16.dp,
+                                        top = 75.dp,
+                                        end = 16.dp,
+                                        bottom = 4.dp,
+                                    ),
+                                )
+                            }
                             Row(
                                 modifier = Modifier
                                     .horizontalScroll(rememberScrollState())
@@ -377,10 +464,10 @@ data class BrowseSourceScreen(
                     // Top edge fade: content scrolling up under the
                     // top bar dissolves instead of being cut off at the
                     // bar's bottom edge. The veil matches the top bar's
-                    // surface colour.
+                    // surfaceContainer colour.
                     TopFadeBlur(
                         height = 48.dp,
-                        color = MiuixTheme.colorScheme.surface,
+                        color = MiuixTheme.colorScheme.surfaceContainer,
                         barStyle = effectiveBarStyle,
                         glassTier = glassTier,
                         backdrop = backdrop,
