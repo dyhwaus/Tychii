@@ -64,6 +64,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
 import eu.kanade.domain.ui.model.BarStyle
+import eu.kanade.domain.ui.model.GlassTier
 import eu.kanade.presentation.components.relativeDateText
 import eu.kanade.presentation.manga.components.DotSeparatorText
 import eu.kanade.presentation.manga.components.MangaCover
@@ -71,6 +72,7 @@ import eu.kanade.presentation.miuix.MetalEngravedText
 import eu.kanade.presentation.miuix.TychiiCorners
 import eu.kanade.presentation.miuix.metalIsDark
 import eu.kanade.presentation.miuix.metalSurface
+import eu.kanade.presentation.theme.rememberGlassTier
 import eu.kanade.tachiyomi.source.model.SManga
 import eu.kanade.tachiyomi.ui.library.LibraryItem
 import eu.kanade.tachiyomi.ui.reader.ReaderActivity
@@ -424,8 +426,17 @@ internal fun LibraryShelf(
     var focusedItem by remember { mutableStateOf<LibraryItem?>(null) }
     val selecting = selection.isNotEmpty()
     // The backdrop needs Android 12 (RenderEffect blur); below
-    // that the carousel keeps its plain background.
-    val backdropEnabled = Build.VERSION.SDK_INT >= Build.VERSION_CODES.S
+    // that the carousel keeps its plain background. In glass mode
+    // the tier decides: FULL keeps the dispersion, BALANCED drops
+    // it, LITE hides the backdrop entirely. Other styles keep
+    // today's blurred backdrop.
+    val context = LocalContext.current
+    val barStyle by remember { context.appGraph.uiPreferences.barStyle }.collectAsState()
+    val glassTier = rememberGlassTier()
+    val isGlass = barStyle == BarStyle.LIQUID_GLASS
+    val backdropEnabled = Build.VERSION.SDK_INT >= Build.VERSION_CODES.S &&
+        !(isGlass && glassTier == GlassTier.LITE)
+    val backdropDispersion = !isGlass || glassTier == GlassTier.FULL
     val focusedIndex = focusedItem?.let { item ->
         items.indexOfFirst { it.libraryManga.manga.id == item.libraryManga.manga.id }
             .takeIf { it >= 0 }
@@ -464,6 +475,7 @@ internal fun LibraryShelf(
                 ShelfCarouselBackdrop(
                     manga = item.libraryManga.manga,
                     sizePx = backdropSizePx,
+                    dispersion = backdropDispersion,
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(FocusedCoverHeight + PlankHeight)
@@ -753,6 +765,7 @@ private fun mangaStatusText(status: Long): String {
 private fun ShelfCarouselBackdrop(
     manga: Manga,
     sizePx: Size,
+    dispersion: Boolean = true,
     modifier: Modifier = Modifier,
 ) {
     val density = LocalDensity.current
@@ -762,8 +775,8 @@ private fun ShelfCarouselBackdrop(
     // snapshots them, so changing them later would do nothing.
     // graphicsLayer takes Compose's RenderEffect, so the
     // framework effect is wrapped with asComposeRenderEffect.
-    val dispersionEffect = remember(sizePx, dispersionPx) {
-        if (!isRuntimeShaderSupported()) {
+    val dispersionEffect = remember(sizePx, dispersionPx, dispersion) {
+        if (!isRuntimeShaderSupported() || !dispersion) {
             null
         } else {
             val shader = RuntimeShader(RADIAL_DISPERSION_SHADER)

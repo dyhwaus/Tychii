@@ -17,6 +17,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
 import eu.kanade.domain.ui.model.BarStyle
+import eu.kanade.domain.ui.model.GlassTier
 import top.yukonga.miuix.kmp.basic.IconButton
 import top.yukonga.miuix.kmp.blur.Backdrop
 import top.yukonga.miuix.kmp.blur.blur
@@ -55,17 +56,22 @@ data class CapsuleAction(
 fun MiuixFloatingCapsule(
     actions: List<CapsuleAction>,
     barStyle: BarStyle,
+    glassTier: GlassTier,
     backdrop: Backdrop,
     modifier: Modifier = Modifier,
 ) {
     val isGlass = barStyle == BarStyle.LIQUID_GLASS
+    // LITE renders translucent: no backdrop sampling at all.
+    val useGlass = isGlass && glassTier != GlassTier.LITE
     val isMetal = barStyle == BarStyle.METAL
     val metalDark = metalIsDark()
     val surfaceContainer = MiuixTheme.colorScheme.surfaceContainer
     val containerColor = when (barStyle) {
         BarStyle.OPAQUE -> surfaceContainer
         BarStyle.TRANSLUCENT -> surfaceContainer.copy(alpha = 0.75f)
-        BarStyle.LIQUID_GLASS -> surfaceContainer.copy(alpha = MiuixGlassSurfaceAlpha)
+        BarStyle.LIQUID_GLASS -> surfaceContainer.copy(
+            alpha = if (glassTier == GlassTier.LITE) 0.75f else MiuixGlassSurfaceAlpha,
+        )
         // Metal draws its own surface; this value is never used.
         BarStyle.METAL -> surfaceContainer
     }
@@ -76,8 +82,12 @@ fun MiuixFloatingCapsule(
     val animationScope = rememberCoroutineScope()
     val pressScale = remember { Animatable(1f) }
     // Only follow the tilt sensor in glass mode; opaque/translucent don't
-    // draw a highlight at all.
-    val highlight = if (isGlass) rememberTiltBrightHighlight() else null
+    // draw a highlight at all. BALANCED keeps the highlight static.
+    val highlight = when {
+        !useGlass -> null
+        glassTier == GlassTier.FULL -> rememberTiltBrightHighlight()
+        else -> MiuixGlassSpecular
+    }
     Column(
         modifier = modifier
             .graphicsLayer {
@@ -85,7 +95,7 @@ fun MiuixFloatingCapsule(
                 scaleY = pressScale.value
             }
             .then(
-            if (isGlass) {
+            if (useGlass) {
                 Modifier.drawBackdrop(
                     backdrop = backdrop,
                     shape = { shape },
@@ -96,13 +106,16 @@ fun MiuixFloatingCapsule(
                         // than plain frosted blur — same refraction as
                         // the bottom bar. It only works on a
                         // CornerBasedShape, which the 24.dp rounded
-                        // capsule is.
-                        lens(
-                            refractionHeight = 16.dp.toPx(),
-                            refractionAmount = 10.dp.toPx(),
-                            depthEffect = true,
-                            chromaticAberration = MiuixGlassChromaticAberration,
-                        )
+                        // capsule is. BALANCED skips it: the shader is
+                        // the expensive part.
+                        if (glassTier == GlassTier.FULL) {
+                            lens(
+                                refractionHeight = 16.dp.toPx(),
+                                refractionAmount = 10.dp.toPx(),
+                                depthEffect = true,
+                                chromaticAberration = MiuixGlassChromaticAberration,
+                            )
+                        }
                     },
                     highlight = { highlight?.copy(alpha = 0.66f) },
                     onDrawSurface = { drawRect(containerColor) },

@@ -64,6 +64,7 @@ import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import dev.zacsweers.metrox.viewmodel.assistedMetroViewModel
 import eu.kanade.domain.ui.model.BarStyle
+import eu.kanade.domain.ui.model.GlassTier
 import eu.kanade.presentation.browse.BrowseSourceContent
 import eu.kanade.presentation.browse.MissingSourceScreen
 import eu.kanade.presentation.category.components.ChangeCategoryDialog
@@ -76,6 +77,7 @@ import eu.kanade.presentation.miuix.MetalEngravedIcon
 import eu.kanade.presentation.miuix.MiuixFloatingCapsule
 import eu.kanade.presentation.miuix.TopFadeBlur
 import eu.kanade.presentation.theme.effective
+import eu.kanade.presentation.theme.rememberGlassTier
 import eu.kanade.presentation.util.AssistContentScreen
 import eu.kanade.presentation.util.Screen
 import eu.kanade.tachiyomi.source.online.HttpSource
@@ -179,6 +181,9 @@ data class BrowseSourceScreen(
         }.collectAsState()
         val effectiveBarStyle = barStyle.effective()
         val glassEnabled = effectiveBarStyle == BarStyle.LIQUID_GLASS
+        // Resolved once for the page; the capsule and the chips all
+        // read this one value.
+        val glassTier = rememberGlassTier()
         // The blur source. Created unconditionally (it is only a
         // handle); it is only *applied* to the content layer when
         // glass is enabled.
@@ -306,6 +311,7 @@ data class BrowseSourceScreen(
                                     icon = MaterialSymbols.RoundedFilled.Favorite,
                                     label = stringResource(MR.strings.popular),
                                     barStyle = effectiveBarStyle,
+                                    glassTier = glassTier,
                                     backdrop = backdrop,
                                 )
                                 if (source.supportsLatest) {
@@ -318,6 +324,7 @@ data class BrowseSourceScreen(
                                         icon = MaterialSymbols.Rounded.Verified,
                                         label = stringResource(MR.strings.latest),
                                         barStyle = effectiveBarStyle,
+                                        glassTier = glassTier,
                                         backdrop = backdrop,
                                     )
                                 }
@@ -339,7 +346,7 @@ data class BrowseSourceScreen(
                         modifier = Modifier
                             .fillMaxSize()
                             .nestedScroll(capsuleScrollConnection)
-                            .then(if (glassEnabled) Modifier.layerBackdrop(backdrop) else Modifier),
+                            .then(if (glassEnabled && glassTier != GlassTier.LITE) Modifier.layerBackdrop(backdrop) else Modifier),
                     ) {
                         BrowseSourceContent(
                             source = source,
@@ -375,6 +382,7 @@ data class BrowseSourceScreen(
                         height = 48.dp,
                         color = MiuixTheme.colorScheme.surface,
                         barStyle = effectiveBarStyle,
+                        glassTier = glassTier,
                         backdrop = backdrop,
                         modifier = Modifier.align(Alignment.TopCenter),
                     )
@@ -394,6 +402,7 @@ data class BrowseSourceScreen(
                         MiuixFloatingCapsule(
                             actions = capsuleActions,
                             barStyle = effectiveBarStyle,
+                            glassTier = glassTier,
                             backdrop = backdrop,
                         )
                     }

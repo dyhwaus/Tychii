@@ -42,6 +42,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.shadow.Shadow
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
+import eu.kanade.domain.ui.model.GlassTier
 import top.yukonga.miuix.kmp.blur.Backdrop
 import top.yukonga.miuix.kmp.blur.blur
 import top.yukonga.miuix.kmp.blur.drawBackdrop
@@ -95,6 +96,7 @@ internal fun MiuixLiquidBottomBar(
     isBlurEnabled: Boolean = true,
     containerAlpha: Float = 1f,
     isMetal: Boolean = false,
+    glassTier: GlassTier,
     content: @Composable RowScope.() -> Unit,
 ) {
     // The capsule shape MUST be a RoundedCornerShape, not CircleShape: the
@@ -111,7 +113,13 @@ internal fun MiuixLiquidBottomBar(
         surfaceContainer.copy(alpha = containerAlpha)
     }
 
-    val baseHighlight = rememberTiltBrightHighlight(extraDegrees = -45f)
+    // FULL follows the tilt; BALANCED keeps the same highlight static.
+    // LITE never draws a highlight (no drawBackdrop below).
+    val baseHighlight = if (glassTier == GlassTier.FULL) {
+        rememberTiltBrightHighlight(extraDegrees = -45f)
+    } else {
+        MiuixGlassSpecular
+    }
 
     Box(
         modifier = modifier.width(IntrinsicSize.Min),
@@ -143,10 +151,13 @@ internal fun MiuixLiquidBottomBar(
                                 vibrancy()
                                 blur(MiuixGlassBlurRadius.toPx(), MiuixGlassBlurRadius.toPx())
                                 // WeKite 的底栏透镜：24/24，不带 depth 与色散。
-                                lens(
-                                    refractionHeight = 24.dp.toPx(),
-                                    refractionAmount = 24.dp.toPx(),
-                                )
+                                // BALANCED 不调透镜：着色器是最贵的一环。
+                                if (glassTier == GlassTier.FULL) {
+                                    lens(
+                                        refractionHeight = 24.dp.toPx(),
+                                        refractionAmount = 24.dp.toPx(),
+                                    )
+                                }
                             },
                             highlight = { baseHighlight.copy(alpha = 0.75f) },
                             onDrawSurface = { drawRect(containerColor) },

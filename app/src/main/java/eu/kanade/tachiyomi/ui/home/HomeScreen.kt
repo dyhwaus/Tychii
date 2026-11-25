@@ -65,6 +65,7 @@ import cafe.adriel.voyager.navigator.currentOrThrow
 import cafe.adriel.voyager.navigator.tab.LocalTabNavigator
 import cafe.adriel.voyager.navigator.tab.TabNavigator
 import eu.kanade.domain.ui.model.BarStyle
+import eu.kanade.domain.ui.model.GlassTier
 import eu.kanade.presentation.miuix.CapsuleAction
 import eu.kanade.presentation.miuix.FloatMotion
 import eu.kanade.presentation.miuix.MiuixCapsuleTitle
@@ -73,6 +74,7 @@ import eu.kanade.presentation.miuix.TopCapsuleClearance
 import eu.kanade.presentation.miuix.TopFadeBlur
 import eu.kanade.presentation.miuix.TychiiLiquidBar
 import eu.kanade.presentation.theme.effective
+import eu.kanade.presentation.theme.rememberGlassTier
 import eu.kanade.presentation.util.Screen
 import eu.kanade.presentation.util.isTabletUi
 import eu.kanade.tachiyomi.ui.browse.BrowseSection
@@ -138,6 +140,9 @@ object HomeScreen : Screen() {
         }.collectAsState()
         val effectiveBarStyle = barStyle.effective()
         val glassEnabled = effectiveBarStyle == BarStyle.LIQUID_GLASS
+        // Resolved once for the page; the bar, capsules and title all
+        // read this one value.
+        val glassTier = rememberGlassTier()
         // The Updates tab can be hidden from Settings; the bar and the
         // rail both render this list, so a hidden tab is never selectable.
         val tabs = if (hideUpdatesTab) TABS - UpdatesTab else TABS
@@ -304,7 +309,10 @@ object HomeScreen : Screen() {
                                 modifier = Modifier
                                     .padding(paddingValues)
                                     .then(
-                                        if (glassEnabled) {
+                                        // LITE records no backdrop layer:
+                                        // the pieces render translucent and
+                                        // nothing samples the page.
+                                        if (glassEnabled && glassTier != GlassTier.LITE) {
                                             Modifier.layerBackdrop(backdrop)
                                         } else {
                                             Modifier
@@ -323,6 +331,7 @@ object HomeScreen : Screen() {
                             height = WindowInsets.statusBars.asPaddingValues().calculateTopPadding() + TopCapsuleClearance,
                             color = MaterialTheme.colorScheme.background,
                             barStyle = effectiveBarStyle,
+                            glassTier = glassTier,
                             backdrop = backdrop,
                             modifier = Modifier.align(Alignment.TopCenter),
                         )
@@ -361,6 +370,7 @@ object HomeScreen : Screen() {
                                         tabNavigator.current.options.title
                                     },
                                     barStyle = effectiveBarStyle,
+                                    glassTier = glassTier,
                                     backdrop = backdrop,
                                 )
                             }
@@ -390,6 +400,7 @@ object HomeScreen : Screen() {
                                 },
                                 showLabels = showNavBarLabels,
                                 barStyle = effectiveBarStyle,
+                                glassTier = glassTier,
                                 backdrop = backdrop,
                                 tabBadge = { tab -> tabBadge(tab) },
                             )
@@ -423,6 +434,7 @@ object HomeScreen : Screen() {
                             MiuixFloatingCapsule(
                                 actions = capsuleActions,
                                 barStyle = effectiveBarStyle,
+                                glassTier = glassTier,
                                 backdrop = backdrop,
                             )
                         }

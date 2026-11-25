@@ -63,6 +63,7 @@ import androidx.compose.ui.util.fastAll
 import androidx.compose.ui.util.fastAny
 import androidx.compose.ui.util.fastMap
 import eu.kanade.domain.ui.model.BarStyle
+import eu.kanade.domain.ui.model.GlassTier
 import eu.kanade.presentation.components.relativeDateText
 import eu.kanade.presentation.manga.components.ChapterDownloadAction
 import eu.kanade.presentation.manga.components.ChapterHeader
@@ -76,6 +77,7 @@ import eu.kanade.presentation.manga.components.MissingChapterCountListItem
 import eu.kanade.presentation.miuix.MetalEngravedIcon
 import eu.kanade.presentation.miuix.MiuixGlassBlurRadius
 import eu.kanade.presentation.miuix.MiuixGlassChromaticAberration
+import eu.kanade.presentation.miuix.MiuixGlassSpecular
 import eu.kanade.presentation.miuix.MiuixGlassSurfaceAlpha
 import eu.kanade.presentation.miuix.lens
 import eu.kanade.presentation.miuix.metalEngravedShadow
@@ -84,6 +86,7 @@ import eu.kanade.presentation.miuix.metalSurface
 import eu.kanade.presentation.miuix.rememberTiltBrightHighlight
 import eu.kanade.presentation.miuix.vibrancy
 import eu.kanade.presentation.theme.effective
+import eu.kanade.presentation.theme.rememberGlassTier
 import eu.kanade.presentation.util.formatChapterNumber
 import androidx.core.graphics.ColorUtils
 import eu.kanade.tachiyomi.data.download.model.Download
@@ -173,6 +176,7 @@ fun MangaScreen(
     val themeColor = rememberThemeColor(vibrantColor)
     val barStyle by remember { context.appGraph.uiPreferences.barStyle }.collectAsState()
     val effectiveBarStyle = barStyle.effective()
+    val glassTier = rememberGlassTier()
     val backdrop = rememberLayerBackdrop()
     val onCopyTagToClipboard: (tag: String) -> Unit = {
         if (it.isNotEmpty()) {
@@ -218,6 +222,7 @@ fun MangaScreen(
             themeColor = themeColor,
             onGeneratePalette = onGeneratePalette,
             barStyle = effectiveBarStyle,
+            glassTier = glassTier,
             backdrop = backdrop,
         )
     } else {
@@ -258,6 +263,7 @@ fun MangaScreen(
             themeColor = themeColor,
             onGeneratePalette = onGeneratePalette,
             barStyle = effectiveBarStyle,
+            glassTier = glassTier,
             backdrop = backdrop,
         )
     }
@@ -272,10 +278,13 @@ private fun MangaStartButton(
     expanded: Boolean,
     onClick: () -> Unit,
     barStyle: BarStyle,
+    glassTier: GlassTier,
     backdrop: LayerBackdrop,
     modifier: Modifier = Modifier,
 ) {
     val isGlass = barStyle == BarStyle.LIQUID_GLASS
+    // LITE renders translucent: no backdrop sampling at all.
+    val useGlass = isGlass && glassTier != GlassTier.LITE
     val isMetal = barStyle == BarStyle.METAL
     val metalDark = metalIsDark()
     // The button is a call to action, not a passive bar, so it keeps the
@@ -290,14 +299,21 @@ private fun MangaStartButton(
     val containerColor = when (barStyle) {
         BarStyle.OPAQUE -> primaryContainer
         BarStyle.TRANSLUCENT -> primaryContainer.copy(alpha = 0.75f)
-        BarStyle.LIQUID_GLASS -> primaryContainer.copy(alpha = MiuixGlassSurfaceAlpha)
+        BarStyle.LIQUID_GLASS -> primaryContainer.copy(
+            alpha = if (glassTier == GlassTier.LITE) 0.75f else MiuixGlassSurfaceAlpha,
+        )
         // Metal draws its own surface; this value is never used.
         BarStyle.METAL -> primaryContainer
     }
     // Fully rounded at 56.dp tall; RoundedCornerShape, not CircleShape,
     // so the backdrop shape stays a CornerBasedShape.
     val shape = remember { RoundedCornerShape(28.dp) }
-    val highlight = if (isGlass) rememberTiltBrightHighlight() else null
+    // BALANCED keeps the highlight static.
+    val highlight = when {
+        !useGlass -> null
+        glassTier == GlassTier.FULL -> rememberTiltBrightHighlight()
+        else -> MiuixGlassSpecular
+    }
     // The button used to be the only floating glass piece without the
     // bar's lens refraction and drop shadow, so it read as a flat
     // translucent pill instead of glass. Same 24.dp refraction and
@@ -305,7 +321,7 @@ private fun MangaStartButton(
     val isDark = isSystemInDarkTheme()
     Box(
         modifier = modifier.then(
-            if (isGlass) {
+            if (useGlass) {
                 Modifier
                     .dropShadow(
                         shape = shape,
@@ -321,12 +337,16 @@ private fun MangaStartButton(
                         effects = {
                             vibrancy()
                             blur(MiuixGlassBlurRadius.toPx(), MiuixGlassBlurRadius.toPx())
-                            lens(
-                                refractionHeight = 24.dp.toPx(),
-                                refractionAmount = 24.dp.toPx(),
-                                depthEffect = true,
-                                chromaticAberration = MiuixGlassChromaticAberration,
-                            )
+                            // BALANCED skips the lens: the shader is the
+                            // expensive part.
+                            if (glassTier == GlassTier.FULL) {
+                                lens(
+                                    refractionHeight = 24.dp.toPx(),
+                                    refractionAmount = 24.dp.toPx(),
+                                    depthEffect = true,
+                                    chromaticAberration = MiuixGlassChromaticAberration,
+                                )
+                            }
                         },
                         highlight = { highlight?.copy(alpha = 0.75f) },
                         onDrawSurface = { drawRect(containerColor) },
@@ -440,6 +460,7 @@ private fun MangaScreenSmallImpl(
     themeColor: Color?,
     onGeneratePalette: (Drawable) -> Unit,
     barStyle: BarStyle,
+    glassTier: GlassTier,
     backdrop: LayerBackdrop,
 ) {
     val chapterListState = rememberLazyListState()
@@ -525,6 +546,7 @@ private fun MangaScreenSmallImpl(
                     expanded = chapterListState.shouldExpandFAB(),
                     onClick = onContinueReading,
                     barStyle = barStyle,
+                    glassTier = glassTier,
                     backdrop = backdrop,
                 )
             }
@@ -547,7 +569,7 @@ private fun MangaScreenSmallImpl(
             refreshing = state.isRefreshingData,
             onRefresh = onRefresh,
             enabled = !isAnySelected,
-            modifier = Modifier.then(if (barStyle == BarStyle.LIQUID_GLASS) Modifier.layerBackdrop(backdrop) else Modifier),
+            modifier = Modifier.then(if (barStyle == BarStyle.LIQUID_GLASS && glassTier != GlassTier.LITE) Modifier.layerBackdrop(backdrop) else Modifier),
             indicatorPadding = PaddingValues(top = topPadding),
         ) {
             val layoutDirection = LocalLayoutDirection.current
@@ -699,6 +721,7 @@ fun MangaScreenLargeImpl(
     themeColor: Color?,
     onGeneratePalette: (Drawable) -> Unit,
     barStyle: BarStyle,
+    glassTier: GlassTier,
     backdrop: LayerBackdrop,
 ) {
     val layoutDirection = LocalLayoutDirection.current
@@ -781,6 +804,7 @@ fun MangaScreenLargeImpl(
                     expanded = chapterListState.shouldExpandFAB(),
                     onClick = onContinueReading,
                     barStyle = barStyle,
+                    glassTier = glassTier,
                     backdrop = backdrop,
                 )
             }
@@ -801,7 +825,7 @@ fun MangaScreenLargeImpl(
             refreshing = state.isRefreshingData,
             onRefresh = onRefresh,
             enabled = !isAnySelected,
-            modifier = Modifier.then(if (barStyle == BarStyle.LIQUID_GLASS) Modifier.layerBackdrop(backdrop) else Modifier),
+            modifier = Modifier.then(if (barStyle == BarStyle.LIQUID_GLASS && glassTier != GlassTier.LITE) Modifier.layerBackdrop(backdrop) else Modifier),
             indicatorPadding = PaddingValues(
                 start = insetPadding.calculateStartPadding(layoutDirection),
                 top = with(density) { topBarHeight.toDp() },

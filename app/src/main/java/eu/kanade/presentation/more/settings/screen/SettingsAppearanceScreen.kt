@@ -13,6 +13,7 @@ import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import eu.kanade.domain.ui.UiPreferences
 import eu.kanade.domain.ui.model.BarStyle
+import eu.kanade.domain.ui.model.GlassTier
 import eu.kanade.domain.ui.model.TabletUiMode
 import eu.kanade.domain.ui.model.ThemeMode
 import eu.kanade.domain.ui.model.TimeFormat
@@ -111,6 +112,7 @@ object SettingsAppearanceScreen : SearchableSettings {
         val now = remember { Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).toJavaLocalDateTime() }
 
         val dateFormat by uiPreferences.dateFormat.collectAsState()
+        val barStyle by uiPreferences.barStyle.collectAsState()
         val formattedDateNow = remember(dateFormat) {
             UiPreferences.dateFormat(dateFormat, locale.platformLocale).format(now)
         }
@@ -188,6 +190,22 @@ object SettingsAppearanceScreen : SearchableSettings {
                             current
                         }
                     },
+                ),
+                // Only when the bar style is liquid glass: the tier
+                // decides how much of the recipe renders, and the
+                // refraction switch turns the FULL tier's lens off.
+                Preference.PreferenceItem.ListPreference(
+                    preference = uiPreferences.glassTier,
+                    entries = GlassTier.entries
+                        .associateWith { stringResource(it.titleRes) },
+                    title = stringResource(MR.strings.pref_glass_tier),
+                    visible = barStyle == BarStyle.LIQUID_GLASS,
+                ),
+                Preference.PreferenceItem.SwitchPreference(
+                    preference = uiPreferences.refractionEnabled,
+                    title = stringResource(MR.strings.pref_glass_refraction),
+                    subtitle = stringResource(MR.strings.pref_glass_refraction_summary),
+                    visible = barStyle == BarStyle.LIQUID_GLASS,
                 ),
             ),
         )

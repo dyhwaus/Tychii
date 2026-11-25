@@ -14,6 +14,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import eu.kanade.domain.ui.model.BarStyle
+import eu.kanade.domain.ui.model.GlassTier
 import top.yukonga.miuix.kmp.blur.Backdrop
 import top.yukonga.miuix.kmp.blur.blur
 import top.yukonga.miuix.kmp.blur.drawBackdrop
@@ -43,17 +44,22 @@ import top.yukonga.miuix.kmp.theme.MiuixTheme
 fun MiuixCapsuleTitle(
     title: String,
     barStyle: BarStyle,
+    glassTier: GlassTier,
     backdrop: Backdrop,
     modifier: Modifier = Modifier,
 ) {
     val isGlass = barStyle == BarStyle.LIQUID_GLASS
+    // LITE renders translucent: no backdrop sampling at all.
+    val useGlass = isGlass && glassTier != GlassTier.LITE
     val isMetal = barStyle == BarStyle.METAL
     val metalDark = metalIsDark()
     val surfaceContainer = MiuixTheme.colorScheme.surfaceContainer
     val containerColor = when (barStyle) {
         BarStyle.OPAQUE -> surfaceContainer
         BarStyle.TRANSLUCENT -> surfaceContainer.copy(alpha = 0.75f)
-        BarStyle.LIQUID_GLASS -> surfaceContainer.copy(alpha = MiuixGlassSurfaceAlpha)
+        BarStyle.LIQUID_GLASS -> surfaceContainer.copy(
+            alpha = if (glassTier == GlassTier.LITE) 0.75f else MiuixGlassSurfaceAlpha,
+        )
         // Metal draws its own surface; this value is never used.
         BarStyle.METAL -> surfaceContainer
     }
@@ -62,11 +68,15 @@ fun MiuixCapsuleTitle(
     // backdrop shape stays a CornerBasedShape.
     val shape = remember { RoundedCornerShape(20.dp) }
     // Only follow the tilt sensor in glass mode; opaque/translucent don't
-    // draw a highlight at all.
-    val highlight = if (isGlass) rememberTiltBrightHighlight() else null
+    // draw a highlight at all. BALANCED keeps the highlight static.
+    val highlight = when {
+        !useGlass -> null
+        glassTier == GlassTier.FULL -> rememberTiltBrightHighlight()
+        else -> MiuixGlassSpecular
+    }
     Box(
         modifier = modifier.then(
-            if (isGlass) {
+            if (useGlass) {
                 Modifier.drawBackdrop(
                     backdrop = backdrop,
                     shape = { shape },
@@ -74,13 +84,16 @@ fun MiuixCapsuleTitle(
                         vibrancy()
                         blur(MiuixGlassBlurRadius.toPx(), MiuixGlassBlurRadius.toPx())
                         // Very shallow refraction keeps title glyphs crisp while
-                        // giving the capsule a real glass edge.
-                        lens(
-                            refractionHeight = 8.dp.toPx(),
-                            refractionAmount = 4.dp.toPx(),
-                            depthEffect = true,
-                            chromaticAberration = MiuixGlassChromaticAberration * 0.25f,
-                        )
+                        // giving the capsule a real glass edge. BALANCED
+                        // skips it: the shader is the expensive part.
+                        if (glassTier == GlassTier.FULL) {
+                            lens(
+                                refractionHeight = 8.dp.toPx(),
+                                refractionAmount = 4.dp.toPx(),
+                                depthEffect = true,
+                                chromaticAberration = MiuixGlassChromaticAberration * 0.25f,
+                            )
+                        }
                     },
                     highlight = { highlight?.copy(alpha = 0.64f) },
                     onDrawSurface = { drawRect(containerColor) },

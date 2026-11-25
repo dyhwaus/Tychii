@@ -13,6 +13,7 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import eu.kanade.domain.ui.model.BarStyle
+import eu.kanade.domain.ui.model.GlassTier
 import top.yukonga.miuix.kmp.blur.Backdrop
 import top.yukonga.miuix.kmp.blur.ProgressiveBlur
 import top.yukonga.miuix.kmp.blur.drawBackdrop
@@ -42,10 +43,15 @@ fun TopFadeBlur(
     height: Dp,
     color: Color,
     barStyle: BarStyle,
+    glassTier: GlassTier,
     backdrop: Backdrop,
     modifier: Modifier = Modifier,
 ) {
     val isGlass = barStyle == BarStyle.LIQUID_GLASS
+    // LITE keeps the plain gradient veil and skips the blur: the
+    // fade still works, with no backdrop sampling at all. BALANCED
+    // keeps the blur (only the lens is dropped there).
+    val useGlass = isGlass && glassTier != GlassTier.LITE
     val veil = Brush.verticalGradient(
         0f to color,
         1f to color.copy(alpha = 0f),
@@ -57,7 +63,7 @@ fun TopFadeBlur(
             .height(height)
             .background(veil)
             .then(
-                if (isGlass) {
+                if (useGlass) {
                     Modifier.drawBackdrop(
                         backdrop = backdrop,
                         shape = { RectangleShape },

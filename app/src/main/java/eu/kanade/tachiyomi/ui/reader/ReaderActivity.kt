@@ -63,6 +63,7 @@ import androidx.lifecycle.viewmodel.viewModelFactory
 import dev.zacsweers.metro.Inject
 import eu.kanade.domain.base.BasePreferences
 import eu.kanade.domain.ui.model.BarStyle
+import eu.kanade.domain.ui.model.GlassTier
 import eu.kanade.presentation.reader.DisplayRefreshHost
 import eu.kanade.presentation.reader.OrientationSelectDialog
 import eu.kanade.presentation.reader.ReaderContentOverlay
@@ -75,6 +76,7 @@ import eu.kanade.presentation.reader.appbars.ReaderAppBars
 import eu.kanade.presentation.reader.components.ChapterNavigatorType
 import eu.kanade.presentation.reader.settings.ReaderSettingsDialog
 import eu.kanade.presentation.theme.effective
+import eu.kanade.presentation.theme.rememberGlassTier
 import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.data.notification.NotificationReceiver
 import eu.kanade.tachiyomi.data.notification.Notifications
@@ -207,6 +209,7 @@ class ReaderActivity : BaseActivity() {
 
             val barStyle by remember { appGraph.uiPreferences.barStyle }.collectAsState()
             val effectiveBarStyle = barStyle.effective()
+            val glassTier = rememberGlassTier()
             val backdrop = rememberLayerBackdrop()
 
             val backgroundColor = remember(general.theme) { Color(baseContext.readerBackgroundColor(general.theme)) }
@@ -244,12 +247,14 @@ class ReaderActivity : BaseActivity() {
                 // The viewer is the backdrop the bars blur: in glass mode
                 // it is recorded into the shared layer, and the bars —
                 // siblings after it in this Box — stay outside it, or
-                // they would blur themselves and crash hwui.
+                // they would blur themselves and crash hwui. LITE
+                // records no layer: the bars render translucent and
+                // nothing samples the page.
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
                         .then(
-                            if (effectiveBarStyle == BarStyle.LIQUID_GLASS) {
+                            if (effectiveBarStyle == BarStyle.LIQUID_GLASS && glassTier != GlassTier.LITE) {
                                 Modifier.layerBackdrop(backdrop)
                             } else {
                                 Modifier
@@ -586,6 +591,7 @@ class ReaderActivity : BaseActivity() {
         ReaderAppBars(
             visible = state.menuVisible,
             barStyle = barStyle,
+            glassTier = glassTier,
             backdrop = backdrop,
 
             mangaTitle = state.manga?.title,

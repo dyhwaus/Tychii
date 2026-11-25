@@ -34,9 +34,11 @@ import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import eu.kanade.domain.ui.model.BarStyle
+import eu.kanade.domain.ui.model.GlassTier
 import eu.kanade.presentation.miuix.FloatMotion
 import eu.kanade.presentation.miuix.MiuixGlassBlurRadius
 import eu.kanade.presentation.miuix.MiuixGlassChromaticAberration
+import eu.kanade.presentation.miuix.MiuixGlassSpecular
 import eu.kanade.presentation.miuix.MiuixGlassSurfaceAlpha
 import eu.kanade.presentation.miuix.TychiiCorners
 import eu.kanade.presentation.miuix.lens
@@ -89,6 +91,7 @@ fun ReaderAppBars(
     onClickCropBorder: () -> Unit,
     onClickSettings: () -> Unit,
     barStyle: BarStyle = BarStyle.TRANSLUCENT,
+    glassTier: GlassTier,
     backdrop: Backdrop? = null,
 ) {
     // The bars float over the manga page: in liquid glass mode they use
@@ -99,7 +102,9 @@ fun ReaderAppBars(
     // action capsules elsewhere — instead of full-width sharp bands,
     // with the chapter navigator pill lined up on the same side
     // margins.
-    val glassBackdrop = if (barStyle == BarStyle.LIQUID_GLASS) backdrop else null
+    // LITE renders translucent: no backdrop sampling at all. The veil
+    // below follows automatically (isGlass false -> 0.75 alpha).
+    val glassBackdrop = if (barStyle == BarStyle.LIQUID_GLASS && glassTier != GlassTier.LITE) backdrop else null
     val isGlass = glassBackdrop != null
     val surfaceContainer = MiuixTheme.colorScheme.surfaceContainer
     val containerColor = when {
@@ -108,7 +113,12 @@ fun ReaderAppBars(
         else -> surfaceContainer.copy(alpha = 0.75f)
     }
     val pillShape = remember { RoundedCornerShape(TychiiCorners.Bar) }
-    val highlight = if (isGlass) rememberTiltBrightHighlight() else null
+    // BALANCED keeps the highlight static.
+    val highlight = when {
+        !isGlass -> null
+        glassTier == GlassTier.FULL -> rememberTiltBrightHighlight()
+        else -> MiuixGlassSpecular
+    }
     val pillBackground = if (isGlass) {
         Modifier.drawBackdrop(
             backdrop = glassBackdrop,
@@ -116,12 +126,15 @@ fun ReaderAppBars(
             effects = {
                 vibrancy()
                 blur(MiuixGlassBlurRadius.toPx(), MiuixGlassBlurRadius.toPx())
-                lens(
-                    refractionHeight = 24.dp.toPx(),
-                    refractionAmount = 24.dp.toPx(),
-                    depthEffect = true,
-                    chromaticAberration = MiuixGlassChromaticAberration,
-                )
+                // BALANCED skips the lens: the shader is the expensive part.
+                if (glassTier == GlassTier.FULL) {
+                    lens(
+                        refractionHeight = 24.dp.toPx(),
+                        refractionAmount = 24.dp.toPx(),
+                        depthEffect = true,
+                        chromaticAberration = MiuixGlassChromaticAberration,
+                    )
+                }
             },
             highlight = { highlight?.copy(alpha = 0.75f) },
             onDrawSurface = { drawRect(containerColor) },
@@ -188,6 +201,7 @@ fun ReaderAppBars(
                                     onPageIndexChange = onPageIndexChange,
                                     onPageIndexChangeFinished = onPageIndexChangeFinished,
                                     barStyle = barStyle,
+                                    glassTier = glassTier,
                                     backdrop = backdrop,
                                 )
                             }
@@ -218,6 +232,7 @@ fun ReaderAppBars(
                         onPageIndexChange = onPageIndexChange,
                         onPageIndexChangeFinished = onPageIndexChangeFinished,
                         barStyle = barStyle,
+                        glassTier = glassTier,
                         backdrop = backdrop,
                     )
                 }

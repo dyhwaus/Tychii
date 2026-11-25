@@ -6,6 +6,7 @@ import dev.zacsweers.metro.Inject
 import dev.zacsweers.metro.SingleIn
 import eu.kanade.domain.ui.model.AppTheme
 import eu.kanade.domain.ui.model.BarStyle
+import eu.kanade.domain.ui.model.GlassTier
 import eu.kanade.domain.ui.model.TabletUiMode
 import eu.kanade.domain.ui.model.ThemeMode
 import eu.kanade.domain.ui.model.TimeFormat
@@ -56,6 +57,15 @@ class UiPreferences(
     // LIQUID_GLASS is the default to preserve the current look; on API < 32
     // it falls back to TRANSLUCENT (see HomeScreen).
     val barStyle: Preference<BarStyle> = preferenceStore.getEnum("pref_bar_style", BarStyle.LIQUID_GLASS)
+
+    // Glass rendering tier (AUTO resolves by API + RAM; see
+    // GlassTier.resolve). Only matters when the bar style is liquid
+    // glass; other styles ignore it.
+    val glassTier: Preference<GlassTier> = preferenceStore.getEnum("pref_glass_tier", GlassTier.AUTO)
+
+    // The lens refraction in the FULL tier; off renders FULL as
+    // BALANCED without touching the tier setting.
+    val refractionEnabled: Preference<Boolean> = preferenceStore.getBoolean("pref_glass_refraction", true)
 
     // Hides the Updates tab from the bottom bar (and the navigation rail).
     val hideUpdatesTab: Preference<Boolean> = preferenceStore.getBoolean("pref_hide_updates_tab", false)

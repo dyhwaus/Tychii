@@ -41,10 +41,12 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import eu.kanade.domain.ui.model.BarStyle
+import eu.kanade.domain.ui.model.GlassTier
 import eu.kanade.presentation.miuix.MetalRecessDark
 import eu.kanade.presentation.miuix.MetalRecessLight
 import eu.kanade.presentation.miuix.MiuixGlassBlurRadius
 import eu.kanade.presentation.miuix.MiuixGlassChromaticAberration
+import eu.kanade.presentation.miuix.MiuixGlassSpecular
 import eu.kanade.presentation.miuix.MiuixGlassSurfaceAlpha
 import eu.kanade.presentation.miuix.TychiiCorners
 import eu.kanade.presentation.miuix.lens
@@ -88,6 +90,7 @@ fun ChapterNavigator(
     onPageIndexChangeFinished: () -> Unit,
     modifier: Modifier = Modifier,
     barStyle: BarStyle = BarStyle.TRANSLUCENT,
+    glassTier: GlassTier,
     backdrop: Backdrop? = null,
 ) {
     val haptic = LocalHapticFeedback.current
@@ -124,7 +127,9 @@ fun ChapterNavigator(
     // liquid glass mode the slider pill blurs the page behind it,
     // otherwise it keeps the solid/translucent surface — or the
     // brushed-metal surface — of the global bar style.
-    val glassBackdrop = if (barStyle == BarStyle.LIQUID_GLASS) backdrop else null
+    // LITE renders translucent: no backdrop sampling at all. The veil
+    // below follows automatically (isGlass false -> 0.75 alpha).
+    val glassBackdrop = if (barStyle == BarStyle.LIQUID_GLASS && glassTier != GlassTier.LITE) backdrop else null
     val isGlass = glassBackdrop != null
     val surfaceContainer = MiuixTheme.colorScheme.surfaceContainer
     val containerColor = when {
@@ -136,7 +141,12 @@ fun ChapterNavigator(
         else -> surfaceContainer.copy(alpha = 0.75f)
     }
     val sliderShape = remember { RoundedCornerShape(TychiiCorners.Bar) }
-    val highlight = if (isGlass) rememberTiltBrightHighlight() else null
+    // BALANCED keeps the highlight static.
+    val highlight = when {
+        !isGlass -> null
+        glassTier == GlassTier.FULL -> rememberTiltBrightHighlight()
+        else -> MiuixGlassSpecular
+    }
     val sliderBackground = if (isGlass) {
         Modifier.drawBackdrop(
             backdrop = glassBackdrop,
@@ -144,12 +154,15 @@ fun ChapterNavigator(
             effects = {
                 vibrancy()
                 blur(MiuixGlassBlurRadius.toPx(), MiuixGlassBlurRadius.toPx())
-                lens(
-                    refractionHeight = 24.dp.toPx(),
-                    refractionAmount = 24.dp.toPx(),
-                    depthEffect = true,
-                    chromaticAberration = MiuixGlassChromaticAberration,
-                )
+                // BALANCED skips the lens: the shader is the expensive part.
+                if (glassTier == GlassTier.FULL) {
+                    lens(
+                        refractionHeight = 24.dp.toPx(),
+                        refractionAmount = 24.dp.toPx(),
+                        depthEffect = true,
+                        chromaticAberration = MiuixGlassChromaticAberration,
+                    )
+                }
             },
             highlight = { highlight?.copy(alpha = 0.75f) },
             onDrawSurface = { drawRect(containerColor) },
@@ -387,6 +400,9 @@ private fun ChapterNavigatorPreview() {
             totalPages = 10,
             onPageIndexChange = { currentPage = (it + 1) },
             onPageIndexChangeFinished = {},
+            // The preview uses the default translucent style, so the
+            // tier never applies here.
+            glassTier = GlassTier.FULL,
         )
     }
 }

@@ -22,6 +22,7 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import eu.kanade.domain.ui.model.BarStyle
+import eu.kanade.domain.ui.model.GlassTier
 import eu.kanade.presentation.util.Tab
 import top.yukonga.miuix.kmp.blur.Backdrop
 import top.yukonga.miuix.kmp.theme.MiuixTheme
@@ -59,6 +60,7 @@ fun TychiiLiquidBar(
     onTabClick: (Tab) -> Unit,
     showLabels: Boolean,
     barStyle: BarStyle,
+    glassTier: GlassTier,
     backdrop: Backdrop,
     tabBadge: @Composable (Tab) -> (@Composable () -> Unit)?,
     modifier: Modifier = Modifier,
@@ -76,16 +78,18 @@ fun TychiiLiquidBar(
         MiuixLiquidBottomBar(
             backdrop = backdrop,
             isDark = isDark,
-            isBlurEnabled = barStyle == BarStyle.LIQUID_GLASS,
+            isBlurEnabled = barStyle == BarStyle.LIQUID_GLASS && glassTier != GlassTier.LITE,
             containerAlpha = when (barStyle) {
                 BarStyle.OPAQUE -> 1f
                 BarStyle.TRANSLUCENT -> 0.75f
-                // Ignored when blur is on (the glass container is 0.4 alpha).
-                BarStyle.LIQUID_GLASS -> 1f
+                // Ignored when blur is on (the glass container is 0.4 alpha);
+                // in LITE the bar renders translucent instead.
+                BarStyle.LIQUID_GLASS -> if (glassTier == GlassTier.LITE) 0.75f else 1f
                 // Metal is opaque; the surface is brushed metal, not a colour.
                 BarStyle.METAL -> 1f
             },
             isMetal = isMetal,
+            glassTier = glassTier,
         ) {
             tabs.forEachIndexed { index, tab ->
                 val selected = selectedIndex() == index

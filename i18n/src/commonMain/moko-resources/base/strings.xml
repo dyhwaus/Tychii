@@ -269,6 +269,13 @@
     <string name="bar_style_liquid_glass">Liquid glass</string>
     <string name="bar_style_metal">Metal</string>
     <string name="pref_bar_style_glass_note">Requires Android 12L or later</string>
+    <string name="pref_glass_tier">Glass rendering</string>
+    <string name="glass_tier_auto">Automatic</string>
+    <string name="glass_tier_full">Full</string>
+    <string name="glass_tier_balanced">Balanced</string>
+    <string name="glass_tier_lite">Power saving</string>
+    <string name="pref_glass_refraction">Refraction</string>
+    <string name="pref_glass_refraction_summary">Only applies in the Full tier</string>
 
     <string name="pref_manage_notifications">Manage notifications</string>
     <string name="pref_app_language">App language</string>

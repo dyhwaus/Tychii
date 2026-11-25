@@ -17,6 +17,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
 import eu.kanade.domain.ui.model.BarStyle
+import eu.kanade.domain.ui.model.GlassTier
 import top.yukonga.miuix.kmp.blur.Backdrop
 import top.yukonga.miuix.kmp.blur.blur
 import top.yukonga.miuix.kmp.blur.drawBackdrop
@@ -31,7 +32,8 @@ import top.yukonga.miuix.kmp.theme.MiuixTheme
  * [backdrop] is null for chips that sit inside the backdrop-recorded
  * layer (the Library row): a glass chip there would recurse, so it
  * renders as translucent instead — the same veil the glass branch
- * draws over its blur.
+ * draws over its blur. [glassTier] defaults to FULL; it only matters
+ * when a backdrop is passed.
  */
 @Composable
 fun FilterChip(
@@ -40,11 +42,13 @@ fun FilterChip(
     icon: ImageVector? = null,
     label: String,
     barStyle: BarStyle,
+    glassTier: GlassTier = GlassTier.FULL,
     backdrop: Backdrop? = null,
 ) {
     val colorScheme = MiuixTheme.colorScheme
-    // Glass only when a backdrop is actually handed in.
-    val glassBackdrop = if (barStyle == BarStyle.LIQUID_GLASS) backdrop else null
+    // Glass only when a backdrop is actually handed in, and never in
+    // LITE (which renders translucent instead).
+    val glassBackdrop = if (barStyle == BarStyle.LIQUID_GLASS && glassTier != GlassTier.LITE) backdrop else null
     val isMetal = barStyle == BarStyle.METAL
     val metalDark = metalIsDark()
     val containerColor = when (barStyle) {
@@ -55,7 +59,12 @@ fun FilterChip(
     }
     val contentColor = if (selected) colorScheme.primary else colorScheme.onSurface
     val shape = RoundedCornerShape(12.dp)
-    val highlight = if (glassBackdrop != null) rememberTiltBrightHighlight() else null
+    // BALANCED keeps the highlight static.
+    val highlight = when {
+        glassBackdrop == null -> null
+        glassTier == GlassTier.FULL -> rememberTiltBrightHighlight()
+        else -> MiuixGlassSpecular
+    }
     val textStyle = LocalTextStyle.current
     Box(
         modifier = Modifier
@@ -68,12 +77,16 @@ fun FilterChip(
                         effects = {
                             vibrancy()
                             blur(MiuixGlassBlurRadius.toPx(), MiuixGlassBlurRadius.toPx())
-                            lens(
-                                refractionHeight = 16.dp.toPx(),
-                                refractionAmount = 10.dp.toPx(),
-                                depthEffect = true,
-                                chromaticAberration = MiuixGlassChromaticAberration,
-                            )
+                            // BALANCED skips the lens: the shader is the
+                            // expensive part.
+                            if (glassTier == GlassTier.FULL) {
+                                lens(
+                                    refractionHeight = 16.dp.toPx(),
+                                    refractionAmount = 10.dp.toPx(),
+                                    depthEffect = true,
+                                    chromaticAberration = MiuixGlassChromaticAberration,
+                                )
+                            }
                         },
                         highlight = { highlight?.copy(alpha = 0.66f) },
                         onDrawSurface = { drawRect(containerColor) },
