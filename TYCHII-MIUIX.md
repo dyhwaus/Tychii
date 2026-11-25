@@ -3146,6 +3146,100 @@ Untested — needs a rebuild: same look everywhere (this batch only renames
 values, it changes none), glass still falls back to translucent below
 API 32, and no screen changed behavior.
 
+## Glass tiered rendering — design (2026-11-25): 2.2
+
+Design only; no code changed in this batch. The doc asked for a graded,
+measurable, degradable glass system. Measured against the current code
+first:
+
+### What runs today (verified in code)
+
+- One recipe (LiquidGlass.kt): blur 8.dp + veil 0.4 + vibrancy 1.5
+  (colorControls saturation) + lens refraction (bar 24/24, title capsule
+  8/4, chroma 0.14) + dual-peak specular highlight. The lens is an AGSL
+  rounded-rect refraction shader; the dispersion variant samples the
+  backdrop 3x (RGB) with a Fresnel edge factor.
+- Implicit tiers already exist by API: API 33+ gets the full recipe
+  (refraction needs RuntimeShader); API 32 gets blur + highlight, no
+  refraction (`isRuntimeShaderSupported()` false); below 32 the style
+  falls back to translucent (`BarStyle.effective()`).
+- The tilt highlight is ALREADY decoupled from recomposition:
+  `rememberTiltBrightHighlight` reads the gravity sensor (~50 events/s)
+  through `derivedStateOf` with a 0.05 snap, so downstream only
+  recomposes when the snapped value changes. The doc's "gyroscope
+  decoupled" item is satisfied; do not touch it.
+- Cost, in order: (1) the backdrop layer re-recording + blur while
+  scrolling — every floating piece's `drawBackdrop` reads a layer that
+  tracks the moving content; (2) the lens shader (per-pixel SDF, 3
+  samples with dispersion); (3) the shelf backdrop (16.dp blur +
+  dispersion); (4) the highlight — negligible.
+- Dead ends, do not retry: pausing backdrop recording while scrolling
+  (implemented 2026-11-16, reverted the same day for rendering
+  problems). Also out: lowering the blur radius globally (it changes
+  the look the user chose) and the Haze engine swap (never started).
+
+### Tiers
+
+New `GlassTier` enum next to `BarStyle` (domain `ui.model`), with a
+`glassTier` preference in `UiPreferences` and a `refractionEnabled`
+switch. The setting offers 自动 / 完整 / 均衡 / 省电； 自动 resolves by
+capability and preserves today's rendering on every device:
+
+- FULL （完整）: today's recipe — blur + vibrancy + lens with dispersion
+  + dynamic highlight.
+- BALANCED （均衡）: blur + vibrancy + static highlight, no lens call at
+  all (the shader is the expensive part); the shelf backdrop keeps its
+  blur but drops dispersion.
+- LITE （省电）: no `drawBackdrop` anywhere — the piece renders as
+  translucent, and the page does not even create its backdrop layer
+  (no recording cost, no layer memory).
+
+AUTO resolution: API 33+ and total RAM >= 6 GB -> FULL; API 33+ and
+RAM < 6 GB, or API 32 -> BALANCED; below 32 -> LITE. Total RAM via
+`ActivityManager.getMemoryInfo().totalMem`; it is a heuristic proxy
+for GPU headroom, and the 6 GB line is a starting guess to validate on
+the user's device, not a measured threshold. The 省电 option IS the
+doc's "性能模式" — one setting, not two.
+
+Refraction as its own switch: `refractionEnabled` (default on) applies
+only in FULL — turning it off renders FULL as BALANCED without touching
+the tier setting.
+
+### Where it plugs in
+
+- The tier is resolved once per page (from the preference +
+  capability) and passed to the six `drawBackdrop` sites
+  (MiuixLiquidBottomBar, MiuixFloatingCapsule, MiuixCapsuleTitle,
+  MangaScreen start button, ReaderAppBars, ChapterNavigator) plus the
+  shelf backdrop. Each site already branches on `isGlass` (effective
+  style == LIQUID_GLASS); the effects block becomes a `when` on the
+  tier. LITE skips `rememberLayerBackdrop()` at the page root
+  (HomeScreen, MangaScreen, BrowseSourceScreen, ReaderActivity).
+- Settings UI: one `ListPreference` row for the tier (same shape as the
+  BarStyle row in SettingsAppearanceScreen) shown only when the style
+  is liquid glass, plus the refraction `SwitchPreference` next to it.
+  Both need base + zh-rCN strings.
+
+### Benchmarks (need the user's device — nothing measurable here)
+
+- Scroll the Library grid for 10 s in each tier; record p95 frame time
+  and jank (> 16.6 ms frames) via `dumpsys gfxinfo` or FrameMetrics.
+  Acceptance: BALANCED p95 < 16.6 ms on the user's phone where FULL
+  exceeds it; LITE matches the translucent baseline. No absolute
+  numbers are promised until measured.
+- Memory: confirm via the profiler that LITE creates no backdrop layer.
+
+### Implementation order (small steps)
+
+1. `GlassTier` enum + preferences + capability resolver. AUTO must
+   preserve today's rendering on every device (FULL on 33+, BALANCED
+   on 32, LITE below 32).
+2. Thread the resolved tier through the six draw sites + shelf
+   backdrop (effects `when`).
+3. Skip backdrop creation in LITE.
+4. Settings rows + strings.
+5. Benchmark on the user's device; tune the RAM line; record results.
+
 ## Build fixes
 
 - `MetalTabBar.kt:157` — `Operator '==' cannot be
