@@ -3273,6 +3273,19 @@ before grouping, so every category page is filtered the same way, and
 it composes with the tri-state filters and the search query. The row
 hides while searching or selecting, like the floating capsule.
 
+**The row is gone (2026-11-25, user request).** The user asked for
+the capsules at the top of the Library tab removed; the first attempt
+gated the row on Shelf mode only, which was the wrong place — the
+user meant the Library tab's grid/list itself, where the row lived.
+The whole row was removed from `LibraryContent` (smart-group chips,
+rule chips, and the 智能规则 manager chip). The filtering machinery
+stays: `SmartLibraryCategory`, `LibraryRule`, the rules preference,
+and the ViewModel's selection state are untouched, but with no row
+there is no way to select a group or rule, so the filters are inert
+and the rule manager screen has no entry point from the library.
+The selection state is in-memory only, so nothing can be stuck
+active across a restart.
+
 - `SmartLibraryCategory` (`tachiyomi/ui/library/SmartLibraryCategory.kt`):
   an enum with a `titleRes` per entry (same shape as `BarStyle`) and a
   `matches(item, now)` predicate. The seven groups, in row order:
@@ -3359,13 +3372,12 @@ a list of ANDed conditions, and an optional sort override.
   filter at the same time — selecting one clears the other. While a
   rule with a sort is active, the sort dialog still edits the
   category sort, which applies once the rule is cleared.
-- UI: the chip row gains one chip per enabled rule plus a trailing
-  智能规则 chip that opens the rule manager (`RuleListScreen`,
-  pushed from the Library tab). The row is hidden in Shelf mode
-  (2026-11-25, user request) — the shelf page has no room for a
-  chip row above the carousel; a group or rule selected before
-  switching to Shelf still filters, and is cleared from the grid
-  or list view. The manager lists rules with their
+- UI: the chip row gained one chip per enabled rule plus a trailing
+  智能规则 chip that opened the rule manager (`RuleListScreen`,
+  pushed from the Library tab). The whole row was removed
+  2026-11-25 (user request; see the note at the top of this
+  section), so the rule chips and the manager entry point are
+  gone from the library page. The manager lists rules with their
   condition summaries and an enable switch, and a FAB to create one.
   The editor (`RuleEditorScreen`) edits name, enable, conditions
   (field/operator/value as `OverlaySpinnerPreference` rows, numbers
@@ -3387,19 +3399,13 @@ a list of ANDed conditions, and an optional sort override.
   bad/future-version input. Expectations were simulated in Python
   first; all 15 simulated cases held.
 
-Untested — needs a rebuild: the rule chips appear after the seven
-groups; tapping one filters and the chip stays selected; the manager
-opens from the 智能规则 chip; creating, editing, copying,
-disabling and deleting a rule all reflect in the chip row without
-re-entering the library; a rule with a sort re-sorts while active
-and the category sort returns when it is cleared.
-
-Untested — needs a rebuild: the chip row appears above the grid/list
-in every display mode, tapping a chip filters and the active chip
-shows the accent tint, tapping it again clears, the row hides while
-searching or selecting, the Explore 热门/最新 chips look and behave
-exactly as before, and the index rail still recomputes from the
-filtered items.
+The chip-row checks below are moot — the row was removed
+2026-11-25 (user request), so no chips appear above the grid/list
+in any display mode. The rule manager and editor still exist but
+have no entry point from the library page; the underlying matching
+and JSON store are covered by `LibraryRuleTest`. The shared
+`FilterChip` itself is untouched and still used by Explore's
+热门/最新 chips.
 
 ## Glass tiered rendering — implementation (2026-11-25): 2.2
 
