@@ -1,16 +1,15 @@
-// 铝合金五金件：Tychii 的拟物材质，Smartisan 的做法——底栏不是一块
-// “金属材质”，而是一件真实的物件，像 Smartisan 图标里的金属零件。
-// 冷灰，不掺金不掺铜，贴合黑白。
+// 精密金属：Apple 式做法——精密、克制、细腻、轻盈。银白 Silver
+// （浅色）、中性钛灰 Titanium（深色，不是 Silver 的反相），阳极
+// 氧化 Anodized 只做选中态的微主题色反射。低反射、细拉丝
+// （2%–5%）、柔和倒角，不做强高光带、硬倒角和斜向扫光；动态反射
+// 默认关闭。文字和图标仍是刻进去的：深色刻痕，下方 1px 亮边。
+// 金属件的选中态是凸起的开关（底栏）或压下去的凹槽（章节导航），
+// 不是一块玻璃 pill。
 //
 // 和液态玻璃是两种物理逻辑：玻璃透明，透出背后的页面；金属不透明，
-// 靠表面质感立起来——纵向柔和渐变打底，细腻的缎面纹理，顶部一道高光
-// 带，上下倒角，左上一道静态柔光。铝比铬柔：没有镜面的亮带与暗反射
-// 带，颜色均匀，纹理细而淡。文字和图标是刻进去的：深色刻痕，下方
-// 1px 亮边。金属件的选中态是凸起的开关（底栏）或压下去的凹槽（章节
-// 导航），不是一块玻璃 pill。
-//
-// 因为不透明，金属件不需要录背景来模糊：这个模式下录制层直接不录，
-// 顶渐隐也只剩一道渐变面纱。全部用 Compose 的渐变和线条画，不贴位图。
+// 靠表面质感立起来。因为不透明，金属件不需要录背景来模糊：这个
+// 模式下录制层直接不录，顶渐隐也只剩一道渐变面纱。全部用 Compose
+// 的渐变和线条画，不贴位图。
 
 package eu.kanade.presentation.miuix
 
@@ -64,12 +63,13 @@ import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 
-// 基底：纵向柔和渐变，上亮下暗，像光从上面落下来。铝的颜色均匀，
-// 没有铬的亮带与暗反射带；比原来的拉丝钢亮一档，对比更低。
-val MetalLightTop = Color(0xFFF3F4F6)
-val MetalLightBottom = Color(0xFFDCDEE1)
-val MetalDarkTop = Color(0xFF34373B)
-val MetalDarkBottom = Color(0xFF222427)
+// 基底：纵向柔和渐变，上亮下暗，像光从上面落下来。Silver 是银白、
+// 浅灰，不铺纯白；Titanium 是中性钛灰，不偏蓝不偏紫，顶比原来的
+// 暗底亮一档，暗色主题里边缘才读得出来。两档对比都低，没有强渐变。
+val MetalLightTop = Color(0xFFF4F5F6)
+val MetalLightBottom = Color(0xFFE1E3E6)
+val MetalDarkTop = Color(0xFF3B3B3D)
+val MetalDarkBottom = Color(0xFF262628)
 
 // 凹槽的底色：比基底暗一档，配内阴影就是冲压下去的样子。
 val MetalRecessLight = Color(0xFFC2C4C8)
@@ -80,8 +80,8 @@ val MetalRecessDark = Color(0xFF17191B)
 fun metalIsDark(): Boolean = MiuixTheme.colorScheme.background.luminance() < 0.5f
 
 /**
- * 铝合金五金件表面：柔和渐变基底 + 细腻缎面纹理 + 顶部高光带 +
- * 左上柔光 + 上下倒角。只画表面，不带阴影——浮起的阴影由调用方
+ * 精密金属表面：柔和渐变基底 + 2%–5% 细拉丝 + 柔和方向性反射 +
+ * 窄而柔和的倒角。只画表面，不带阴影——浮起的阴影由调用方
  * 按原来的方式加。
  */
 fun Modifier.metalSurface(shape: Shape, isDark: Boolean): Modifier = this.then(
@@ -98,54 +98,43 @@ fun Modifier.metalSurface(shape: Shape, isDark: Boolean): Modifier = this.then(
             0f to if (isDark) MetalDarkTop else MetalLightTop,
             1f to if (isDark) MetalDarkBottom else MetalLightBottom,
         )
-        // 倒角：上沿亮线，下沿暗线，沿着圆角走。五金件的倒角硬，
-        // 像被光切出来的边。
+        // 倒角：窄而柔和的外缘高光，上沿略亮、下沿略暗，沿着圆角走。
+        // 精密金属的倒角是加工出来的薄边，不是被光切出来的硬边。
         val chamfer = Brush.verticalGradient(
-            0f to Color.White.copy(alpha = 0.65f),
+            0f to Color.White.copy(alpha = 0.30f),
             0.5f to Color.Transparent,
-            1f to Color.Black.copy(alpha = 0.45f),
+            1f to Color.Black.copy(alpha = 0.20f),
         )
-        // 左上斜柔光，静态，不跟手。
-        val sheen = Brush.linearGradient(
-            colorStops = arrayOf(
-                0f to Color.White.copy(alpha = 0.09f),
-                0.6f to Color.Transparent,
-            ),
-            start = Offset.Zero,
-            end = Offset(size.width * 0.7f, size.height),
-        )
-        // 顶部高光带：光打在真实金属条的顶面上，柔和的白光从顶部
-        // 漫下来，到三成处消失。没有它，铝面太平，不像一件东西。
-        val topLight = Brush.verticalGradient(
-            0f to Color.White.copy(alpha = 0.18f),
-            0.3f to Color.Transparent,
+        // 方向性反射：光从上面落下来，柔和、只有一个方向，顶亮底暗，
+        // 到一半处消失。没有斜向扫光——低反射是精密金属的底线。
+        val reflection = Brush.verticalGradient(
+            0f to Color.White.copy(alpha = 0.05f),
+            0.5f to Color.Transparent,
         )
         val spacing = 2.dp.toPx()
         val lineCount = (size.height / spacing).toInt() + 1
         onDrawBehind {
             clipPath(path) {
                 drawRect(brush = base)
-                // 缎面纹理：1px 横线，黑白交错，比拉丝钢细而淡——
-                // 铝是细腻的哑光面，不是粗拉丝。每条线的强度、起
-                // 点、落点都由行号的哈希定——固定下来，跨帧不闪；
-                // 真实的拉丝不是直尺画出来的线，线有轻有重、有起
-                // 有落，不会每条都从左拉到右。
+                // 细拉丝：1px 横线，2%–5% 不透明度，黑白交错。每条线
+                // 的强度、起点、落点都由行号的哈希定——固定下来，
+                // 跨帧不闪；线有轻有重、有起有落，不会每条都从左拉
+                // 到右。正常阅读距离下几乎看不见，近看可辨。
                 for (i in 0 until lineCount) {
                     val y = i * spacing
                     val hashA = ((i * 2654435761L) % 1000L) / 1000f
                     val hashB = ((i * 40503L) % 1000L) / 1000f
                     val hashC = ((i * 65599L) % 1000L) / 1000f
-                    val alpha = 0.005f + hashA * 0.045f
+                    val alpha = 0.02f + hashA * 0.03f
                     val color = if (i % 2 == 0) Color.White else Color.Black
                     drawLine(
                         color = color.copy(alpha = alpha),
-                        start = Offset(hashB * size.width * 0.2f, y),
-                        end = Offset(size.width - hashC * size.width * 0.2f, y),
+                        start = Offset(hashB * size.width * 0.1f, y),
+                        end = Offset(size.width - hashC * size.width * 0.1f, y),
                         strokeWidth = 1f,
                     )
                 }
-                drawRect(brush = sheen)
-                drawRect(brush = topLight)
+                drawRect(brush = reflection)
             }
             drawOutline(
                 outline = outline,
