@@ -3064,6 +3064,50 @@ Untested — needs a rebuild: unfavorite shows the undo Snackbar and Undo
 restores the manga with categories intact; the category create/rename/delete
 dialogs open; nothing else changed on those screens.
 
+## Library fast index rail (2026-11-25): 2.3
+
+- New `presentation/library/components/LibraryIndexRail.kt`: a slim index
+  rail on the right edge of the Library, for grid (CompactGrid/CoverOnlyGrid)
+  and list modes. Shelf mode has no scrollable list, so no rail there.
+- Buckets: A-Z for Latin initials, the gojuuon row for kana initials
+  (hiragana/katakana, base/small/voiced/half-voiced — the row strings were
+  verified character by character against Unicode data), "#" for kanji,
+  digits and everything else (no reading to bucket by). Sections follow
+  first-appearance order in the already-sorted list, each key once at its
+  first item, so the rail matches the list even if the collator interleaves
+  buckets.
+- The rail only shows when the page's own sort is alphabetical (every other
+  sort orders by date/count, so A-Z buckets would lie), the list is not a
+  search result, nothing is selected, the category has >= 30 items, and
+  there are >= 2 sections. Per-category: each pager page computes its own
+  sections from its own items and owns its own scroll state.
+- Interaction: tap or drag the rail to jump (scrollToItem, instant); a big
+  key bubble shows in the middle of the screen while dragging, and the
+  active letter is tinted primary. The rail is 20.dp wide, exactly the
+  floating action capsule's end padding, so the two never overlap; the
+  letters sit in a 16.dp pill (surfaceContainer, 0.85) so they stay legible
+  over any cover.
+- Wiring: `LibraryPager` hoists a `LazyStaggeredGridState` and a
+  `LazyListState` per page and passes them into `LibraryCompactGrid` /
+  `LibraryList` (via `LazyLibraryGrid`'s new `state` param, defaulting to
+  its own remembered state). Index math: the list always emits an (empty
+  when not searching) global-search item first, so item i is at list index
+  i + 1; the grid emits it only while searching, and the rail hides then,
+  so item i is at grid index i.
+- Unit test `app/src/test/.../LibraryIndexTest.kt` (JUnit 5 + Kotest):
+  bucket cases for Latin/kana/kanji/digits and section ordering. The
+  expectations were checked by simulating the same logic in Python against
+  the kana strings extracted from the file.
+- Not done: date-bucketed rail for update-time sorts, an author sort
+  (LibrarySort has no author type), search-result jump to shelf position,
+  TalkBack semantics for the rail.
+
+Untested — needs a rebuild: the rail appears on a 30+ alphabetical
+category in grid and list modes, dragging it jumps and shows the bubble,
+tapping a letter lands on the right manga, the action capsule still works
+(the rail never covers it), and small/non-alphabetical/searching/selecting
+states show no rail.
+
 ## Build fixes
 
 - `MetalTabBar.kt:157` — `Operator '==' cannot be
