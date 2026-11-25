@@ -223,6 +223,7 @@
     <string name="dialog_with_checkbox_remove_description">将会清除此章节的阅读日期，你确定吗？</string>
     <string name="dialog_with_checkbox_reset">重置此作品的所有章节</string>
     <string name="snack_add_to_library">要添加到书架吗？</string>
+    <string name="snack_manga_removed_from_library">已将《%1$s》移出书架</string>
     <string name="picture_saved">图片已保存</string>
     <string name="custom_filter">滤镜</string>
     <string name="set_as_cover">设为封面</string>

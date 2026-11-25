@@ -391,16 +391,31 @@ class MangaViewModel(
     // Manga info - start
 
     fun toggleFavorite() {
+        // Capture the manga before removal so the undo can restore this exact one.
+        val manga = successState?.manga ?: return
         toggleFavorite(
             onRemoved = {
                 viewModelScope.launch {
-                    if (!hasDownloads()) return@launch
                     val result = snackbarHostState.showSnackbar(
+                        message = context.stringResource(MR.strings.snack_manga_removed_from_library, manga.title),
+                        actionLabel = context.stringResource(MR.strings.action_undo),
+                        withDismissAction = true,
+                    )
+                    if (result == SnackbarResult.ActionPerformed) {
+                        // Removal only flipped favoriteAt, so categories and downloads
+                        // are untouched and re-favoriting restores the manga as it was.
+                        launch(Dispatchers.IO) {
+                            updateManga.awaitUpdateFavorite(manga.id, true)
+                        }
+                        return@launch
+                    }
+                    if (!hasDownloads()) return@launch
+                    val deleteResult = snackbarHostState.showSnackbar(
                         message = context.stringResource(MR.strings.delete_downloads_for_manga),
                         actionLabel = context.stringResource(MR.strings.action_delete),
                         withDismissAction = true,
                     )
-                    if (result == SnackbarResult.ActionPerformed) {
+                    if (deleteResult == SnackbarResult.ActionPerformed) {
                         deleteDownloads()
                     }
                 }

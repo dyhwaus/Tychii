@@ -13,6 +13,7 @@ import eu.kanade.presentation.category.CategoryScreen
 import eu.kanade.presentation.category.components.CategoryCreateDialog
 import eu.kanade.presentation.category.components.CategoryDeleteDialog
 import eu.kanade.presentation.category.components.CategoryRenameDialog
+import eu.kanade.presentation.miuix.TychiiPage
 import eu.kanade.presentation.util.Screen
 import eu.kanade.tachiyomi.util.system.toast
 import kotlinx.coroutines.flow.collectLatest
@@ -35,38 +36,40 @@ class CategoryScreen : Screen() {
 
         val successState = state as CategoryScreenState.Success
 
-        CategoryScreen(
-            state = successState,
-            onClickCreate = { viewModel.showDialog(CategoryDialog.Create) },
-            onClickRename = { viewModel.showDialog(CategoryDialog.Rename(it)) },
-            onClickDelete = { viewModel.showDialog(CategoryDialog.Delete(it)) },
-            onChangeOrder = viewModel::changeOrder,
-            navigateUp = navigator::pop,
-        )
+        TychiiPage {
+            CategoryScreen(
+                state = successState,
+                onClickCreate = { viewModel.showDialog(CategoryDialog.Create) },
+                onClickRename = { viewModel.showDialog(CategoryDialog.Rename(it)) },
+                onClickDelete = { viewModel.showDialog(CategoryDialog.Delete(it)) },
+                onChangeOrder = viewModel::changeOrder,
+                navigateUp = navigator::pop,
+            )
 
-        when (val dialog = successState.dialog) {
-            null -> {}
-            CategoryDialog.Create -> {
-                CategoryCreateDialog(
-                    onDismissRequest = viewModel::dismissDialog,
-                    onCreate = viewModel::createCategory,
-                    categories = successState.categories.fastMap { it.name },
-                )
-            }
-            is CategoryDialog.Rename -> {
-                CategoryRenameDialog(
-                    onDismissRequest = viewModel::dismissDialog,
-                    onRename = { viewModel.renameCategory(dialog.category, it) },
-                    categories = successState.categories.fastMap { it.name },
-                    category = dialog.category.name,
-                )
-            }
-            is CategoryDialog.Delete -> {
-                CategoryDeleteDialog(
-                    onDismissRequest = viewModel::dismissDialog,
-                    onDelete = { viewModel.deleteCategory(dialog.category.id) },
-                    category = dialog.category.name,
-                )
+            when (val dialog = successState.dialog) {
+                null -> {}
+                CategoryDialog.Create -> {
+                    CategoryCreateDialog(
+                        onDismissRequest = viewModel::dismissDialog,
+                        onCreate = viewModel::createCategory,
+                        categories = successState.categories.fastMap { it.name },
+                    )
+                }
+                is CategoryDialog.Rename -> {
+                    CategoryRenameDialog(
+                        onDismissRequest = viewModel::dismissDialog,
+                        onRename = { viewModel.renameCategory(dialog.category, it) },
+                        categories = successState.categories.fastMap { it.name },
+                        category = dialog.category.name,
+                    )
+                }
+                is CategoryDialog.Delete -> {
+                    CategoryDeleteDialog(
+                        onDismissRequest = viewModel::dismissDialog,
+                        onDelete = { viewModel.deleteCategory(dialog.category.id) },
+                        category = dialog.category.name,
+                    )
+                }
             }
         }
 
