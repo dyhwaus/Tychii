@@ -3015,10 +3015,10 @@ is unchanged.
 The user supplied a review report ("Tychii 深度代码审查报告与改造建议")
 written without full source access, so every claim in it was re-verified
 against the current code before acting. Work follows the report's own
-priority order; 2.3, 3.x, the 2.2 design and the first 4.x slice (smart
-groups) are done. Remaining: the 2.2 implementation, the rest of the 2.5
-dialog-host audit, and the rest of 4.x (rule engine, per-manga reader
-config, data center, bookmarks).
+priority order; 2.3, 3.x, the 2.2 design and implementation, and the
+first 4.x slice (smart groups) are done. Remaining: the rest of the
+2.5 dialog-host audit, and the rest of 4.x (rule engine, per-manga
+reader config, data center, bookmarks).
 
 - 2.1 CI: already satisfied — `.github/workflows/build.yml` (inherited from
   Mihon) runs on push to main and on PRs: spotlessCheck, unit tests,
@@ -3304,6 +3304,83 @@ shows the accent tint, tapping it again clears, the row hides while
 searching or selecting, the Explore 热门/最新 chips look and behave
 exactly as before, and the index rail still recomputes from the
 filtered items.
+
+## Glass tiered rendering — implementation (2026-11-25): 2.2
+
+The design from the section above, now implemented. One setting,
+`glassTier` （自动/完整/均衡/省电， default 自动）, plus a
+`refractionEnabled` switch (default on).
+
+- `GlassTier` (`domain/ui/model/GlassTier.kt`): an enum with a
+  `titleRes` per value, same shape as `BarStyle`.
+- Resolver (`presentation/theme/MiuixGlass.kt`, next to
+  `BarStyle.effective()`): `GlassTier.resolve(totalMemBytes, sdkInt)`
+  — AUTO maps below API 32 to LITE, API 32 to BALANCED, API 33+ with
+  ≥ 6 GB RAM to FULL, API 33+ below that to BALANCED; an explicit
+  tier stays as set. `sdkInt` is a parameter (defaulting to the
+  device's) so the mapping is unit-testable. `withRefraction(false)`
+  renders FULL as BALANCED. Total RAM via
+  `ActivityManager.getMemoryInfo().totalMem`. The 6 GB line is a
+  starting guess for GPU headroom, not a measured threshold.
+- `rememberGlassTier()` (same file): reads both preferences and
+  resolves once per page. HomeScreen, MangaScreen,
+  BrowseSourceScreen, ReaderActivity and LibraryShelf each call it
+  once and pass the resolved tier down — no piece resolves it itself.
+- What each tier does at the eight `drawBackdrop` sites (bottom bar,
+  action capsule, title capsule, manga start button, reader bars,
+  chapter navigator, Explore chips, top fade) plus the shelf
+  backdrop: FULL is today's recipe (blur + vibrancy + lens +
+  tilt-following highlight); BALANCED keeps blur + vibrancy + a
+  static highlight and never calls `lens()`; LITE calls no
+  `drawBackdrop` anywhere and the piece renders translucent
+  (0.75 veil). The top fade keeps its plain gradient veil in LITE
+  (it never needed the blur to fade); the shelf backdrop keeps its
+  blur but drops dispersion in BALANCED, and is not composed at all
+  in LITE.
+- LITE and the backdrop layer: the four page roots (HomeScreen,
+  MangaScreen, BrowseSourceScreen, ReaderActivity) skip the
+  `Modifier.layerBackdrop(backdrop)` application in LITE, so nothing
+  is recorded and no layer memory is held. The `rememberLayerBackdrop()`
+  handle itself is still created — it is only a handle (a
+  GraphicsLayer object with no backing store until applied), and
+  keeping it avoids making every backdrop parameter nullable.
+- The design listed six draw sites; the audit found two more:
+  `FilterChip` (the shared Explore/library chip — its `glassTier`
+  parameter defaults to FULL because the Library row passes no
+  backdrop and the tier cannot matter there) and `TopFadeBlur`
+  (progressive blur at the top edge). The same audit found the
+  deleted drag-pill files (`presentation/miuix/liquid/`) still
+  sitting in this checkout as untracked files — dead code, not in
+  the repo, nothing references them.
+- Settings: a `ListPreference` row for the tier and a
+  `SwitchPreference` for refraction in SettingsAppearanceScreen,
+  right after the BarStyle row, both `visible` only when the style
+  is liquid glass. Strings: `pref_glass_tier`,
+  `glass_tier_auto/full/balanced/lite`,
+  `pref_glass_refraction(_summary)` (base + zh-rCN).
+- One AUTO caveat, stated plainly: on an API 33+ device with under
+  6 GB RAM, AUTO now renders BALANCED where today it renders FULL.
+  That is the design's table, not a bug — but it is a visible
+  change on such a device, and the 6 GB line is the first thing to
+  tune once the user measures their phone.
+- Unit test `GlassTierTest` (JUnit 5 + Kotest): 6 tests covering the
+  AUTO mapping (including the exact 6 GB boundary), explicit tiers
+  staying put, and the refraction fold. The resolver logic was also
+  simulated in Python: 13 cases, 0 mismatches.
+- Benchmarks still need the user's device (the design's step 5):
+  scroll the Library grid 10 s per tier, p95 frame time + jank via
+  `dumpsys gfxinfo` or FrameMetrics; confirm via the profiler that
+  LITE creates no backdrop layer.
+
+Untested — needs a rebuild: AUTO on the user's phone renders as
+before (FULL if API 33+ with ≥ 6 GB RAM, else BALANCED, LITE below
+32); switching the tier in Settings changes the glass live on every
+page (no restart); BALANCED looks like FULL minus the lens edge
+(static highlight, no refraction); LITE looks like translucent
+everywhere with no blur; the refraction switch only affects FULL;
+the shelf backdrop loses dispersion in BALANCED and disappears in
+LITE (glass mode only — other styles keep today's backdrop);
+non-glass styles are pixel-identical.
 
 ## Build fixes
 
