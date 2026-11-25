@@ -936,6 +936,17 @@ capsule is hidden on this page, since the source name is the
 title now and the capsule would sit over it; returning to the
 Browse menu restores it.
 
+The bar follows the global BarStyle since 2026-11-25 (same
+recipe as the title capsule: opaque solid surfaceContainer,
+translucent 0.75, liquid glass with the shallow 8/4 lens and
+tilt highlight, metal as brushed metal with the source name
+engraved). The bar is a full-width rectangle, so the shape is
+a zero-radius RoundedCornerShape — the lens needs a
+CornerBasedShape. It sits in the Scaffold's topBar slot,
+outside the content layer the backdrop records, so the glass
+samples the list without recursing. The TopFadeBlur veil under
+it is surfaceContainer to match.
+
 ## Explore chips clear of the status bar (2026-11-14)
 
 The per-source Explore page's filter chips sat only 8.dp below
