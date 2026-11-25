@@ -3535,6 +3535,57 @@ a `20.sqm` migration + reader UI to add a bookmark at the current
 page, list them and jump to one). The 4.1 rule engine is done, in the
 section above.
 
+## Metal retuned to Apple-style Precision Metal (2026-11-25)
+
+The user supplied a design spec (`Tychii_Precision_Metal________1_4e8u.md`,
+V1.0, direction draft) and asked to restyle the metal per it. The
+direction: precision, restraint, fineness, lightness — real aluminium
+touch, not sci-fi hardware. This supersedes the Smartisan hardware
+direction (74e82d96): the top highlight band and the hard bevel are
+gone, the diagonal sheen is gone.
+
+Done in code (MetalMaterial.kt only for the recipe, plus the two
+selected-state sites):
+
+- Base: Silver light `#F4F5F6` → `#E1E3E6` (silver-white, no pure
+  white); Titanium dark `#3B3B3D` → `#262628` (neutral titanium
+  grey, no blue tint, top a touch lighter so edges read in dark).
+  Both low contrast; Titanium is NOT Silver inverted.
+- Brushed texture: 1px horizontal lines, 2.dp spacing, alpha
+  0.02–0.05 (the spec's 2%–5%), hash-varied strength/start/end
+  (jitter narrowed from 0.2 to 0.1 of the width).
+- Chamfer: white 0.65 → 0.30 top, black 0.45 → 0.20 bottom — a
+  soft machined edge, not a cut edge.
+- Directional reflection: a single vertical white 0.05 fading by
+  50%, light from above. The diagonal sheen (0.09) and the top
+  highlight band (0.18) are deleted.
+- Selected = Anodized: the selected bottom-bar tab gets a subtle
+  theme-colour veil (Miuix primary at 0.10, 16.dp rounded plate
+  behind the item, TychiiLiquidBar.kt), the raise stays. Active
+  capsule tools fill their carved glyph with the action tint at
+  0.2 instead of the neutral fill (MiuixFloatingCapsule.kt) —
+  both callers pass `MaterialTheme.colorScheme.active`, so the
+  tint is always the theme accent. FilterChip needed nothing: its
+  selected state already uses the primary content colour.
+- Kept as-is: the colourless carving for icons/labels (the spec
+  says icons and text should keep clear contrast but does not ask
+  to remove the engraving — a decision to revisit), the recess
+  colours, the drop shadows, all radii (the capsule is a capsule;
+  the 12–20dp in the spec is for panels/cards). No dynamic
+  reflection was added — the spec wants it off by default, and
+  metal never had any. No Playground screen was built — the user
+  asked to change the material, not to prototype it.
+- Not done: Metal Panel (settings pages / reader settings panels
+  still use Miuix surfaceContainer cards — extending metal there
+  is a scope decision, not part of this change), pressed-state
+  darkening (Miuix Button press feedback covers buttons; the
+  metal surface itself has no pressed state).
+
+Untested — needs a rebuild: check the metal reads as precision
+aluminium in both themes (flat, fine grain, soft edge, no strong
+highlight) and that the selected tab's faint theme tint and the
+active capsule tool's tinted fill read as anodized, not as glow.
+
 ## Build fixes
 
 - `MetalTabBar.kt:157` — `Operator '==' cannot be
