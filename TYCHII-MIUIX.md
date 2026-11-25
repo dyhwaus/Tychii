@@ -3582,6 +3582,11 @@ selected-state sites):
   both callers pass `MaterialTheme.colorScheme.active`, so the
   tint is always the theme accent. FilterChip needed nothing: its
   selected state already uses the primary content colour.
+  REVERTED 2026-11-25, user request: in metal mode the selected
+  tab has no tinted plate — the raise alone marks it, as before
+  — and the active capsule tool is back to the neutral faint
+  fill (`metalCarvedFill`). The anodized plate read as an outer
+  ring around the tab.
 - Kept as-is: the colourless carving for icons/labels (the spec
   says icons and text should keep clear contrast but does not ask
   to remove the engraving — a decision to revisit), the recess
@@ -3598,8 +3603,8 @@ selected-state sites):
 
 Untested — needs a rebuild: check the metal reads as precision
 aluminium in both themes (flat, fine grain, soft edge, no strong
-highlight) and that the selected tab's faint theme tint and the
-active capsule tool's tinted fill read as anodized, not as glow.
+highlight) and that the selected tab shows only by its raise, with
+no tinted plate, and the active capsule tool by its neutral fill.
 
 ## Page bookmarks (2026-11-25): 4.4
 
