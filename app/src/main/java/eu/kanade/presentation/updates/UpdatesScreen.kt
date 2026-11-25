@@ -123,7 +123,10 @@ fun UpdateScreen(
                     CapsuleAction(
                         icon = MaterialSymbols.Rounded.FilterList,
                         contentDescription = filterDescription,
-                        onClick = { selectingFilter = true },
+                        // Toggles: tapping the open filter closes it
+                        // again. The capsule sits above the dropdown
+                        // layer, so the re-tap reaches the button.
+                        onClick = { selectingFilter = !selectingFilter },
                         tint = if (hasActiveFilters) activeColor else null,
                     ),
                     CapsuleAction(

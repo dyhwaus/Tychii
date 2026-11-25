@@ -156,7 +156,12 @@ fun LibraryContent(
                         // opening one closes the others, and opening
                         // search closes all three. Without this, tapping
                         // a second capsule action left the first dropdown
-                        // open underneath it.
+                        // open underneath it. Each action toggles its own
+                        // dropdown: tapping the open one closes it again.
+                        // The capsule sits above the dropdown layer (a
+                        // later sibling of the Scaffold), so the re-tap
+                        // reaches the button, not the popup's outside-tap
+                        // area — the toggle is what closes it.
                         CapsuleAction(
                             icon = MaterialSymbols.Rounded.Search,
                             contentDescription = searchDescription,
@@ -171,7 +176,7 @@ fun LibraryContent(
                             icon = MaterialSymbols.AutoMirroredRounded.Sort,
                             contentDescription = sortDescription,
                             onClick = {
-                                selectingSort = true
+                                selectingSort = !selectingSort
                                 selectingDisplayMode = false
                                 selectingFilter = false
                             },
@@ -186,7 +191,7 @@ fun LibraryContent(
                             },
                             contentDescription = displayDescription,
                             onClick = {
-                                selectingDisplayMode = true
+                                selectingDisplayMode = !selectingDisplayMode
                                 selectingSort = false
                                 selectingFilter = false
                             },
@@ -195,7 +200,7 @@ fun LibraryContent(
                             icon = MaterialSymbols.Rounded.FilterList,
                             contentDescription = filterDescription,
                             onClick = {
-                                selectingFilter = true
+                                selectingFilter = !selectingFilter
                                 selectingSort = false
                                 selectingDisplayMode = false
                             },
